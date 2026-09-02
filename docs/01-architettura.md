@@ -3,7 +3,7 @@
 **Scopo** · Spiegare com'è fatto il sistema nel suo insieme: quali pezzi esistono, chi parla con
 chi, e dove si trova l'autorità su ogni decisione.
 **Proprietario** · project-manager
-**Stato** · 🟡 proposta in attesa della decisione sullo stack · vedi `docs/09-decisioni-aperte.md`
+**Stato** · ✅ stack deciso, vedi ADR-0001 e ADR-0002 · 🟡 realizzato solo lo strato di accesso
 **Data** · 2026-09-02
 
 ---
@@ -98,8 +98,8 @@ documentati in `docs/04-frontend-e-design.md`.
 | Il server è l'unica autorità su offerte, tempo e aggiudicazioni | Presa, non negoziabile |
 | Registro eventi immutabile | Presa |
 | Tre superfici distinte sullo stesso stato | Presa, viene dai requisiti |
-| Quale backend concreto | 🔴 Aperta, vedi `docs/09-decisioni-aperte.md` |
-| Applicazione web installabile o app nativa | 🔴 Aperta |
+| Backend: Supabase su PostgreSQL | ✅ Presa, ADR-0001 |
+| Client: applicazione web installabile | ✅ Presa, ADR-0002 |
 
 ## Da sapere prima di intervenire
 
@@ -109,9 +109,10 @@ valore deve essere uguale per tutti, lo calcola il server.
 
 ## Aperto / TODO
 
-- 🔴 Scelta dello stack, dopo la quale questo documento va riscritto con i nomi reali dei servizi.
 - 🟡 Comportamento in caso di connessione assente al tavolo, per esempio internet che salta a metà
   asta. Va deciso se serve una modalità di ripiego.
+- 🟡 Il piano gratuito di Supabase sospende il progetto dopo circa una settimana di inattività.
+  Va scritta un'istruzione per l'amministratore: aprire l'app un'ora prima dell'asta.
 
 ## Changelog
 

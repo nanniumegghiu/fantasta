@@ -4,7 +4,7 @@
 onesti, costo di inversione e la mia raccomandazione motivata. Quando una decisione è presa si
 sposta fra quelle chiuse e diventa un ADR in `docs/adr/`.
 **Proprietario** · project-manager
-**Stato** · 🔴 12 decisioni aperte, 0 chiuse
+**Stato** · 🟡 5 decisioni chiuse con ADR, 7 ancora aperte
 **Data** · 2026-09-02
 
 ---
@@ -16,7 +16,11 @@ decisioni con costo alto vanno prese ora, quelle con costo basso si possono rima
 
 ---
 
-## D1 · Quando è la tua asta?
+## D1 · Quando è la tua asta? — ✅ CHIUSA
+
+> **Risposta: oltre 6 settimane.** Nessuna pressione di calendario: si segue la roadmap intera
+> nell'ordine previsto, facepack compreso, e si chiude con il ciclo di revisione iper-critica prima
+> di usare l'app sul serio. Il testo qui sotto resta come traccia di come è stata posta la domanda.
 
 **Perché lo chiedo** · Oggi è il 2 settembre 2026. Se la tua asta è fra due settimane, questa
 roadmap non regge e va tagliata: si costruisce solo il metodo d'asta che userete voi, si rinuncia
@@ -34,7 +38,10 @@ invece l'asta è fra un mese o è già passata e puntiamo alla stagione prossima
 
 ---
 
-## D2 · Su cosa gira il backend
+## D2 · Su cosa gira il backend — ✅ CHIUSA, vedi ADR-0001
+
+> **Scelta: Supabase.** Motivazioni, contro accettati e conseguenze in
+> `docs/adr/0001-backend-supabase.md`.
 
 Il pezzo che deve tenere insieme dieci telefoni in tempo reale, custodire le liste obiettivi e far
 rispettare le regole d'asta.
@@ -94,7 +101,10 @@ sicurezza e realtime. È la decisione da prendere adesso.
 
 ---
 
-## D3 · Applicazione web installabile o app da scaricare
+## D3 · Applicazione web installabile o app da scaricare — ✅ CHIUSA, vedi ADR-0002
+
+> **Scelta: applicazione web installabile.** Vedi
+> `docs/adr/0002-applicazione-web-installabile.md`.
 
 ### Opzione A — Applicazione web installabile *(raccomandata)*
 
@@ -128,7 +138,10 @@ l'interfaccia. Passare a nativo più avanti è possibile.
 
 ---
 
-## D4 · Da dove arrivano listone e statistiche
+## D4 · Da dove arrivano listone e statistiche — ✅ CHIUSA, vedi ADR-0003
+
+> **Scelta: importazione di un file**, con la struttura pronta per un aggiornamento automatico
+> futuro. Vedi `docs/adr/0003-listone-importazione-manuale.md`.
 
 ### Opzione A — Importazione manuale di un file *(raccomandata)*
 
@@ -167,7 +180,10 @@ resto.
 
 ---
 
-## D5 · Come si chiama l'app
+## D5 · Come si chiama l'app — ✅ CHIUSA, vedi ADR-0004
+
+> **Scelta: Fantasta.** Nessuna delle quattro proposte: il nome è dell'utente. Vedi
+> `docs/adr/0004-nome-prodotto-fantasta.md`.
 
 Il logo non contiene testo, quindi il nome è libero. Serve adesso perché finisce nel nome della
 cartella, del progetto e dell'indirizzo web.
@@ -265,10 +281,29 @@ useranno quelli da subito.
 
 ## Decisioni chiuse
 
-Nessuna ancora. Quando se ne chiude una, qui resta una riga con il numero dell'ADR corrispondente.
+| # | Decisione | Esito | ADR |
+|---|---|---|---|
+| D1 | Scadenza dell'asta | Oltre 6 settimane, nessuna pressione | — |
+| D2 | Backend | Supabase | `0001-backend-supabase.md` |
+| D3 | Piattaforma client | Applicazione web installabile | `0002-applicazione-web-installabile.md` |
+| D4 | Origine listone e statistiche | Importazione di file | `0003-listone-importazione-manuale.md` |
+| D5 | Nome del prodotto | **Fantasta** | `0004-nome-prodotto-fantasta.md` |
+
+Due decisioni tecniche interne sono state prese dagli agenti senza coinvolgere l'utente, perché non
+comportano compromessi di prodotto: `0005-timer-autoritativo-del-server.md` e
+`0006-dipendenze-iniziali.md`.
+
+## Cosa serve dall'utente per sbloccare le decisioni rimaste
+
+| # | Cosa serve | Blocca |
+|---|---|---|
+| D7 | Nome esatto di tre file del facepack e quanti sono in tutto | La Fetta 5 |
+| D8 | Un file di esempio del caricamento rose di Fantacalcio | La Fetta 6 |
+| D6, D9, D10, D11, D12 | Nulla: si procede con la raccomandazione, modificabile in qualsiasi momento a costo quasi nullo | Niente |
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Chiuse D1, D2, D3, D4, D5 con i relativi ADR. |
 | 1.0 | 2026-09-02 | Prima raccolta: 12 decisioni aperte. |

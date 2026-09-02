@@ -3,7 +3,7 @@
 **Scopo** · Definire l'aspetto e il comportamento dell'interfaccia: colori, tipografia, animazioni,
 suoni, e l'elenco completo delle schermate.
 **Proprietario** · frontend-engineer
-**Stato** · 🔴 nessuna schermata costruita · design system definito
+**Stato** · 🟡 token e primi componenti costruiti, schermate 1, 2 e 4 fatte · il resto 🔴
 **Data** · 2026-09-02
 
 ---
@@ -166,7 +166,9 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 ## Aperto / TODO
 
-- 🔴 Scelta definitiva del carattere fra Inter e Manrope.
+- ✅ Carattere scelto: **Inter**, per le cifre a larghezza fissa che tengono fermo il countdown.
+  Caricato da servizio esterno con ricaduta sui caratteri di sistema. Vedi
+  `docs/componenti/app-web.md` per il dubbio ancora aperto sul portarlo dentro il progetto.
 - 🔴 I file audio vanno prodotti o reperiti con licenza libera.
 - 🟡 Contrasto dichiarato ma non ancora misurato.
 - 🟡 Tema chiaro: previsto, non progettato.

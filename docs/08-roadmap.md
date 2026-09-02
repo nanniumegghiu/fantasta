@@ -24,12 +24,21 @@ brutale e alcune cose vanno sacrificate. È la prima domanda in `docs/09-decisio
 
 ---
 
-### Fetta 0 · Fondamenta
+### Fetta 0 · Fondamenta — 🟡 in corso
 
 Progetto creato, backend attivo, accesso funzionante, pubblicazione online.
 
 **Si dimostra così**: mi registro con Google da telefono, entro, vedo una pagina «Le mie leghe»
 vuota col mio nome, esco e rientro.
+
+| Pezzo | Stato |
+|---|---|
+| Progetto web che compila, con icone e installabilità | ✅ verificato: compilazione e server di anteprima |
+| Schermate di accesso, registrazione, «Le mie leghe» | 🟡 scritte, mai aperte in un browser |
+| Migrazione dei profili con le sue policy | 🟡 scritta, mai applicata |
+| Progetto Supabase e chiavi | 🔴 servono all'utente |
+| Accesso con Google e con email, provato davvero | 🔴 |
+| Pubblicazione online | 🔴 |
 
 ### Fetta 1 · Leghe, inviti e squadre
 

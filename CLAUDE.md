@@ -9,8 +9,8 @@
 
 ## 1. Cos'è il prodotto
 
-Un'applicazione per fare **l'asta del fantacalcio Classic fra amici**, dalla preparazione fino alle
-rose finite.
+**Fantasta** è un'applicazione per fare **l'asta del fantacalcio Classic fra amici**, dalla
+preparazione fino alle rose finite.
 
 Un gruppo di amici crea una lega, ognuno entra con un codice di invito ricevuto su WhatsApp e si dà
 un nome di squadra. Prima dell'asta ciascuno prepara in privato la propria **lista obiettivi**, con
@@ -24,7 +24,7 @@ esporta il file da caricare nell'app Fantacalcio.
 **Cosa il prodotto non fa**, dichiarato per evitare che ci finisca dentro di nascosto: formazioni
 settimanali, punteggi di giornata, classifiche, mercato di riparazione, chat, pagine legali.
 
-Il nome dell'app non è ancora deciso: vedi la decisione D5 in `docs/09-decisioni-aperte.md`.
+Il nome si scrive **Fantasta** nei testi e `fantasta` nel codice. Vedi ADR-0004.
 
 ---
 
@@ -65,7 +65,11 @@ Progetto Fantacalcio/
 │   └── skills/                  ← procedure riutilizzabili
 ├── brand/                       ← il logo, fonte dei colori dell'app
 ├── docs/                        ← un documento per area
-└── app/                         ← il codice 🔴 non ancora creato
+└── app/                         ← il codice. Vedi docs/componenti/app-web.md
+    ├── src/                     ← interfaccia, accesso, rotte
+    ├── scripts/                 ← icone e controllo delle dipendenze
+    ├── supabase/migrations/     ← migrazioni versionate del database
+    └── public/                  ← icone generate dal logo
 ```
 
 **Scelte non ovvie:**
@@ -130,30 +134,42 @@ Il protocollo fra frontend e backend è in `.claude/skills/contratto-dati/SKILL.
 
 Sistema: Windows 11, shell PowerShell.
 
-**Stack applicativo** · 🔴 **non ancora scelto.** Le opzioni, con pro e contro reali, sono in
-`docs/09-decisioni-aperte.md`, decisioni D2 e D3. Nulla è stato installato e nessuna dipendenza è
-stata aggiunta: il metodo lo vieta prima della decisione.
+**Stack applicativo**, deciso il 2 settembre 2026:
+
+| Strato | Scelta | ADR |
+|---|---|---|
+| Backend, dati, accesso, realtime, archivio file | **Supabase** su PostgreSQL | `0001` |
+| Client | **Applicazione web installabile**, React con Vite e TypeScript | `0002` |
+| Dati dei calciatori | **Importazione di file**, non raccolta automatica | `0003` |
+| Countdown d'asta | Istanti salvati dal server, non contatori locali | `0005` |
+| Dipendenze autorizzate | Elenco chiuso, una per una con il motivo | `0006` |
+
+Nessun pacchetto che non compaia in ADR-0006 è autorizzato. Se un comando ne installa uno, o si
+toglie o si scrive un ADR che supera il precedente.
 
 ---
 
 ## 7. Stato attuale e prossimo passo
 
-**Stato** · Prima sessione. Esistono struttura, documentazione, agenti e skill. **Non esiste una
-riga di codice di prodotto**, ed è voluto.
+**Stato** · Prima sessione conclusa. Struttura, documentazione, decisioni e **Fetta 0 costruita**.
+L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: mancano le due chiavi.
 
 | Area | Stato |
 |---|---|
 | Struttura cartelle e repository Git | ✅ fatto e verificato |
 | Documentazione di area, 10 documenti | ✅ scritta |
-| Agenti, 6 | ✅ scritti |
-| Skill, 5 | ✅ scritte |
+| Agenti, 6 · Skill, 5 | ✅ scritti |
 | Palette estratta dal logo | ✅ fatto, valori reali dai pixel |
-| Decisioni aperte raccolte | ✅ 12 decisioni, 0 chiuse |
-| ADR | 🔴 nessuno: dipendono dalle decisioni |
-| Codice dell'applicazione | 🔴 non iniziato |
+| Decisioni | ✅ 5 chiuse con ADR, 7 aperte non bloccanti |
+| ADR | ✅ 7 scritti |
+| Applicazione: struttura, compilazione, icone | ✅ fatto, compilazione verificata |
+| Schermate di accesso e «Le mie leghe» | 🟡 scritte, **mai aperte in un browser** |
+| Collegamento al backend | 🔴 mancano le chiavi |
+| Prima migrazione, profili con policy | 🟡 scritta, **mai applicata** |
+| Fetta 1 in poi | 🔴 non iniziate |
 
-**Prossimo passo** · Chiudere le decisioni D1, D2, D3 e D4 di `docs/09-decisioni-aperte.md`,
-scrivere gli ADR corrispondenti, poi iniziare la Fetta 0 della roadmap.
+**Prossimo passo** · Creare il progetto Supabase, applicare la migrazione dei profili, verificare
+l'accesso con Google e con email su un dispositivo vero. Poi Fetta 1: leghe, inviti e squadre.
 
 ---
 
@@ -178,4 +194,5 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Chiuse 5 decisioni con 7 ADR. Nome del prodotto: Fantasta. Fetta 0 costruita: applicazione web installabile che compila, icone generate dal logo, accesso e rotte protette, prima migrazione con le sue policy. |
 | 1.0 | 2026-09-02 | Prima sessione: struttura, 10 documenti di area, 6 agenti, 5 skill, palette dal logo, 12 decisioni aperte. Nessun codice, come previsto dal metodo. |
