@@ -4,7 +4,7 @@
 crediti, metodi d'asta, timer, vincoli sulle offerte. È la fonte unica: il codice le implementa,
 non le reinventa.
 **Proprietario** · backend-engineer (le regole vivono sul server)
-**Stato** · 🟡 realizzate e verificate: crediti, massimo offribile, ruoli, turni, timer · varianti e poteri admin 🔴
+**Stato** · ✅ tutte le regole di questo documento sono realizzate e verificate · scambi 🔴
 **Data** · 2026-09-02
 
 ---
@@ -189,12 +189,18 @@ credito residuo, reparto già completo.
 
 ## Aperto / TODO
 
-- 🟡 Il filtro del bacino di estrazione per l'asta random è progettato ma va confermato dall'utente.
-- 🟡 Composizione rosa diversa da 3-8-8-6: supportata dal modello, da provare con valori insoliti.
+- ✅ Filtro del bacino per l'asta random: realizzato come soglia sulla quotazione. Il filtro «solo
+  i calciatori presenti in qualche lista obiettivi» è stato **scartato di proposito**, perché
+  lascerebbe dedurre chi sta nelle liste altrui. Vedi
+  `docs/decisioni/2026-09-03-filtro-random-e-liste-obiettivi.md`.
+- 🟡 Composizione rosa diversa da 3-8-8-6: supportata dal modello, provata con 1-1-1-1 nelle
+  verifiche, non con valori grandi e sbilanciati.
+- 🔴 Gli scambi fra squadre restano da costruire.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-03 | Tutte e sette le combinazioni di metodo e variante realizzate, più modalità live, chiamata con passo e poteri dell amministratore. |
 | 1.1 | 2026-09-02 | Regole realizzate nel motore d asta e verificate sui casi limite. Solo chiamata libera totale, per ora. |
 | 1.0 | 2026-09-02 | Prima stesura: ruoli, crediti, massimo offribile, metodi, timer, poteri admin. |

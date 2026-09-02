@@ -3,7 +3,7 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🟡 Fette da 0 a 3 complete e 4a costruita, verificate lato server, mai viste in un browser
+**Stato** · 🟡 Fette da 0 a 4 costruite e verificate lato server, mai viste in un browser
 **Data** · 2026-09-02
 
 ---
@@ -89,18 +89,19 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Schermata con fasce, tetti, note, slot e incroci | 🟡 scritta, **mai aperta in un browser** |
 | Contatore degli obiettivi ancora liberi durante l'asta | 🔴 arriva con la Fetta 4f |
 
-### Fetta 4 · L'asta — 🟡 motore e schermo condiviso costruiti
+### Fetta 4 · L'asta — ✅ costruita, 🔴 mai vista in un browser
 
 È il cuore dell'app e il pezzo più difficile. Va spezzata.
 | Sotto-fetta | Stato |
 |---|---|
-| **4a · Motore** | ✅ 26 prove su 26, `node scripts/verifica-asta.mjs`. Solo chiamata libera totale. |
-| **4b · Schermo condiviso** | 🟡 scritto con i suoni sintetizzati, **mai aperto in un browser** |
-| **4f · Aggancio obiettivi** | 🟡 la vista personale mostra tetto e nota del calciatore in asta |
-| **4c · Varianti** | 🔴 rifiutate esplicitamente dal server, non finte |
-| **4d · Poteri amministratore** | 🟡 solo pausa e ripresa. Passa, assegna e annulla 🔴 |
-| **4e · Chiamata con passo** | 🔴 |
-| Compito pianificato che chiude i lotti dimenticati | 🔴 |
+| **4a · Motore** | ✅ 26 prove, `node scripts/verifica-asta.mjs` |
+| **4b · Schermo condiviso** | 🟡 scritto con i suoni, **mai aperto in un browser** |
+| **4c · Varianti** | ✅ tutte e sette, più la modalità live |
+| **4d · Poteri amministratore** | ✅ passa, assegna, aggiudica, annulla, pausa |
+| **4e · Chiamata con passo** | ✅ irreversibile, chiude in anticipo quando resta uno solo |
+| **4f · Aggancio obiettivi** | ✅ tetto e nota del calciatore in asta, nella vista personale |
+| Rete di sicurezza sui lotti dimenticati | ✅ pianificata ogni dieci secondi |
+| Prova su dispositivi veri | 🔴 |
 
 | Sotto-fetta | Contenuto | Come si dimostra |
 |---|---|---|
@@ -159,6 +160,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.5 | 2026-09-03 | Fetta 4 completata: sette varianti, modalità live, passo, poteri dell amministratore, rete di sicurezza. |
 | 1.4 | 2026-09-02 | Fetta 4a costruita: motore d asta, timer del server, schermo condiviso con i suoni. |
 | 1.3 | 2026-09-02 | Fetta 3 costruita: lista obiettivi con i quattro metodi. |
 | 1.2 | 2026-09-02 | Fetta 2 costruita: importazione e tabella del listone. |

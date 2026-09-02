@@ -56,9 +56,38 @@ if (process.argv.includes('--pulisci')) {
   await sql('delete from public.player_stats;')
   await sql('delete from public.players;')
   await sql("delete from auth.users where email like '%@fantasta.test';")
-  console.log('Dati di prova rimossi.')
+  await sql("select cron.schedule('fantasta-lotti-scaduti', '10 seconds', 'select public.chiudi_lotti_scaduti();');")
+  console.log('Dati di prova rimossi, rete di sicurezza riaccesa.')
   process.exit(0)
 }
+
+
+// ─── La rete di sicurezza va sospesa durante le prove ───────────────────────
+//
+// Il compito pianificato chiude i lotti scaduti ogni dieci secondi. Queste
+// prove fanno scadere i lotti spostando indietro l'ora dell'ultimo rilancio,
+// quindi la rete interverrebbe **al posto loro**, e non si capirebbe più chi
+// ha chiuso cosa. Non è un difetto del prodotto: è che una prova sul tempo e
+// un compito che guarda il tempo non possono girare insieme.
+//
+// Si sospende qui e si riaccende alla fine, anche se qualcosa va storto.
+
+const reteAttiva = async (v) => {
+  if (v) {
+    await sql(
+      "select cron.schedule('fantasta-lotti-scaduti', '10 seconds', 'select public.chiudi_lotti_scaduti();');",
+    )
+  } else {
+    // Questa forma non fallisce se il compito non c'è: restituisce zero righe.
+    await sql("select cron.unschedule(jobid) from cron.job where jobname = 'fantasta-lotti-scaduti';")
+  }
+}
+
+await reteAttiva(false)
+process.on('exit', () => {
+  // Riaccenderla è importante: lasciarla spenta lascerebbe l'app senza rete.
+  void reteAttiva(true)
+})
 
 const esiti = []
 function esito(nome, ok, dettaglio) {
@@ -140,14 +169,17 @@ const utenteDi = (idSquadra) => (squadraDi(admin) === idSquadra ? admin : amico)
 
 // ─── 1. Impostazioni ────────────────────────────────────────────────────────
 
-const nonDisponibile = await rpc(admin, 'configura_asta', {
-  p_lega: lega, p_metodo: 'random', p_variante: 'per_ruolo', p_conduzione: 'app',
+// L'ibrida è «prima i portieri, poi movimento libero»: ha senso solo quando
+// sono i partecipanti a chiamare. Nei metodi automatici coincide con la
+// divisione per ruoli, e il server la rifiuta invece di far finta.
+const combinazioneImpossibile = await rpc(admin, 'configura_asta', {
+  p_lega: lega, p_metodo: 'random', p_variante: 'ibrida', p_conduzione: 'app',
   p_tipo_chiamata: 'libera', p_secondi_inattivita: 3, p_secondi_countdown: 3,
 })
 esito(
-  'Le varianti non ancora costruite vengono rifiutate, non finte',
-  nonDisponibile.riga?.esito === 'metodo_non_disponibile',
-  `${nonDisponibile.riga?.messaggio}`,
+  'Una combinazione che non ha senso viene rifiutata con la spiegazione',
+  combinazioneImpossibile.riga?.esito === 'metodo_non_disponibile',
+  `${combinazioneImpossibile.riga?.messaggio}`,
 )
 
 const daNonAdmin = await rpc(amico, 'configura_asta', {
@@ -457,6 +489,8 @@ esito(
 )
 
 // ─── Riepilogo ──────────────────────────────────────────────────────────────
+
+await reteAttiva(true)
 
 const fallite = esiti.filter((e) => !e.ok)
 console.log(`\n${esiti.length - fallite.length} superate su ${esiti.length}.`)

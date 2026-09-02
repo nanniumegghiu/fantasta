@@ -235,7 +235,12 @@ e lo dichiaro come non verificato.
 
 ---
 
-## D9 · L'asta random ha bisogno di un filtro?
+## D9 · L'asta random ha bisogno di un filtro? — ✅ CHIUSA
+
+> **Realizzato come soglia sulla quotazione**, spento in modo predefinito. L'altra ipotesi, cioè
+> estrarre solo fra i calciatori presenti in qualche lista obiettivi, è stata **scartata**: farebbe
+> dedurre chi sta nelle liste altrui. Vedi
+> `docs/decisioni/2026-09-03-filtro-random-e-liste-obiettivi.md`.
 
 Un'estrazione casuale sull'intero listone produce centinaia di calciatori che nessuno vuole.
 Propongo un filtro facoltativo del bacino: solo calciatori sopra una certa quotazione, oppure solo
@@ -287,6 +292,7 @@ useranno quelli da subito.
 | D7 | Ponte fra facepack e listone | Automatico, tramite servizio pubblico di ricerca | `0011-ponte-automatico-tramite-fmref.md` supera `0010` |
 | D8 | Formato di esportazione delle rose | Quattro colonne, fornite dall'utente | `0008-formato-esportazione-rose.md` |
 | — | Conferma dell'indirizzo email | Disattivata | `0009-conferma-email-disattivata.md` |
+| D9 | Filtro del bacino per l'asta random | Soglia sulla quotazione. Scartato il filtro sulle liste obiettivi | — |
 | D2 | Backend | Supabase | `0001-backend-supabase.md` |
 | D3 | Piattaforma client | Applicazione web installabile | `0002-applicazione-web-installabile.md` |
 | D4 | Origine listone e statistiche | Importazione di file | `0003-listone-importazione-manuale.md` |
@@ -306,6 +312,7 @@ comportano compromessi di prodotto: `0005-timer-autoritativo-del-server.md` e
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-03 | D9 chiusa con la Fetta 4. |
 | 1.2 | 2026-09-02 | D7 riaperta e richiusa: il ponte e automatico. Non serve piu niente dall utente. |
 | 1.1 | 2026-09-02 | Chiuse D1, D2, D3, D4, D5 con i relativi ADR. |
 | 1.0 | 2026-09-02 | Prima raccolta: 12 decisioni aperte. |

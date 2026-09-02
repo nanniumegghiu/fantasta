@@ -11,14 +11,14 @@ import { useListaObiettivi } from '@/features/obiettivi/api'
 import { SelettoreCalciatore } from '@/features/obiettivi/SelettoreCalciatore'
 import { CLASSE_RUOLO, NOME_RUOLO, ORDINE_RUOLI } from '@/features/obiettivi/tipi'
 import {
-  useApriAsta,
   useAsta,
   useBudgetSquadre,
   useCanaleAsta,
   useChiamaCalciatore,
   useChiudiLottoScaduto,
-  useConfiguraAsta,
   useLottoCorrente,
+  usePassa,
+  usePassiDelLotto,
   usePausaAsta,
   useRilancia,
   useRose,
@@ -27,6 +27,8 @@ import {
   type Lotto,
 } from '@/features/asta/api'
 import { useTimerAsta } from '@/features/asta/useTimer'
+import { ImpostazioniPreAsta } from '@/features/asta/ImpostazioniPreAsta'
+import { PannelloAmministratore } from '@/features/asta/PannelloAmministratore'
 import type { Ruolo } from '@/domain/listone'
 
 export function PaginaAsta() {
@@ -78,9 +80,17 @@ export function PaginaAsta() {
           </p>
         )}
 
-        {(!asta || asta.status === 'draft') && (
-          <PrimaDellAsta idLega={idLega} sonoAdmin={sonoAdmin} asta={asta} squadre={budget ?? []} />
-        )}
+        {(!asta || asta.status === 'draft') &&
+          (sonoAdmin ? (
+            <ImpostazioniPreAsta idLega={idLega} asta={asta} squadre={budget ?? []} />
+          ) : (
+            <div className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-5 text-center">
+              <p className="text-base font-bold text-nebbia">L&apos;asta non è ancora aperta</p>
+              <p className="mt-1 text-sm text-fumo">
+                La apre l&apos;amministratore. Intanto puoi preparare la tua lista obiettivi.
+              </p>
+            </div>
+          ))}
 
         {asta?.status === 'paused' && (
           <p className="rounded-2xl border border-oro/40 bg-oro/10 px-4 py-4 text-center text-lg font-bold text-oro">
@@ -88,8 +98,23 @@ export function PaginaAsta() {
           </p>
         )}
 
+        {asta?.current_role_phase && (
+          <p className="rounded-xl border border-verde-acceso/40 bg-verde-acceso/10 px-4 py-2 text-center text-sm font-semibold text-verde-acceso">
+            Adesso si gioca il reparto: {NOME_RUOLO[asta.current_role_phase]}
+          </p>
+        )}
+
         {(asta?.status === 'open' || asta?.status === 'paused') && (
           <>
+            {sonoAdmin && (
+              <PannelloAmministratore
+                idLega={idLega}
+                asta={asta}
+                lotto={lotto}
+                squadre={budget ?? []}
+                acquistati={acquistati}
+              />
+            )}
             {lotto ? (
               <InAstaOra
                 lotto={lotto}
@@ -100,8 +125,9 @@ export function PaginaAsta() {
                 lista={lista}
                 offertaMinima={lega?.min_bid ?? 1}
                 inPausa={asta.status === 'paused'}
+                conPasso={asta.bid_type === 'con_passo'}
               />
-            ) : (
+            ) : asta.method === 'chiamata' ? (
               <TuoTurno
                 asta={asta}
                 squadre={budget ?? []}
@@ -110,6 +136,17 @@ export function PaginaAsta() {
                 acquistati={acquistati}
                 offertaMinima={lega?.min_bid ?? 1}
               />
+            ) : (
+              <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-5 text-center">
+                <p className="text-sm text-fumo">
+                  {asta.method === 'random'
+                    ? "In questa asta i calciatori li estrae il server."
+                    : "In questa asta i calciatori escono in ordine alfabetico."}
+                </p>
+                <p className="mt-1 text-xs text-fumo">
+                  Aspetta che l&apos;amministratore apra il prossimo.
+                </p>
+              </section>
             )}
 
             {mioBudget && lega && <IlMioBudget budget={mioBudget} lega={lega} rose={rose ?? []} />}
@@ -130,125 +167,6 @@ export function PaginaAsta() {
   )
 }
 
-// ─── Prima dell'asta ────────────────────────────────────────────────────────
-
-function PrimaDellAsta({
-  idLega,
-  sonoAdmin,
-  asta,
-  squadre,
-}: {
-  idLega: string | undefined
-  sonoAdmin: boolean
-  asta: { inactivity_seconds: number; countdown_seconds: number } | null | undefined
-  squadre: BudgetSquadra[]
-}) {
-  const configura = useConfiguraAsta(idLega)
-  const apri = useApriAsta(idLega)
-  const [inattivita, setInattivita] = useState(asta?.inactivity_seconds ?? 8)
-  const [countdown, setCountdown] = useState(asta?.countdown_seconds ?? 5)
-  const [sorteggia, setSorteggia] = useState(true)
-  const [messaggio, setMessaggio] = useState<string | null>(null)
-
-  if (!sonoAdmin) {
-    return (
-      <div className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-5 text-center">
-        <p className="text-base font-bold text-nebbia">L&apos;asta non è ancora aperta</p>
-        <p className="mt-1 text-sm text-fumo">
-          La apre l&apos;amministratore. Intanto puoi preparare la tua lista obiettivi.
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
-      <h2 className="text-base font-bold text-nebbia">Impostazioni dell&apos;asta</h2>
-      <p className="mt-0.5 mb-4 text-xs text-fumo">
-        Si cambiano solo prima di aprire. Dopo l&apos;apertura si congelano: cambiarle a metà
-        falserebbe la gara.
-      </p>
-
-      <div className="flex flex-col gap-4">
-        <CampoNumero
-          etichetta="Secondi di attesa dopo l'ultimo rilancio"
-          valore={inattivita}
-          onChange={setInattivita}
-          minimo={3}
-          massimo={120}
-          aiuto="Passati questi senza offerte, parte il countdown."
-        />
-        <CampoNumero
-          etichetta="Durata del countdown"
-          valore={countdown}
-          onChange={setCountdown}
-          minimo={3}
-          massimo={60}
-          aiuto="A zero il calciatore va al miglior offerente."
-        />
-
-        <div className="rounded-xl border border-verde-acceso/30 bg-verde-notte p-3 text-xs text-fumo">
-          Per ora è disponibile la <strong className="text-nebbia">chiamata libera totale</strong>,
-          condotta dall&apos;app. Le altre varianti sono progettate ma non ancora costruite, e
-          l&apos;app le rifiuta invece di fingere che funzionino.
-        </div>
-
-        <label className="flex items-center gap-3 text-sm text-nebbia">
-          <input
-            type="checkbox"
-            checked={sorteggia}
-            onChange={(e) => setSorteggia(e.target.checked)}
-            className="size-5 accent-[var(--color-verde-acceso)]"
-          />
-          Sorteggia l&apos;ordine di chiamata
-        </label>
-
-        {messaggio && (
-          <p className="rounded-xl border border-oro/40 bg-oro/10 px-4 py-3 text-sm text-oro">
-            {messaggio}
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          <Bottone
-            aspetto="secondario"
-            inCorso={configura.isPending}
-            onClick={() =>
-              configura.mutate(
-                { secondiInattivita: inattivita, secondiCountdown: countdown },
-                {
-                  onSuccess: (e) => setMessaggio(e.messaggio),
-                  onError: (e) => setMessaggio(e.message),
-                },
-              )
-            }
-          >
-            Salva le impostazioni
-          </Bottone>
-
-          <Bottone
-            misura="grande"
-            inCorso={apri.isPending}
-            disabilitato={squadre.length < 2}
-            onClick={() =>
-              apri.mutate(sorteggia, {
-                onSuccess: (e) => setMessaggio(e.messaggio),
-                onError: (e) => setMessaggio(e.message),
-              })
-            }
-          >
-            Apri l&apos;asta
-          </Bottone>
-        </div>
-
-        {squadre.length < 2 && (
-          <p className="text-xs text-oro">Servono almeno due squadre per aprire l&apos;asta.</p>
-        )}
-      </div>
-    </section>
-  )
-}
-
 // ─── Il calciatore in asta ──────────────────────────────────────────────────
 
 function InAstaOra({
@@ -260,6 +178,7 @@ function InAstaOra({
   lista,
   offertaMinima,
   inPausa,
+  conPasso,
 }: {
   lotto: Lotto
   timer: { fase: string; mancanti: number }
@@ -269,12 +188,18 @@ function InAstaOra({
   lista: ReturnType<typeof useListaObiettivi>['data']
   offertaMinima: number
   inPausa: boolean
+  conPasso: boolean
 }) {
   const rilancia = useRilancia(idLega)
+  const passa = usePassa(idLega)
+  const { data: chiHaPassato } = usePassiDelLotto(conPasso ? lotto.id : undefined)
+  const [confermaPasso, setConfermaPasso] = useState(false)
   const [libero, setLibero] = useState<number>(lotto.current_bid + 1)
   const [errore, setErrore] = useState<string | null>(null)
 
-  useEffect(() => setLibero(lotto.current_bid + 1), [lotto.current_bid])
+  useEffect(() => {
+    setLibero(lotto.current_bidder_team_id ? lotto.current_bid + 1 : offertaMinima)
+  }, [lotto.current_bid, lotto.current_bidder_team_id, offertaMinima])
 
   const offerente = squadre.find((s) => s.team_id === lotto.current_bidder_team_id)
   const sonoInTesta = mioBudget?.team_id === lotto.current_bidder_team_id
@@ -295,7 +220,11 @@ function InAstaOra({
     )
   }
 
-  const bloccato = inPausa || timer.fase === 'scaduto'
+  const hoPassato = Boolean(mioBudget && chiHaPassato?.includes(mioBudget.team_id))
+  const bloccato = inPausa || timer.fase === 'scaduto' || hoPassato
+  // Su un lotto aperto dal server non c'è ancora un'offerta: il primo scatto
+  // deve valere l'offerta minima, non uno.
+  const base = lotto.current_bidder_team_id ? lotto.current_bid : Math.max(offertaMinima - 1, 0)
 
   return (
     <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
@@ -370,7 +299,7 @@ function InAstaOra({
 
       <div className="mt-4 grid grid-cols-3 gap-2">
         {[1, 5, 10].map((passo) => {
-          const importo = lotto.current_bid + passo
+          const importo = base + passo
           return (
             <Bottone
               key={passo}
@@ -391,14 +320,14 @@ function InAstaOra({
             etichetta="Rilancio libero"
             valore={libero}
             onChange={setLibero}
-            minimo={lotto.current_bid + 1}
-            massimo={Math.max(lotto.current_bid + 1, massimo)}
+            minimo={base + 1}
+            massimo={Math.max(base + 1, massimo)}
           />
         </div>
         <Bottone
           misura="grande"
           aspetto="oro"
-          disabilitato={bloccato || libero > massimo || libero <= lotto.current_bid}
+          disabilitato={bloccato || libero > massimo || libero <= base}
           inCorso={rilancia.isPending}
           onClick={() => offri(libero)}
         >
@@ -409,6 +338,48 @@ function InAstaOra({
       <p className="cifre-fisse mt-2 text-xs text-fumo">
         Puoi arrivare al massimo a {massimo}. L&apos;offerta minima è {offertaMinima}.
       </p>
+
+      {conPasso && (
+        <div className="mt-3 border-t border-verde-campo pt-3">
+          {hoPassato ? (
+            <p className="text-sm font-semibold text-fumo">
+              Hai passato su di lui: non puoi più rilanciare.
+            </p>
+          ) : confermaPasso ? (
+            <div className="rounded-xl border border-errore/40 bg-errore/10 p-3">
+              <p className="text-sm text-nebbia">
+                Se passi sei fuori da questo calciatore <strong>per sempre</strong>: non potrai più
+                rilanciare, nemmeno se il prezzo scende. Sicuro?
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Bottone
+                  aspetto="secondario"
+                  inCorso={passa.isPending}
+                  onClick={() => {
+                    setErrore(null)
+                    passa.mutate(lotto.id, {
+                      onSuccess: (e) => {
+                        if (e.esito !== 'ok') setErrore(e.messaggio)
+                        setConfermaPasso(false)
+                      },
+                      onError: (e) => setErrore(e.message),
+                    })
+                  }}
+                >
+                  Sì, passo
+                </Bottone>
+                <Bottone aspetto="fantasma" onClick={() => setConfermaPasso(false)}>
+                  Resto in gioco
+                </Bottone>
+              </div>
+            </div>
+          ) : (
+            <Bottone aspetto="fantasma" disabilitato={inPausa} onClick={() => setConfermaPasso(true)}>
+              Passo su questo calciatore
+            </Bottone>
+          )}
+        </div>
+      )}
     </section>
   )
 }

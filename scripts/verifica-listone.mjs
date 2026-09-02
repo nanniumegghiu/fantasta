@@ -373,7 +373,10 @@ const seconda = await rpc(amministratore, 'importa_listone', {
   p_stagione: '2026/27',
   p_righe: listone.righe,
 })
-const quanti = (await sql('select count(*)::int as n from public.players;'))[0].n
+const idImportati = listone.righe.map((r) => r.id).join(',')
+const quanti = (await sql(
+  `select count(*)::int as n from public.players where id in (${idImportati});`,
+))[0].n
 esito(
   'Ricaricare lo stesso file non crea doppioni',
   seconda.riga?.inseriti === 0 && quanti === 5,

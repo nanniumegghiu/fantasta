@@ -24,6 +24,7 @@ import {
   suonoAggiudicazione,
   suonoChiamata,
   suonoPartenzaCountdown,
+  suonoCampanella,
   suonoRilancio,
   suonoTic,
 } from '@/features/asta/suoni'
@@ -87,6 +88,19 @@ export function PaginaSchermoAsta() {
     fasePrecedente.current = timer.fase
   }, [timer.fase, timer.mancanti, audioPronto])
 
+  const fasePrecedenteRuolo = useRef<string | null | undefined>(undefined)
+  useEffect(() => {
+    const fase = asta?.current_role_phase ?? null
+    if (
+      audioPronto &&
+      fasePrecedenteRuolo.current !== undefined &&
+      fasePrecedenteRuolo.current !== fase
+    ) {
+      suonoCampanella()
+    }
+    fasePrecedenteRuolo.current = fase
+  }, [asta?.current_role_phase, audioPronto])
+
   useEffect(() => {
     const quanti = rose?.length ?? 0
     if (acquistiPrecedenti.current >= 0 && quanti > acquistiPrecedenti.current && audioPronto) {
@@ -117,6 +131,7 @@ export function PaginaSchermoAsta() {
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-verde-notte">
       <BarraAlta
+        reparto={asta?.current_role_phase ?? null}
         nomeLega={lega?.name}
         connesso={connesso}
         inPausa={asta?.status === 'paused'}
@@ -188,6 +203,7 @@ function SchermataAttivazione({ lega, onAttiva }: { lega?: string; onAttiva: () 
 // ─── Barra alta: il riepilogo totale della serata ───────────────────────────
 
 function BarraAlta({
+  reparto,
   nomeLega,
   connesso,
   inPausa,
@@ -198,6 +214,7 @@ function BarraAlta({
   suoni,
   onSuoni,
 }: {
+  reparto: Ruolo | null
   nomeLega?: string
   connesso: boolean
   inPausa: boolean
@@ -215,6 +232,14 @@ function BarraAlta({
       <div className="flex items-center gap-6">
         <MarchioFantasta className="text-3xl" />
         <p className="min-w-0 flex-1 truncate text-2xl font-bold text-nebbia">{nomeLega}</p>
+
+        {reparto && (
+          <span
+            className={`rounded-full px-4 py-1 text-xl font-bold ${CLASSE_RUOLO[reparto]}`}
+          >
+            {NOME_RUOLO[reparto]}
+          </span>
+        )}
 
         {inPausa && (
           <span className="rounded-full bg-oro/20 px-4 py-1 text-xl font-bold text-oro">

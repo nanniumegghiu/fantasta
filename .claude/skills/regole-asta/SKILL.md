@@ -70,6 +70,21 @@ Sono i casi che rompono l'asta davanti a dieci persone.
 - [ ] Amministratore che annulla l'ultima aggiudicazione: crediti restituiti, slot liberato,
       calciatore di nuovo fra gli svincolati, evento registrato.
 - [ ] Riconnessione a 2 secondi dalla fine: il telefono riprende da 2 secondi, non da capo.
+- [ ] Lotto aperto dal server senza offerte: allo scadere viene **passato**, non aggiudicato, e non
+      viene riproposto.
+- [ ] Assegnazione rapida oltre il massimo offribile di quella squadra: rifiutata anche
+      all'amministratore.
+- [ ] Un calciatore su cui c'è già un'offerta: l'amministratore non può passarlo, semmai aggiudicarlo.
+
+## Se scrivi una prova che manipola il tempo
+
+Un compito pianificato chiude i lotti scaduti ogni dieci secondi. Se la tua prova fa scadere un
+lotto spostando indietro l'ora dell'ultimo rilancio, **la rete interverrà al posto tuo** e non
+capirai più chi ha chiuso cosa.
+
+Sospendila all'inizio e riaccendila alla fine, come fanno `scripts/verifica-asta.mjs` e
+`scripts/verifica-asta-completa.mjs`. Lasciarla spenta lascerebbe l'app senza rete: riaccenderla
+non è una cortesia, è parte della prova.
 
 ## Cosa non deve mai succedere
 

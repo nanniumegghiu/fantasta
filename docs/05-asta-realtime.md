@@ -3,7 +3,7 @@
 **Scopo** · Descrivere il meccanismo che tiene sincronizzate tutte le superfici durante l'asta:
 canale realtime, timer autoritativo, offerte simultanee, riconnessioni.
 **Proprietario** · backend-engineer, con il frontend-engineer come consumatore del contratto
-**Stato** · 🟡 motore, timer e sincronia realizzati e verificati · varianti, poteri admin e passo 🔴
+**Stato** · ✅ motore, timer, sincronia, varianti, passo e poteri dell amministratore realizzati e verificati
 **Data** · 2026-09-02
 
 ---
@@ -56,10 +56,13 @@ il telefono a decidere, e un orologio sfasato falserebbe l'asta. Il meccanismo p
    Il server **ricalcola dai propri istanti** e chiude solo se è davvero scaduto. Se non lo è,
    rifiuta e non succede niente. Verificato: la richiesta anticipata riceve «Il tempo non è ancora
    finito».
-2. 🔴 **Non ancora costruito.** Un compito pianificato sul server che chiuda i lotti scaduti che
-   nessuno ha segnalato, per esempio perché tutti hanno chiuso l'app. Finché non c'è, un lotto
-   lasciato aperto da tutti resta aperto: in una stanza dove qualcuno sta sempre guardando lo
-   schermo non capita, ma è un buco dichiarato e non un dettaglio.
+2. ✅ Un compito pianificato sul server passa **ogni dieci secondi** a chiudere i lotti scaduti che
+   nessuno ha segnalato, per esempio perché tutti hanno chiuso l'app. Nel caso normale non fa
+   niente, perché il lotto è già stato chiuso dalla prima gamba. Verificato: un lotto scaduto e
+   non segnalato viene chiuso e aggiudicato al prezzo giusto.
+
+Il secondo meccanismo è la rete di sicurezza; il primo è ciò che rende la chiusura istantanea agli
+occhi di chi è al tavolo.
 
 ### 2.3 Scarto degli orologi
 
@@ -141,11 +144,12 @@ lotto si chiude e l'offerta viene rifiutata. Mai entrambe.
 
 - 🔴 Comportamento se internet cade a tutta la stanza. Va deciso se serve una modalità di ripiego in
   cui l'amministratore registra tutto a mano e si risincronizza dopo.
-- 🟡 Frequenza del compito pianificato di sicurezza: da tarare sul costo effettivo.
+- ✅ Compito pianificato di sicurezza: ogni dieci secondi, versionato nella migrazione 0010.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-03 | Varianti, passo, poteri dell amministratore e rete di sicurezza pianificata. |
 | 1.1 | 2026-09-02 | Motore realizzato. Semplificazione: il countdown si ricava dal solo `last_bid_at`, senza un secondo istante da tenere allineato. |
 | 1.0 | 2026-09-02 | Prima stesura. |

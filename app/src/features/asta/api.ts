@@ -18,6 +18,8 @@ export type Asta = {
   countdown_seconds: number
   nomination_order: string[]
   current_turn_index: number
+  current_role_phase: 'P' | 'D' | 'C' | 'A' | null
+  random_pool_filter: { quotazione_minima?: number }
 }
 
 export type CalciatoreInAsta = {
@@ -238,21 +240,32 @@ async function chiamaFunzione<T>(nome: string, argomenti: Record<string, unknown
   return prima
 }
 
+export type ImpostazioniAsta = {
+  metodo: 'chiamata' | 'alfabetico' | 'random'
+  variante: 'totale' | 'per_ruolo' | 'ibrida'
+  conduzione: 'app' | 'live'
+  tipoChiamata: 'libera' | 'con_passo'
+  secondiInattivita: number
+  secondiCountdown: number
+  quotazioneMinima: number | null
+}
+
 export function useConfiguraAsta(idLega: string | undefined) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (v: {
-      secondiInattivita: number
-      secondiCountdown: number
-    }): Promise<EsitoSemplice> =>
+    mutationFn: (v: ImpostazioniAsta): Promise<EsitoSemplice> =>
       chiamaFunzione('configura_asta', {
         p_lega: idLega,
-        p_metodo: 'chiamata',
-        p_variante: 'totale',
-        p_conduzione: 'app',
-        p_tipo_chiamata: 'libera',
+        p_metodo: v.metodo,
+        p_variante: v.variante,
+        p_conduzione: v.conduzione,
+        p_tipo_chiamata: v.tipoChiamata,
         p_secondi_inattivita: v.secondiInattivita,
         p_secondi_countdown: v.secondiCountdown,
+        p_filtro_random:
+          v.metodo === 'random' && v.quotazioneMinima
+            ? { quotazione_minima: v.quotazioneMinima }
+            : {},
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['asta', idLega] }),
   })
@@ -324,4 +337,96 @@ export function useChiudiLottoScaduto(idLega: string | undefined) {
       qc.invalidateQueries({ queryKey: ['rose', idLega] })
     },
   })
+}
+
+// ─── Metodi automatici ──────────────────────────────────────────────────────
+
+export function useApriProssimoLotto(idLega: string | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      chiamaFunzione<{ esito: string; messaggio: string; lotto: string | null }>(
+        'apri_prossimo_lotto',
+        { p_lega: idLega },
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['asta', idLega] })
+      qc.invalidateQueries({ queryKey: ['lotto'] })
+    },
+  })
+}
+
+// ─── Chiamata con passo ─────────────────────────────────────────────────────
+
+export function usePassa(idLega: string | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (idLotto: string) =>
+      chiamaFunzione<{ esito: string; messaggio: string; chiuso: boolean }>('passa', {
+        p_lotto: idLotto,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['lotto'] })
+      qc.invalidateQueries({ queryKey: ['asta', idLega] })
+      qc.invalidateQueries({ queryKey: ['rose', idLega] })
+      qc.invalidateQueries({ queryKey: ['budget', idLega] })
+    },
+  })
+}
+
+/** Chi ha già passato su questo lotto: serve a spegnere il pulsante. */
+export function usePassiDelLotto(idLotto: string | undefined) {
+  return useQuery({
+    queryKey: ['passi', idLotto],
+    enabled: Boolean(idLotto),
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await richiediSupabase()
+        .from('lot_passes')
+        .select('team_id')
+        .eq('lot_id', idLotto!)
+      if (error) throw new Error(messaggioErrore(error))
+      return (data ?? []).map((r) => (r as { team_id: string }).team_id)
+    },
+  })
+}
+
+// ─── Poteri dell'amministratore ─────────────────────────────────────────────
+
+function useAzioneAdmin<T>(idLega: string | undefined, nome: string, argomenti: (v: T) => Record<string, unknown>) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: T) => chiamaFunzione<EsitoSemplice>(nome, argomenti(v)),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['asta', idLega] })
+      qc.invalidateQueries({ queryKey: ['lotto'] })
+      qc.invalidateQueries({ queryKey: ['budget', idLega] })
+      qc.invalidateQueries({ queryKey: ['rose', idLega] })
+      qc.invalidateQueries({ queryKey: ['lega', idLega] })
+    },
+  })
+}
+
+export function useAggiudicaOra(idLega: string | undefined) {
+  return useAzioneAdmin<string>(idLega, 'aggiudica_ora', (idLotto) => ({ p_lotto: idLotto }))
+}
+
+export function usePassaLotto(idLega: string | undefined) {
+  return useAzioneAdmin<string>(idLega, 'passa_lotto', (idLotto) => ({ p_lotto: idLotto }))
+}
+
+export function useAssegnaRapido(idLega: string | undefined) {
+  return useAzioneAdmin<{ idCalciatore: number; idSquadra: string; prezzo: number }>(
+    idLega,
+    'assegna_rapido',
+    (v) => ({
+      p_lega: idLega,
+      p_player_id: v.idCalciatore,
+      p_squadra: v.idSquadra,
+      p_prezzo: v.prezzo,
+    }),
+  )
+}
+
+export function useAnnullaUltima(idLega: string | undefined) {
+  return useAzioneAdmin<void>(idLega, 'annulla_ultima_aggiudicazione', () => ({ p_lega: idLega }))
 }

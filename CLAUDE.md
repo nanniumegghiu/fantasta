@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 1.5 · **Data** · 2026-09-02
+**Versione documento** · 1.6 · **Data** · 2026-09-03
 
 ---
 
@@ -175,17 +175,16 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Fetta 1: leghe, inviti, squadre, regolamento in PDF | ✅ 30 prove su 30 lato server |
 | Fetta 2: importazione listone e statistiche, tabella | ✅ 17 prove su 17 lato server |
 | Fetta 3: lista obiettivi con i quattro metodi | ✅ 24 prove su 24 lato server |
-| Fetta 4a: motore d asta, timer, aggiudicazioni | ✅ 26 prove su 26 lato server |
-| Fetta 4b: schermo condiviso con i suoni | 🟡 scritto, mai aperto in un browser |
+| Fetta 4: asta completa, sette varianti, passo, poteri admin | ✅ 57 prove su 57 lato server |
+| Schermo condiviso con i suoni | 🟡 scritto, mai aperto in un browser |
 | Tutte le schermate | 🟡 scritte e compilate, **mai aperte in un browser** |
 | Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
-| Varianti d asta, poteri admin, chiamata con passo | 🔴 rifiutate dal server, non finte |
 | Fette 5, 6, 7: facepack, esportazione, scambi | 🔴 non iniziate |
 
 **Prossimo passo** · Aprire l'app in un browser e provare il giro completo su due dispositivi:
 creo la lega, mando il codice, il secondo entra, apro il listone, preparo gli obiettivi e faccio
-un'asta di prova con lo schermo condiviso acceso. Poi le sotto-fette 4c, 4d ed 4e: varianti,
-poteri dell'amministratore e chiamata con passo.
+un'asta di prova con lo schermo condiviso acceso. Poi la Fetta 5, il facepack, e la Fetta 6,
+l'esportazione delle rose.
 
 ---
 
@@ -201,6 +200,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciassette prove sulla lettura dei file e sull importazione del listone. Costruisce da zero un vero `.xlsx` per provarci sopra. |
 | `node scripts/verifica-obiettivi.mjs` | Ventiquattro prove sulla lista obiettivi. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 | `node scripts/verifica-asta.mjs` | Ventisei prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete. |
+| `node scripts/verifica-asta-completa.mjs` | Trentuno prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore e la rete di sicurezza. |
 
 ---
 
@@ -225,6 +225,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.6 | 2026-09-03 | Fetta 4 completata: sette varianti, modalità live, chiamata con passo, poteri dell amministratore, rete di sicurezza pianificata. |
 | 1.5 | 2026-09-02 | Fetta 4a e 4b costruite: motore d asta con timer del server, schermo condiviso con riepilogo totale e suoni sintetizzati. Due difese che bloccavano il server stesso corrette. |
 | 1.4 | 2026-09-02 | Fetta 3 costruita: lista obiettivi con i quattro metodi, invisibile a chiunque altro. |
 | 1.3 | 2026-09-02 | Fetta 2 costruita: lettore di fogli di calcolo senza dipendenze (ADR-0012), importazione con anteprima, tabella del listone. |
