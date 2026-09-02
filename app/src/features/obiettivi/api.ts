@@ -56,10 +56,34 @@ async function esegui(promessa: PromiseLike<{ error: unknown }>) {
   if (error) throw new Error(messaggioErrore(error))
 }
 
-// ─── Metodi attivi ──────────────────────────────────────────────────────────
+// ─── Il metodo e le sue aggiunte ────────────────────────────────────────────
 
-export function useImpostaMetodi(idLega: string | undefined) {
-  return useAzione<{ idLista: string; campo: 'usa_fasce' | 'usa_tetti' | 'usa_slot' | 'usa_incroci'; acceso: boolean }>(
+/** Sceglie fasce oppure slot, e segna la scelta come fatta. */
+export function useScegliMetodo(idLega: string | undefined) {
+  return useAzione<{ idLista: string; metodo: 'fasce' | 'slot' }>(idLega, async (v) =>
+    esegui(
+      richiediSupabase()
+        .from('target_lists')
+        .update({ metodo: v.metodo, metodo_confermato: true })
+        .eq('id', v.idLista),
+    ),
+  )
+}
+
+/** Riporta alla schermata di scelta senza cancellare niente. */
+export function useRiapriScelta(idLega: string | undefined) {
+  return useAzione<string>(idLega, async (idLista) =>
+    esegui(
+      richiediSupabase()
+        .from('target_lists')
+        .update({ metodo_confermato: false })
+        .eq('id', idLista),
+    ),
+  )
+}
+
+export function useImpostaOpzione(idLega: string | undefined) {
+  return useAzione<{ idLista: string; campo: 'usa_tetti' | 'usa_incroci'; acceso: boolean }>(
     idLega,
     async (v) =>
       esegui(
@@ -69,6 +93,63 @@ export function useImpostaMetodi(idLega: string | undefined) {
           .eq('id', v.idLista),
       ),
   )
+}
+
+// ─── Riordino ───────────────────────────────────────────────────────────────
+
+/**
+ * Riscrive l'ordine di un gruppo in una chiamata sola.
+ * Spostare una riga cambia la posizione di tutte quelle sotto: mandarle una
+ * per una farebbe riassestare la lista a scatti su una connessione lenta.
+ */
+export function useRiordinaObiettivi(idLega: string | undefined) {
+  return useAzione<Array<{ id: string; priorita: number; fascia?: string | null }>>(
+    idLega,
+    async (righe) => {
+      const { error } = await richiediSupabase().rpc('riordina_obiettivi', { p_righe: righe })
+      if (error) throw new Error(messaggioErrore(error))
+    },
+  )
+}
+
+export function useRiordinaCandidati(idLega: string | undefined) {
+  return useAzione<{ idSlot: string; ordine: string[] }>(idLega, async (v) => {
+    const { error } = await richiediSupabase().rpc('riordina_candidati', {
+      p_slot: v.idSlot,
+      p_ordine: v.ordine,
+    })
+    if (error) throw new Error(messaggioErrore(error))
+  })
+}
+
+// ─── Aggiunte fatte dal posto giusto ────────────────────────────────────────
+
+/** Crea l'obiettivo se manca e lo aggancia allo slot: un gesto solo. */
+export function useAggiungiASlot(idLega: string | undefined) {
+  return useAzione<{ idSlot: string; idCalciatori: number[] }>(idLega, async (v) => {
+    const { error } = await richiediSupabase().rpc('aggiungi_a_slot', {
+      p_slot: v.idSlot,
+      p_calciatori: v.idCalciatori,
+    })
+    if (error) throw new Error(messaggioErrore(error))
+  })
+}
+
+export function useAggiungiAIncrocio(idLega: string | undefined) {
+  return useAzione<{ idIncrocio: string; idCalciatori: number[] }>(idLega, async (v) => {
+    const { error } = await richiediSupabase().rpc('aggiungi_a_incrocio', {
+      p_incrocio: v.idIncrocio,
+      p_calciatori: v.idCalciatori,
+    })
+    if (error) throw new Error(messaggioErrore(error))
+  })
+}
+
+export function useCreaSlotStandard(idLega: string | undefined) {
+  return useAzione<string>(idLega, async (idLista) => {
+    const { error } = await richiediSupabase().rpc('crea_slot_standard', { p_lista: idLista })
+    if (error) throw new Error(messaggioErrore(error))
+  })
 }
 
 // ─── Obiettivi ──────────────────────────────────────────────────────────────

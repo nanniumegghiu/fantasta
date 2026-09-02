@@ -63,13 +63,23 @@ export type Incrocio = {
   pairing_members: MembroIncrocio[]
 }
 
+/**
+ * Il metodo di preparazione. Se ne sceglie **uno**: fasce e slot rispondono
+ * alla stessa domanda in due modi diversi, e tenerli accesi insieme non aiuta
+ * a decidere, raddoppia il lavoro.
+ */
+export type MetodoLista = 'fasce' | 'slot'
+
 export type ListaObiettivi = {
   id: string
   league_id: string
   user_id: string
-  usa_fasce: boolean
+  metodo: MetodoLista
+  /** Finché è falso, la schermata apre sulla scelta del metodo. */
+  metodo_confermato: boolean
+  /** Aggiunta accendibile in tutti e due i metodi. */
   usa_tetti: boolean
-  usa_slot: boolean
+  /** Indipendente dal metodo: si affianca a entrambi. */
   usa_incroci: boolean
   tiers: Fascia[]
   targets: Obiettivo[]

@@ -260,14 +260,27 @@ esito(
   `"${incrocio.corpo?.[0]?.name}" con ${membri.corpo?.length} portieri`,
 )
 
-const metodi = await scrivi(amico, `target_lists?id=eq.${listaAmico}`, 'PATCH', {
-  usa_slot: true,
+// Fasce e slot sono alternativi: la lista ha UN metodo, non due interruttori.
+const scelta = await scrivi(amico, `target_lists?id=eq.${listaAmico}`, 'PATCH', {
+  metodo: 'slot',
+  metodo_confermato: true,
   usa_incroci: true,
 })
 esito(
-  'Il proprietario accende e spegne i metodi che preferisce',
-  metodi.stato === 200 && metodi.corpo?.[0]?.usa_slot === true,
-  `fasce ${metodi.corpo?.[0]?.usa_fasce}, tetti ${metodi.corpo?.[0]?.usa_tetti}, slot ${metodi.corpo?.[0]?.usa_slot}, incroci ${metodi.corpo?.[0]?.usa_incroci}`,
+  'Il proprietario sceglie un metodo solo, e le aggiunte restano separate',
+  scelta.stato === 200 &&
+    scelta.corpo?.[0]?.metodo === 'slot' &&
+    scelta.corpo?.[0]?.metodo_confermato === true,
+  `metodo ${scelta.corpo?.[0]?.metodo}, tetti ${scelta.corpo?.[0]?.usa_tetti}, incroci ${scelta.corpo?.[0]?.usa_incroci}`,
+)
+
+const metodoAssurdo = await scrivi(amico, `target_lists?id=eq.${listaAmico}`, 'PATCH', {
+  metodo: 'entrambi',
+})
+esito(
+  'Non esiste un metodo che li combini',
+  metodoAssurdo.stato >= 400,
+  `HTTP ${metodoAssurdo.stato}: ${metodoAssurdo.corpo?.message?.slice(0, 70) ?? ''}`,
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -397,6 +410,120 @@ esito(
   'Il proprietario vede i suoi obiettivi con fascia e calciatore uniti',
   mieiObiettivi.corpo?.length === 5 && mieiObiettivi.corpo[0]?.players?.name === 'Lautaro Martinez',
   `${mieiObiettivi.corpo?.length} obiettivi; il primo: ${JSON.stringify(mieiObiettivi.corpo?.[0])?.slice(0, 110)}`,
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Le aggiunte fatte dal posto giusto, e il riordino
+// ═══════════════════════════════════════════════════════════════════════════
+
+const standard = await rpc(amico, 'crea_slot_standard', { p_lista: listaAmico })
+const slotCreati = await sql(`select role, label, position from public.roster_slots
+  where list_id = '${listaAmico}' order by role, position;`)
+esito(
+  'Gli slot si creano in blocco dalla rosa della lega',
+  slotCreati.length === 25 && slotCreati.some((s) => s.label === 'Portiere 1'),
+  `in tutto ${slotCreati.length} slot per una rosa da 25 (${standard.corpo} creati adesso, gli altri c'erano già); il primo dei portieri si chiama "${slotCreati.find((s) => s.role === 'P')?.label}"`,
+)
+
+const slotAttacco = (await sql(`select id from public.roster_slots
+  where list_id = '${listaAmico}' and role = 'A' order by position limit 1;`))[0].id
+
+const dentroSlot = await rpc(amico, 'aggiungi_a_slot', {
+  p_slot: slotAttacco,
+  p_calciatori: [909001, 909002],
+})
+const candidati = await sql(`select c.position, p.name from public.slot_candidates c
+  join public.targets t on t.id = c.target_id
+  join public.players p on p.id = t.player_id
+  where c.slot_id = '${slotAttacco}' order by c.position;`)
+esito(
+  'Aggiungere a uno slot crea l obiettivo e lo aggancia, in un gesto solo',
+  dentroSlot.corpo === 2 && candidati.length === 2,
+  `candidati in ordine: ${candidati.map((c) => c.name).join(', ')}`,
+)
+
+const ruoloSbagliato = await rpc(amico, 'aggiungi_a_slot', {
+  p_slot: slotAttacco,
+  p_calciatori: [909003],
+})
+esito(
+  'Uno slot di attaccanti non accoglie un portiere',
+  ruoloSbagliato.corpo === 0,
+  `calciatori aggiunti: ${ruoloSbagliato.corpo}`,
+)
+
+const aggiuntaAltrui = await rpc(admin, 'aggiungi_a_slot', {
+  p_slot: slotAttacco,
+  p_calciatori: [909006],
+})
+esito(
+  'Nessuno aggiunge candidati negli slot di un altro',
+  aggiuntaAltrui.corpo === 0,
+  `calciatori aggiunti dall amministratore: ${aggiuntaAltrui.corpo}`,
+)
+
+// Riordino dei candidati: si rovescia l'ordine e si ricontrolla.
+const idCandidati = (await sql(`select target_id from public.slot_candidates
+  where slot_id = '${slotAttacco}' order by position;`)).map((c) => c.target_id)
+await rpc(amico, 'riordina_candidati', {
+  p_slot: slotAttacco,
+  p_ordine: [...idCandidati].reverse(),
+})
+const dopoRiordino = await sql(`select p.name from public.slot_candidates c
+  join public.targets t on t.id = c.target_id
+  join public.players p on p.id = t.player_id
+  where c.slot_id = '${slotAttacco}' order by c.position;`)
+esito(
+  'I candidati di uno slot si riordinano',
+  dopoRiordino[0].name === candidati[1].name,
+  `prima "${candidati.map((c) => c.name).join(', ')}", ora "${dopoRiordino.map((c) => c.name).join(', ')}"`,
+)
+
+const riordinoAltrui = await rpc(admin, 'riordina_candidati', {
+  p_slot: slotAttacco,
+  p_ordine: idCandidati,
+})
+esito(
+  'Nessuno riordina gli slot di un altro',
+  riordinoAltrui.corpo === 0,
+  `righe toccate dall amministratore: ${riordinoAltrui.corpo}`,
+)
+
+// Riordino degli obiettivi per priorità.
+const daRiordinare = await sql(`select id from public.targets
+  where list_id = '${listaAmico}' order by created_at limit 3;`)
+const quante = await rpc(amico, 'riordina_obiettivi', {
+  p_righe: daRiordinare.map((r, i) => ({ id: r.id, priorita: daRiordinare.length - i })),
+})
+const priorita = await sql(`select priority from public.targets
+  where id in (${daRiordinare.map((r) => `'${r.id}'`).join(',')}) order by priority;`)
+esito(
+  'Gli obiettivi si riordinano in una chiamata sola',
+  quante.corpo === 3 && priorita[0].priority === 1,
+  `righe toccate ${quante.corpo}, priorità ora ${priorita.map((p) => p.priority).join(', ')}`,
+)
+
+const riordinoObiettiviAltrui = await rpc(admin, 'riordina_obiettivi', {
+  p_righe: daRiordinare.map((r) => ({ id: r.id, priorita: 99 })),
+})
+const nonToccate = (await sql(`select count(*)::int n from public.targets
+  where id in (${daRiordinare.map((r) => `'${r.id}'`).join(',')}) and priority = 99;`))[0].n
+esito(
+  'Nessuno riordina gli obiettivi di un altro',
+  riordinoObiettiviAltrui.corpo === 0 && nonToccate === 0,
+  `righe toccate ${riordinoObiettiviAltrui.corpo}, priorità cambiate ${nonToccate}`,
+)
+
+// Incroci: solo portieri.
+const gruppo = (await sql(`select id from public.goalkeeper_pairings where list_id = '${listaAmico}' limit 1;`))[0].id
+const soloPortieri = await rpc(amico, 'aggiungi_a_incrocio', {
+  p_incrocio: gruppo,
+  p_calciatori: [909003, 909001],
+})
+esito(
+  'In un incrocio entrano solo portieri',
+  soloPortieri.corpo === 1,
+  `su due calciatori proposti, uno portiere e uno attaccante, ne è entrato ${soloPortieri.corpo}`,
 )
 
 // ─── Riepilogo ──────────────────────────────────────────────────────────────

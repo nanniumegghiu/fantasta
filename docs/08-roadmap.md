@@ -73,7 +73,7 @@ lo scorrimento è fluido con tutte le righe caricate.
 | Tabella con filtri per ruolo e squadra e ordinamento su ogni colonna | 🟡 scritta, **mai aperta in un browser** |
 | Prova sul file ufficiale vero | 🔴 serve il file |
 
-### Fetta 3 · Lista obiettivi — 🟡 costruita, mai vista in un browser
+### Fetta 3 · Lista obiettivi — 🟡 costruita, poi rifatta dopo la prova d uso
 
 I quattro metodi richiesti, tutti facoltativi e combinabili: fasce, tetto di spesa, slot della rosa
 ideale, incrocio portieri. Note libere per calciatore.
@@ -88,6 +88,7 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Invisibilità agli altri, **amministratore compreso** | ✅ sette prove distinte, tutte a zero righe |
 | Schermata con fasce, tetti, note, slot e incroci | 🟡 scritta, **mai aperta in un browser** |
 | Contatore degli obiettivi ancora liberi durante l'asta | 🔴 arriva con la Fetta 4f |
+| Rifatta dopo la prova d uso: un metodo solo, aggiunte dal posto giusto, riordino trascinando | ✅ 34 prove |
 
 ### Fetta 4 · L'asta — ✅ costruita, 🔴 mai vista in un browser
 

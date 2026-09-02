@@ -174,8 +174,18 @@ teniamo solo ciò che serve mostrare.
 Tutte queste tabelle sono **private del proprietario**. Nessun'altra persona della lega, compreso
 l'amministratore, può leggerle.
 
-**`target_lists`** — una per utente per lega. Contiene le preferenze di visualizzazione: quali dei
-quattro metodi il proprietario ha attivato.
+**`target_lists`** — una per utente per lega.
+
+| Campo | Cosa dice |
+|---|---|
+| `metodo` | `fasce` oppure `slot`. **Uno solo**: rispondono alla stessa domanda in due modi alternativi |
+| `metodo_confermato` | Finché è falso, la schermata apre sulla scelta del metodo |
+| `usa_tetti` | Il tetto di spesa, aggiunta accendibile in tutti e due i metodi |
+| `usa_incroci` | L'incrocio portieri, indipendente dal metodo |
+
+> Perché una scelta e non quattro interruttori: vedi
+> `docs/decisioni/2026-09-03-fasce-e-slot-sono-alternativi.md`. La nota su ogni obiettivo non è
+> un'opzione, c'è sempre: è quella che ricompare sul telefono quando quel nome viene chiamato.
 
 **`tiers`** — le fasce: `id`, `list_id`, `name`, `color`, `position`.
 
@@ -220,6 +230,7 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260902233000_registro_cancellazione_a_cascata.sql` | Correzione: il registro immutabile impediva di cancellare una lega |
 | `20260903000000_asta_completa.sql` | Le sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore |
 | `20260903010000_rete_di_sicurezza_pianificata.sql` | Il compito che ogni dieci secondi chiude i lotti scaduti dimenticati |
+| `20260903100000_lista_obiettivi_un_metodo_solo.sql` | `metodo` al posto dei due interruttori, riordino, aggiunte dirette a slot e incroci |
 | `20260903020000_elimina_lega.sql` | `elimina_lega`: cancellazione a cascata, con il nome della lega da riscrivere |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
@@ -253,6 +264,7 @@ lo scalo dei crediti, e l'asta diventa incontestabile solo a parole.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.5 | 2026-09-03 | La lista obiettivi ha un metodo solo. Funzioni di riordino e di aggiunta diretta. |
 | 1.4 | 2026-09-03 | Tabelle dell asta, correzioni ai trigger, eliminazione della lega. |
 | 1.3 | 2026-09-02 | Fetta 3: lista obiettivi con i quattro metodi. Slot e incroci puntano agli obiettivi, non ai calciatori. |
 | 1.2 | 2026-09-02 | Fetta 2: listone e statistiche esistono davvero, con le funzioni di importazione e la vista che li unisce. Aggiunto il concetto di amministratore dell applicazione. |

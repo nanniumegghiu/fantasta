@@ -123,7 +123,11 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
 8. La mia squadra: nome, rosa divisa per ruolo, crediti, spesa per reparto.
 9. Rose degli avversari: tutte le squadre con crediti residui aggiornati.
 10. Listone: tabella filtrabile per ruolo e squadra, ordinabile per ogni statistica, con foto.
-11. **Lista obiettivi**, la schermata più ricca: fasce, tetti di spesa, slot, incroci portieri, note.
+11. **Lista obiettivi**, la schermata più ricca. Si apre sulla **scelta del metodo**, fasce oppure
+    slot, spiegata con due schede invece che con degli interruttori. Scelto il metodo, si lavora
+    dentro quello: i calciatori si aggiungono **dal posto in cui devono finire**, toccando la fascia
+    o lo slot, e si riordinano trascinando. Il tetto di spesa e l'incrocio portieri si accendono
+    quando servono; la nota c'è sempre.
 12. Impostazioni lega, solo amministratore: regole, partecipanti, codice di invito, apertura asta.
 
 **Asta**
