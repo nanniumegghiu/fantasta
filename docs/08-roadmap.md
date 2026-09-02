@@ -89,6 +89,7 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Schermata con fasce, tetti, note, slot e incroci | 🟡 scritta, **mai aperta in un browser** |
 | Contatore degli obiettivi ancora liberi durante l'asta | 🔴 arriva con la Fetta 4f |
 | Rifatta dopo la prova d uso: un metodo solo, aggiunte dal posto giusto, riordino trascinando | ✅ 34 prove |
+| Fasce e slot **divisi per reparto**, con il filtro che nasconde gli altri tre | ✅ 36 prove, `node scripts/verifica-obiettivi.mjs` |
 
 ### Fetta 4 · L'asta — ✅ costruita, 🔴 mai vista in un browser
 
@@ -100,7 +101,7 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | **4c · Varianti** | ✅ tutte e sette, più la modalità live |
 | **4d · Poteri amministratore** | ✅ passa, assegna, aggiudica, annulla, pausa |
 | **4e · Chiamata con passo** | ✅ irreversibile, chiude in anticipo quando resta uno solo |
-| **4f · Aggancio obiettivi** | ✅ tetto e nota del calciatore in asta, nella vista personale |
+| **4f · Aggancio obiettivi** | ✅ tetto e nota del calciatore in asta, nella vista personale; la scorciatoia apre gli obiettivi sul reparto in corso |
 | Rete di sicurezza sui lotti dimenticati | ✅ pianificata ogni dieci secondi |
 | Prova su dispositivi veri | 🔴 |
 
@@ -161,6 +162,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.6 | 2026-09-03 | Fasce per reparto e filtro del reparto in corso. L asta pesca solo dal listone della stagione della lega. |
 | 1.5 | 2026-09-03 | Fetta 4 completata: sette varianti, modalità live, passo, poteri dell amministratore, rete di sicurezza. |
 | 1.4 | 2026-09-02 | Fetta 4a costruita: motore d asta, timer del server, schermo condiviso con i suoni. |
 | 1.3 | 2026-09-02 | Fetta 3 costruita: lista obiettivi con i quattro metodi. |

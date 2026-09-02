@@ -161,7 +161,14 @@ export function PaginaAsta() {
           </div>
         )}
 
-        <Scorciatoie idLega={idLega} sonoAdmin={sonoAdmin} asta={asta} />
+        <Scorciatoie
+          idLega={idLega}
+          sonoAdmin={sonoAdmin}
+          asta={asta}
+          // Il reparto in corso: la lista obiettivi si apre gia' filtrata su
+          // quello, senza gli altri tre a fare rumore.
+          ruolo={lotto?.players.role ?? asta?.current_role_phase ?? null}
+        />
       </main>
     </div>
   )
@@ -578,18 +585,23 @@ function Scorciatoie({
   idLega,
   sonoAdmin,
   asta,
+  ruolo,
 }: {
   idLega: string | undefined
   sonoAdmin: boolean
   asta: { status: string } | null | undefined
+  /** Reparto che si sta chiamando, se c'e'. */
+  ruolo: Ruolo | null
 }) {
   const pausa = usePausaAsta(idLega)
   const inPausa = asta?.status === 'paused'
 
   return (
     <section className="flex flex-wrap gap-2">
-      <Link to={`/lega/${idLega}/obiettivi`}>
-        <Bottone aspetto="secondario">I miei obiettivi</Bottone>
+      <Link to={`/lega/${idLega}/obiettivi${ruolo ? `?ruolo=${ruolo}` : ''}`}>
+        <Bottone aspetto="secondario">
+          {ruolo ? `I miei ${NOME_RUOLO[ruolo].toLowerCase()}` : 'I miei obiettivi'}
+        </Bottone>
       </Link>
       <Link to="/listone">
         <Bottone aspetto="secondario">Listone</Bottone>

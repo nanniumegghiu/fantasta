@@ -15,6 +15,8 @@ export const COLORI_FASCIA: Record<ColoreFascia, { punto: string; bordo: string;
 export type Fascia = {
   id: string
   list_id: string
+  /** Una fascia appartiene a un reparto: durante l'asta si guarda solo quello. */
+  role: Ruolo
   name: string
   color: ColoreFascia
   position: number

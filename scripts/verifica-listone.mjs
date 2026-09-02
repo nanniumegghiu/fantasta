@@ -64,6 +64,12 @@ if (process.argv.includes('--pulisci')) {
   process.exit(0)
 }
 
+// La stagione dei dati di prova non e' mai quella vera: l'importazione
+// del listone ritira i calciatori della stagione indicata che non sono nel
+// file, e con una stagione condivisa manderebbe fuori listone i calciatori
+// veri. E' gia' successo.
+const STAGIONE_DI_PROVA = 'PROVA'
+
 const esiti = []
 function esito(nome, ok, dettaglio) {
   esiti.push({ nome, ok })
@@ -350,13 +356,24 @@ async function leggi(u, percorso) {
   return { stato: r.status, corpo: await r.json().catch(() => null) }
 }
 
+// ─── La sentinella ──────────────────────────────────────────────────────────
+// Un calciatore con identificativo e stagione da listone vero, messo qui
+// prima di ogni importazione di prova. Deve sopravvivere a tutto: alla
+// pulizia, che cancella solo gli identificativi di prova, e all'importazione,
+// che ritira i calciatori della stagione indicata non presenti nel file.
+// Nasce da due danni reali, non da un'ipotesi.
+
+await sql(`insert into public.players (id, season, name, role, serie_a_team, quotation, active)
+  values (4999, '2026/27', 'Sentinella Non Cancellabile', 'A', 'Prova FC', 1, true)
+  on conflict (id) do update set active = true;`)
+
 const normale = await registra('normale')
 const amministratore = await registra('amm')
 await sql(`insert into public.app_admins (user_id) values ('${amministratore.id}')
            on conflict do nothing;`)
 
 const daNonAdmin = await rpc(normale, 'importa_listone', {
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_righe: listone.righe,
 })
 esito(
@@ -368,7 +385,7 @@ esito(
 const idImportati = listone.righe.map((r) => r.id).join(',')
 
 const primaImportazione = await rpc(amministratore, 'importa_listone', {
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_righe: listone.righe,
 })
 // Si controlla che ci siano le SUE righe, non quante ce ne sono in tutto:
@@ -388,7 +405,7 @@ esito(
 )
 
 const seconda = await rpc(amministratore, 'importa_listone', {
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_righe: listone.righe,
 })
 const quanti = (await sql(
@@ -402,7 +419,7 @@ esito(
 
 const ridotto = listone.righe.filter((r) => r.id !== 900321)
 const terza = await rpc(amministratore, 'importa_listone', {
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_righe: ridotto,
 })
 const kean = (await sql("select active from public.players where id = 900321;"))[0]
@@ -413,7 +430,7 @@ esito(
 )
 
 const stat = await rpc(amministratore, 'importa_statistiche', {
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_giornata: 13,
   p_righe: statistiche.righe,
 })
@@ -465,11 +482,17 @@ esito(
 // La sentinella ha un identificativo da listone ufficiale: se dopo la pulizia
 // non c'e' piu', vuol dire che qualcuno ha riallargato la cancellazione.
 
-await sql(`insert into public.players (id, season, name, role, serie_a_team, quotation)
-  values (4999, '2026/27', 'Sentinella Non Cancellabile', 'A', 'Prova FC', 1)
-  on conflict (id) do nothing;`)
+// Prima prova: le importazioni di prova non devono averla toccata.
+const dopoImportazioni = (await sql(
+  "select active from public.players where id = 4999;",
+))[0]
+esito(
+  'Le importazioni di prova non ritirano dal listone i calciatori veri',
+  dopoImportazioni?.active === true,
+  `la sentinella, stagione 2026/27, è ancora in listone: ${dopoImportazioni?.active}`,
+)
 
-// Esattamente le stesse istruzioni del ramo --pulisci.
+// Seconda prova: le stesse istruzioni del ramo --pulisci.
 await sql('delete from public.player_stats where player_id >= 900000;')
 await sql('delete from public.players where id >= 900000;')
 

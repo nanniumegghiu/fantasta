@@ -61,6 +61,12 @@ if (process.argv.includes('--pulisci')) {
   process.exit(0)
 }
 
+// La stagione dei dati di prova non e' mai quella vera: l'importazione
+// del listone ritira i calciatori della stagione indicata che non sono nel
+// file, e con una stagione condivisa manderebbe fuori listone i calciatori
+// veri. E' gia' successo.
+const STAGIONE_DI_PROVA = 'PROVA'
+
 const esiti = []
 function esito(nome, ok, dettaglio) {
   esiti.push({ nome, ok })
@@ -110,12 +116,12 @@ const CALCIATORI = [
   { id: 908402, nome: 'Centrocampo Uno', ruolo: 'C', squadra: 'Prova FC', quotazione: 10 },
   { id: 908403, nome: 'Attacco Uno', ruolo: 'A', squadra: 'Prova FC', quotazione: 10 },
 ]
-await rpc(admin, 'importa_listone', { p_stagione: '2026/27', p_righe: CALCIATORI })
+await rpc(admin, 'importa_listone', { p_stagione: STAGIONE_DI_PROVA, p_righe: CALCIATORI })
 
 const NOME_LEGA = 'Lega da Eliminare'
 const lega = (await rpc(admin, 'crea_lega', {
   p_nome: NOME_LEGA,
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_nome_squadra: 'Squadra Admin',
   p_crediti: 50,
   p_slot_p: 1, p_slot_d: 1, p_slot_c: 1, p_slot_a: 1,

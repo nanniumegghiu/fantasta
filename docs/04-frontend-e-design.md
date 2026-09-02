@@ -128,12 +128,21 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
     dentro quello: i calciatori si aggiungono **dal posto in cui devono finire**, toccando la fascia
     o lo slot, e si riordinano trascinando. Il tetto di spesa e l'incrocio portieri si accendono
     quando servono; la nota c'è sempre.
+
+    Fasce e slot sono **divisi per reparto**, e in cima c'è un filtro che ne lascia vedere uno solo.
+    Scegliendo i nomi per una fascia di difensori non compaiono gli attaccanti: non è un aiuto alla
+    ricerca, è la regola del modello, e il server la fa rispettare comunque.
+
+    Il reparto scelto vive **nell'indirizzo** (`?ruolo=D`), non nello stato del componente. Così la
+    vista personale dell'asta ci porta già filtrata sul reparto che si sta chiamando, e il
+    collegamento si può rimettere fra i preferiti.
 12. Impostazioni lega, solo amministratore: regole, partecipanti, codice di invito, apertura asta.
 
 **Asta**
 
 13. Vista personale dell'asta: calciatore in asta, mie informazioni su di lui, rilanci +1, +5, +10
-    e libero, crediti, obiettivi residui, accesso rapido a rose e listone.
+    e libero, crediti, obiettivi residui, accesso rapido a rose e listone. La scorciatoia agli
+    obiettivi porta al **solo reparto in corso** e lo dice nel nome: «I miei difensori».
 14. Vista amministratore dell'asta: la precedente più passa, assegna, annulla, pausa.
 15. **Schermo condiviso**: la vista da proiettare, senza comandi, con i suoni.
 

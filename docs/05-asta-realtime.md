@@ -97,7 +97,17 @@ crediti sufficienti nemmeno per l'offerta minima.
 Se **tutti** sono da saltare, il reparto è finito: nelle varianti per ruolo si passa al reparto
 successivo, e lo schermo condiviso lo annuncia con la campanella.
 
-### 2.6 Riconnessione
+### 2.6 Da quale listone si pesca
+
+Ogni lega dichiara la sua stagione, e l'asta pesca **solo da quella**. Vale sia per l'estrazione
+automatica, sia per la chiamata: un calciatore di un'altra stagione viene rifiutato con un messaggio
+che nomina tutte e due, così il disallineamento si legge invece di doverlo indovinare.
+
+L'importazione, dal canto suo, ritira i calciatori mancanti della sola stagione che si sta caricando:
+il listone nuovo non cancella la storia del vecchio. Vedi
+`docs/decisioni/2026-09-03-il-listone-ha-una-stagione.md`.
+
+### 2.7 Riconnessione
 
 Chi torna online non ricostruisce niente a mano: richiede lo stato corrente dell'asta e gli eventi
 successivi all'ultimo che aveva ricevuto. Il registro eventi ha un numero progressivo proprio per
@@ -106,7 +116,7 @@ questo. In due richieste è di nuovo allineato.
 Sulla vista personale compare un indicatore di connessione. Se il canale cade, l'utente lo **vede**:
 non gli si lascia credere di essere in asta mentre sta guardando una schermata congelata.
 
-### 2.7 Modalità live
+### 2.8 Modalità live
 
 Quando l'asta è condotta a voce, il timer è spento e nessuno rilancia dal telefono. Il canale resta
 attivo perché lo schermo condiviso e le viste personali mostrino comunque rose, crediti e listone
@@ -150,6 +160,7 @@ lotto si chiude e l'offerta viene rifiutata. Mai entrambe.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-03 | L asta pesca solo dal listone della stagione della lega. |
 | 1.2 | 2026-09-03 | Varianti, passo, poteri dell amministratore e rete di sicurezza pianificata. |
 | 1.1 | 2026-09-02 | Motore realizzato. Semplificazione: il countdown si ricava dal solo `last_bid_at`, senza un secondo istante da tenere allineato. |
 | 1.0 | 2026-09-02 | Prima stesura. |

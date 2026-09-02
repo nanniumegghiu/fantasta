@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 1.7 · **Data** · 2026-09-03
+**Versione documento** · 1.8 · **Data** · 2026-09-03
 
 ---
 
@@ -172,9 +172,9 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Backend Supabase creato e attivo | ✅ progetto `fantasta`, migrazione applicata |
 | Regole di accesso provate violandole | ✅ 7 prove su 7, `node scripts/verifica-sicurezza.mjs` |
 | Registrazione e accesso con email | ✅ verificati con richieste reali |
-| Fetta 1: leghe, inviti, squadre, regolamento in PDF | ✅ 30 prove su 30 lato server |
-| Fetta 2: importazione listone e statistiche, tabella | ✅ 17 prove su 17 lato server |
-| Fetta 3: lista obiettivi, rifatta dopo la prova d uso | ✅ 34 prove su 34 lato server |
+| Fetta 1: leghe, inviti, squadre, regolamento in PDF | ✅ 32 prove su 32 lato server |
+| Fetta 2: importazione listone e statistiche, tabella | ✅ 19 prove su 19 lato server |
+| Fetta 3: lista obiettivi, per reparto dopo la prova d uso | ✅ 36 prove su 36 lato server |
 | Fetta 4: asta completa, sette varianti, passo, poteri admin | ✅ 57 prove su 57 lato server |
 | Schermo condiviso con i suoni | 🟡 scritto, mai aperto in un browser |
 | Tutte le schermate | 🟡 scritte e compilate, **mai aperte in un browser** |
@@ -202,9 +202,9 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 |---|---|
 | `node scripts/prepara-backend.mjs` | Crea il progetto Supabase se manca, scrive le chiavi in `app/.env.local` e applica le migrazioni non ancora applicate. Ripetibile senza danni. |
 | `node scripts/verifica-sicurezza.mjs` | Sette prove sui profili: prova a leggere e scrivere dati altrui e verifica di essere respinto. |
-| `node scripts/verifica-leghe.mjs` | Trenta prove su leghe, inviti, squadre e regolamento. Con `--pulisci` rimuove gli utenti di prova. |
-| `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciassette prove sulla lettura dei file e sull importazione del listone. Costruisce da zero un vero `.xlsx` per provarci sopra. |
-| `node scripts/verifica-obiettivi.mjs` | Trentaquattro prove sulla lista obiettivi. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
+| `node scripts/verifica-leghe.mjs` | Trentadue prove su leghe, inviti, squadre e regolamento. Con `--pulisci` rimuove gli utenti di prova. |
+| `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciannove prove sulla lettura dei file e sull importazione del listone. Due sono la sentinella: un calciatore vero che deve sopravvivere alle prove e alla pulizia. Costruisce da zero un vero `.xlsx` per provarci sopra. |
+| `node scripts/verifica-obiettivi.mjs` | Trentasei prove sulla lista obiettivi, comprese quelle che vietano di mettere un attaccante in una fascia di difensori. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 | `node scripts/verifica-asta.mjs` | Ventisei prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete. |
 | `node scripts/verifica-asta-completa.mjs` | Trentuno prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore e la rete di sicurezza. |
 | `node scripts/verifica-eliminazione-lega.mjs` | Undici prove sull eliminazione di una lega: chi può, la conferma del nome, e che non resti niente in giro. |
@@ -232,6 +232,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.8 | 2026-09-03 | Fasce e slot divisi per reparto, con il filtro che nasconde gli altri tre. L asta pesca solo dal listone della stagione della lega. |
 | 1.7 | 2026-09-03 | Lista obiettivi rifatta: si sceglie un metodo, fasce o slot, e si aggiunge dal posto giusto. Riordino trascinando. |
 | 1.6 | 2026-09-03 | Fetta 4 completata: sette varianti, modalità live, chiamata con passo, poteri dell amministratore, rete di sicurezza pianificata. |
 | 1.5 | 2026-09-02 | Fetta 4a e 4b costruite: motore d asta con timer del server, schermo condiviso con riepilogo totale e suoni sintetizzati. Due difese che bloccavano il server stesso corrette. |

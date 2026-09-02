@@ -187,14 +187,22 @@ l'amministratore, può leggerle.
 > `docs/decisioni/2026-09-03-fasce-e-slot-sono-alternativi.md`. La nota su ogni obiettivo non è
 > un'opzione, c'è sempre: è quella che ricompare sul telefono quando quel nome viene chiamato.
 
-**`tiers`** — le fasce: `id`, `list_id`, `name`, `color`, `position`.
+**`tiers`** — le fasce: `id`, `list_id`, `role`, `name`, `color`, `position`.
+
+Una fascia **appartiene a un reparto**, come già facevano gli slot. Il ruolo non è un modo di
+visualizzare, è la prima divisione della preparazione: durante l'asta si chiamano i portieri, e in
+quel momento gli altri tre reparti sono rumore da nascondere. Conseguenza pratica: una fascia di
+difensori non accoglie attaccanti, e quando scegli i nomi non ti vengono nemmeno proposti. Il nome
+può ripetersi fra reparti diversi, l'unicità è su `(list_id, role, name)`.
+
+Alla creazione della lista nascono tre fasce per ognuno dei quattro reparti, dodici in tutto.
 
 **`targets`** — il singolo obiettivo.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | `id`, `list_id`, `player_id` | | |
-| `tier_id` | uuid | Facoltativo, metodo delle fasce |
+| `tier_id` | uuid | Facoltativo, metodo delle fasce. La fascia deve essere del reparto del calciatore: `aggiungi_a_fascia` e `riordina_obiettivi` rifiutano il resto |
 | `max_price` | int | Facoltativo, metodo del budget massimo |
 | `priority` | int | Ordine dentro la fascia |
 | `note` | text | Testo libero, mostrato durante l'asta |
@@ -233,6 +241,8 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903120000_invito_dice_se_sei_gia_dentro.sql` | L anteprima dell invito dice se chi guarda fa già parte della lega |
 | `20260903100000_lista_obiettivi_un_metodo_solo.sql` | `metodo` al posto dei due interruttori, riordino, aggiunte dirette a slot e incroci |
 | `20260903020000_elimina_lega.sql` | `elimina_lega`: cancellazione a cascata, con il nome della lega da riscrivere |
+| `20260903140000_fasce_per_ruolo.sql` | `tiers.role` obbligatorio, fasce di partenza per reparto, `aggiungi_a_fascia`, riordino che non mescola i reparti |
+| `20260903150000_asta_rispetta_la_stagione.sql` | L asta pesca solo dal listone della stagione della lega |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

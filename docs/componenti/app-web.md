@@ -78,7 +78,7 @@ volta sola non valeva la pena aprirlo.
 | `/lega/:id` | Riepilogo: asta, listone, invito, partecipanti, la mia squadra, regole, regolamento. |
 | `/lega/:id/asta` | La vista personale: rilanci, passo, budget, poteri se sei l amministratore. |
 | `/lega/:id/asta/schermo` | Lo schermo condiviso da proiettare. Nessun dato privato. |
-| `/lega/:id/obiettivi` | La lista obiettivi: fasce, tetti, note, slot, incroci. Privata. |
+| `/lega/:id/obiettivi` | La lista obiettivi: fasce, tetti, note, slot, incroci. Privata. Accetta `?ruolo=P|D|C|A` e apre già filtrata su quel reparto. |
 | `/listone` | Tabella dei calciatori: filtri per ruolo e squadra, ordinamento su ogni colonna. |
 | `/importazione` | Caricamento di listone e statistiche. Solo amministratori dell applicazione. |
 | qualsiasi altro | Rimanda a `/leghe`. |
@@ -126,6 +126,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.6 | 2026-09-03 | Obiettivi divisi per reparto con il filtro in cima; il reparto sta nell indirizzo, e l asta ci porta su quello in corso. |
 | 1.5 | 2026-09-03 | Corretti due difetti segnalati all uso: il campo password si riempiva da solo e mancava la conferma in registrazione. |
 | 1.4 | 2026-09-03 | Fetta 4: vista personale dell asta, schermo condiviso, impostazioni pre-asta e pannello di conduzione. |
 | 1.3 | 2026-09-02 | Fetta 3: schermata della lista obiettivi e selettore dei calciatori. |

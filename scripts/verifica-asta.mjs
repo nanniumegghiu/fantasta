@@ -95,6 +95,12 @@ process.on('exit', () => {
   void reteAttiva(true)
 })
 
+// La stagione dei dati di prova non e' mai quella vera: l'importazione
+// del listone ritira i calciatori della stagione indicata che non sono nel
+// file, e con una stagione condivisa manderebbe fuori listone i calciatori
+// veri. E' gia' successo.
+const STAGIONE_DI_PROVA = 'PROVA'
+
 const esiti = []
 function esito(nome, ok, dettaglio) {
   esiti.push({ nome, ok })
@@ -155,11 +161,11 @@ for (const r of RUOLI) {
     CALCIATORI.push({ id: id++, nome: `${r}${i} Prova`, ruolo: r, squadra: 'Prova FC', quotazione: 5 })
   }
 }
-await rpc(admin, 'importa_listone', { p_stagione: '2026/27', p_righe: CALCIATORI })
+await rpc(admin, 'importa_listone', { p_stagione: STAGIONE_DI_PROVA, p_righe: CALCIATORI })
 
 const lega = (await rpc(admin, 'crea_lega', {
   p_nome: 'Lega Asta',
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_nome_squadra: 'Squadra Admin',
   p_crediti: 20,
   p_slot_p: 1, p_slot_d: 1, p_slot_c: 1, p_slot_a: 1,
@@ -453,8 +459,11 @@ while (giri < 20) {
     .filter((r) => r.liberi > 0)
     .map((r) => r.role)
 
+  // Solo il listone di prova: da quando l'asta rispetta la stagione della
+  // lega, pescare fra i calciatori veri porterebbe a chiamate rifiutate.
   const disponibile = (await sql(`select p.id from public.players p
-    where p.role = any(array[${mancanti.map((r) => `'${r}'`).join(',')}]::public.ruolo_calciatore[])
+    where p.season = '${STAGIONE_DI_PROVA}'
+      and p.role = any(array[${mancanti.map((r) => `'${r}'`).join(',')}]::public.ruolo_calciatore[])
       and not exists (select 1 from public.roster_players r
                       where r.league_id = '${lega}' and r.player_id = p.id)
     limit 1;`))[0]

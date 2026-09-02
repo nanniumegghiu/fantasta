@@ -6,7 +6,7 @@ import type { Ruolo } from '@/domain/listone'
 
 const CAMPI =
   '*,' +
-  'tiers(id,list_id,name,color,position),' +
+  'tiers(id,list_id,role,name,color,position),' +
   'targets(id,list_id,player_id,tier_id,max_price,priority,note,status,players(id,name,role,serie_a_team,quotation,photo_path)),' +
   'roster_slots(id,list_id,role,label,position,slot_candidates(slot_id,target_id,position)),' +
   'goalkeeper_pairings(id,list_id,name,note,position,pairing_members(pairing_id,target_id,position))'
@@ -178,15 +178,38 @@ export function useTogliObiettivo(idLega: string | undefined) {
 // ─── Fasce ──────────────────────────────────────────────────────────────────
 
 export function useAggiungiFascia(idLega: string | undefined) {
-  return useAzione<{ idLista: string; nome: string; colore: ColoreFascia; posizione: number }>(
-    idLega,
-    async (v) =>
-      esegui(
-        richiediSupabase()
-          .from('tiers')
-          .insert({ list_id: v.idLista, name: v.nome, color: v.colore, position: v.posizione }),
-      ),
+  return useAzione<{
+    idLista: string
+    ruolo: Ruolo
+    nome: string
+    colore: ColoreFascia
+    posizione: number
+  }>(idLega, async (v) =>
+    esegui(
+      richiediSupabase().from('tiers').insert({
+        list_id: v.idLista,
+        role: v.ruolo,
+        name: v.nome,
+        color: v.colore,
+        position: v.posizione,
+      }),
+    ),
   )
+}
+
+/**
+ * Aggiunge calciatori dentro una fascia, creando l'obiettivo se manca.
+ * Il server rifiuta chi non è del reparto della fascia: non è un aiuto alla
+ * scelta, è una regola del modello.
+ */
+export function useAggiungiAFascia(idLega: string | undefined) {
+  return useAzione<{ idFascia: string; idCalciatori: number[] }>(idLega, async (v) => {
+    const { error } = await richiediSupabase().rpc('aggiungi_a_fascia', {
+      p_fascia: v.idFascia,
+      p_calciatori: v.idCalciatori,
+    })
+    if (error) throw new Error(messaggioErrore(error))
+  })
 }
 
 export function useAggiornaFascia(idLega: string | undefined) {

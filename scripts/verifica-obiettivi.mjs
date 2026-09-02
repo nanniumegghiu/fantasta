@@ -61,6 +61,12 @@ if (process.argv.includes('--pulisci')) {
   process.exit(0)
 }
 
+// La stagione dei dati di prova non e' mai quella vera: l'importazione
+// del listone ritira i calciatori della stagione indicata che non sono nel
+// file, e con una stagione condivisa manderebbe fuori listone i calciatori
+// veri. E' gia' successo.
+const STAGIONE_DI_PROVA = 'PROVA'
+
 const esiti = []
 function esito(nome, ok, dettaglio) {
   esiti.push({ nome, ok })
@@ -129,11 +135,11 @@ const CALCIATORI = [
   { id: 909005, nome: 'Montipo', ruolo: 'P', squadra: 'Hellas Verona', quotazione: 8 },
   { id: 909006, nome: 'Bastoni', ruolo: 'D', squadra: 'Inter', quotazione: 18 },
 ]
-await rpc(admin, 'importa_listone', { p_stagione: '2026/27', p_righe: CALCIATORI })
+await rpc(admin, 'importa_listone', { p_stagione: STAGIONE_DI_PROVA, p_righe: CALCIATORI })
 
 const lega = (await rpc(admin, 'crea_lega', {
   p_nome: 'Lega Obiettivi',
-  p_stagione: '2026/27',
+  p_stagione: STAGIONE_DI_PROVA,
   p_nome_squadra: 'Real Madrink',
   p_max_partecipanti: 4,
 })).corpo
@@ -150,18 +156,22 @@ esito(
   `id lista: ${listaAmico}`,
 )
 
-const fasce = await leggi(amico, `tiers?select=name,color,position&list_id=eq.${listaAmico}&order=position`)
+const fasce = await leggi(
+  amico,
+  `tiers?select=id,name,color,position,role&list_id=eq.${listaAmico}&order=role,position`,
+)
+const perRuolo = new Set((fasce.corpo ?? []).map((f) => f.role))
 esito(
-  'Nasce con tre fasce di partenza, non vuota',
-  fasce.corpo?.length === 3 && fasce.corpo[0].name === 'Da prendere assolutamente',
-  `fasce: ${fasce.corpo?.map((f) => f.name).join(' · ')}`,
+  'Nasce con tre fasce di partenza per ognuno dei quattro reparti',
+  fasce.corpo?.length === 12 && perRuolo.size === 4,
+  `${fasce.corpo?.length} fasce su ${perRuolo.size} reparti: ${[...perRuolo].join(', ')}`,
 )
 
 const seconda = await rpc(amico, 'assicura_lista_obiettivi', { p_lega: lega })
 const quanteFasce = (await sql(`select count(*)::int n from public.tiers where list_id = '${listaAmico}';`))[0].n
 esito(
   'Riaprirla non crea una seconda lista ne fasce doppie',
-  seconda.corpo === listaAmico && quanteFasce === 3,
+  seconda.corpo === listaAmico && quanteFasce === 12,
   `stessa lista, fasce ancora ${quanteFasce}`,
 )
 
@@ -174,7 +184,9 @@ esito(
 
 // ─── 2. I quattro metodi ────────────────────────────────────────────────────
 
-const idFasciaTop = fasce.corpo ? (await leggi(amico, `tiers?select=id&list_id=eq.${listaAmico}&position=eq.0`)).corpo[0].id : null
+const fasciaAttacco = (fasce.corpo ?? []).find((f) => f.role === 'A' && f.position === 0)
+const fasciaDifesa = (fasce.corpo ?? []).find((f) => f.role === 'D' && f.position === 0)
+const idFasciaTop = fasciaAttacco?.id ?? null
 
 const obiettivo = await scrivi(amico, 'targets', 'POST', {
   list_id: listaAmico,
@@ -415,6 +427,33 @@ esito(
 // ═══════════════════════════════════════════════════════════════════════════
 // Le aggiunte fatte dal posto giusto, e il riordino
 // ═══════════════════════════════════════════════════════════════════════════
+
+// Una fascia appartiene a un reparto: e' quello che permette, durante l'asta,
+// di guardare solo i portieri mentre si chiamano i portieri.
+const inFasciaGiusta = await rpc(amico, 'aggiungi_a_fascia', {
+  p_fascia: fasciaDifesa.id,
+  p_calciatori: [909006],
+})
+const inFasciaSbagliata = await rpc(amico, 'aggiungi_a_fascia', {
+  p_fascia: fasciaDifesa.id,
+  p_calciatori: [909002],
+})
+esito(
+  'Una fascia di difensori non accoglie un attaccante',
+  inFasciaGiusta.corpo === 1 && inFasciaSbagliata.corpo === 0,
+  `difensore aggiunto: ${inFasciaGiusta.corpo}, attaccante rifiutato: ${inFasciaSbagliata.corpo === 0}`,
+)
+
+const spostoDoveNonSiPuo = await rpc(amico, 'riordina_obiettivi', {
+  p_righe: [{ id: obiettivo.corpo[0].id, priorita: 0, fascia: fasciaDifesa.id }],
+})
+const dovEFinito = (await sql(`select f.role from public.targets t
+  join public.tiers f on f.id = t.tier_id where t.id = '${obiettivo.corpo[0].id}';`))[0]
+esito(
+  'Il riordino non sposta un attaccante in una fascia di difensori',
+  spostoDoveNonSiPuo.corpo === 0 && dovEFinito?.role === 'A',
+  `righe toccate ${spostoDoveNonSiPuo.corpo}; l attaccante è ancora in una fascia di reparto ${dovEFinito?.role}`,
+)
 
 const standard = await rpc(amico, 'crea_slot_standard', { p_lista: listaAmico })
 const slotCreati = await sql(`select role, label, position from public.roster_slots

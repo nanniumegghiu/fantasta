@@ -93,6 +93,12 @@ process.on('exit', () => {
   void reteAttiva(true)
 })
 
+// La stagione dei dati di prova non e' mai quella vera: l'importazione
+// del listone ritira i calciatori della stagione indicata che non sono nel
+// file, e con una stagione condivisa manderebbe fuori listone i calciatori
+// veri. E' gia' successo.
+const STAGIONE_DI_PROVA = 'PROVA'
+
 const esiti = []
 function esito(nome, ok, dettaglio) {
   esiti.push({ nome, ok })
@@ -148,7 +154,7 @@ for (const [ruolo, base] of [['P', 'portiere'], ['D', 'difensore'], ['C', 'centr
     })
   }
 }
-await rpc(admin, 'importa_listone', { p_stagione: '2026/27', p_righe: CALCIATORI })
+await rpc(admin, 'importa_listone', { p_stagione: STAGIONE_DI_PROVA, p_righe: CALCIATORI })
 const idDi = (nome) => CALCIATORI.find((c) => c.nome === nome).id
 
 /** Costruisce una lega pronta con l'asta configurata e aperta. */
@@ -156,7 +162,7 @@ async function scenario(nome, impostazioni, opzioni = {}) {
   const slot = opzioni.slot ?? { P: 1, D: 1, C: 1, A: 1 }
   const lega = (await rpc(admin, 'crea_lega', {
     p_nome: nome,
-    p_stagione: '2026/27',
+    p_stagione: STAGIONE_DI_PROVA,
     p_nome_squadra: `Admin ${nome}`,
     p_crediti: opzioni.crediti ?? 100,
     p_slot_p: slot.P, p_slot_d: slot.D, p_slot_c: slot.C, p_slot_a: slot.A,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { Intestazione } from '@/components/Intestazione'
@@ -12,11 +12,11 @@ import {
   useAggiornaIncrocio,
   useAggiornaObiettivo,
   useAggiornaSlot,
+  useAggiungiAFascia,
   useAggiungiAIncrocio,
   useAggiungiASlot,
   useAggiungiFascia,
   useAggiungiIncrocio,
-  useAggiungiObiettivi,
   useAggiungiSlot,
   useCreaSlotStandard,
   useImpostaOpzione,
@@ -39,6 +39,7 @@ import {
   contaPerRuolo,
   spesaMassima,
   type ColoreFascia,
+  type Fascia as FasciaTipo,
   type ListaObiettivi,
   type Obiettivo,
 } from '@/features/obiettivi/tipi'
@@ -49,6 +50,18 @@ export function PaginaObiettivi() {
   const { data: lega } = useLega(idLega)
   const { data: lista, isPending, error } = useListaObiettivi(idLega)
   const [cambioMetodo, setCambioMetodo] = useState(false)
+
+  // Il reparto scelto sta nell'indirizzo, non nello stato: così dall'asta si
+  // arriva già filtrati sul ruolo che si sta chiamando, e il collegamento si
+  // può rimettere fra i preferiti.
+  const [parametri, setParametri] = useSearchParams()
+  const ruoloScelto = (parametri.get('ruolo') as Ruolo | null) ?? null
+  function scegliRuolo(r: Ruolo | null) {
+    const p = new URLSearchParams(parametri)
+    if (r) p.set('ruolo', r)
+    else p.delete('ruolo')
+    setParametri(p, { replace: true })
+  }
 
   if (isPending) {
     return (
@@ -95,14 +108,17 @@ export function PaginaObiettivi() {
         <Riservatezza />
         <Riepilogo lista={lista} creditiLega={lega?.credits_initial} rosa={lega ? totaleSlot(lega) : undefined} />
         <BarraMetodo lista={lista} idLega={idLega} onCambia={() => setCambioMetodo(true)} />
+        <FiltroReparto scelto={ruoloScelto} onScegli={scegliRuolo} lista={lista} />
 
         {lista.metodo === 'fasce' ? (
-          <SezioneFasce lista={lista} idLega={idLega} />
+          <SezioneFasce lista={lista} idLega={idLega} ruoloScelto={ruoloScelto} />
         ) : (
-          <SezioneSlot lista={lista} idLega={idLega} />
+          <SezioneSlot lista={lista} idLega={idLega} ruoloScelto={ruoloScelto} />
         )}
 
-        {lista.usa_incroci && <SezioneIncroci lista={lista} idLega={idLega} />}
+        {lista.usa_incroci && (ruoloScelto === null || ruoloScelto === 'P') && (
+          <SezioneIncroci lista={lista} idLega={idLega} />
+        )}
       </main>
     </div>
   )
@@ -192,6 +208,71 @@ function Riepilogo({
   )
 }
 
+// ─── Il filtro per reparto ──────────────────────────────────────────────────
+
+/**
+ * Durante l'asta si chiamano i portieri: in quel momento difensori,
+ * centrocampisti e attaccanti sono rumore. Questo filtro li toglie di mezzo.
+ *
+ * Vive nell'indirizzo, così la vista personale dell'asta può portare qui già
+ * filtrato sul reparto che si sta chiamando.
+ */
+function FiltroReparto({
+  scelto,
+  onScegli,
+  lista,
+}: {
+  scelto: Ruolo | null
+  onScegli: (r: Ruolo | null) => void
+  lista: ListaObiettivi
+}) {
+  const per = contaPerRuolo(lista.targets)
+
+  return (
+    <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-3">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <PillolaRuolo attiva={scelto === null} onClick={() => onScegli(null)}>
+          Tutti i reparti
+        </PillolaRuolo>
+        {ORDINE_RUOLI.map((r) => (
+          <PillolaRuolo key={r} attiva={scelto === r} onClick={() => onScegli(r)}>
+            {NOME_RUOLO[r]} <span className="cifre-fisse opacity-70">{per[r]}</span>
+          </PillolaRuolo>
+        ))}
+      </div>
+      {scelto && (
+        <p className="mt-2 px-1 text-xs text-fumo">
+          Stai vedendo solo {NOME_RUOLO[scelto].toLowerCase()}. Durante l&apos;asta serve a togliere
+          di mezzo i reparti che non si stanno chiamando.
+        </p>
+      )}
+    </section>
+  )
+}
+
+function PillolaRuolo({
+  attiva,
+  onClick,
+  children,
+}: {
+  attiva: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors',
+        attiva ? 'bg-arancio text-carbone' : 'bg-verde-campo text-fumo hover:text-nebbia',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  )
+}
+
 // ─── La barra del metodo ────────────────────────────────────────────────────
 
 function BarraMetodo({
@@ -263,107 +344,97 @@ function BarraMetodo({
 // Metodo delle fasce
 // ═══════════════════════════════════════════════════════════════════════════
 
-function SezioneFasce({ lista, idLega }: { lista: ListaObiettivi; idLega: string | undefined }) {
+/**
+ * Le fasce, divise per reparto.
+ *
+ * Il reparto è la prima divisione, non un modo di visualizzare: una fascia di
+ * difensori accoglie solo difensori, e quando scegli i nomi non ti vengono
+ * proposti gli attaccanti.
+ */
+function SezioneFasce({
+  lista,
+  idLega,
+  ruoloScelto,
+}: {
+  lista: ListaObiettivi
+  idLega: string | undefined
+  ruoloScelto: Ruolo | null
+}) {
   const aggiungiFascia = useAggiungiFascia(idLega)
-  const aggiornaFascia = useAggiornaFascia(idLega)
-  const togliFascia = useTogliFascia(idLega)
-  const aggiungi = useAggiungiObiettivi(idLega)
-  const [selettore, setSelettore] = useState<{ fascia: string; nome: string } | null>(null)
-  const [nuova, setNuova] = useState('')
+  const aggiungiA = useAggiungiAFascia(idLega)
+  const [selettore, setSelettore] = useState<{ fascia: string; ruolo: Ruolo; nome: string } | null>(null)
+  const [nuova, setNuova] = useState<Record<string, string>>({})
 
-  const ordinate = [...lista.tiers].sort((a, b) => a.position - b.position)
-  const senzaFascia = lista.targets.filter((t) => !t.tier_id)
-  const giaPresenti = new Set(lista.targets.map((t) => t.player_id))
+  const reparti = ruoloScelto ? [ruoloScelto] : ORDINE_RUOLI
+  const senzaFascia = lista.targets.filter(
+    (x) => !x.tier_id && (!ruoloScelto || x.players.role === ruoloScelto),
+  )
 
-  function spostaFascia(indice: number, direzione: -1 | 1) {
-    const altro = indice + direzione
-    if (altro < 0 || altro >= ordinate.length) return
-    aggiornaFascia.mutate({ id: ordinate[indice].id, campi: { position: ordinate[altro].position } })
-    aggiornaFascia.mutate({ id: ordinate[altro].id, campi: { position: ordinate[indice].position } })
+  /** Chi è già fra i tuoi obiettivi di quel reparto: non si ripropone. */
+  function giaNelReparto(ruolo: Ruolo): Set<number> {
+    return new Set(lista.targets.filter((x) => x.players.role === ruolo).map((x) => x.player_id))
   }
 
   return (
     <>
-      {ordinate.map((fascia, i) => {
-        const dentro = lista.targets.filter((t) => t.tier_id === fascia.id)
+      {reparti.map((ruolo) => {
+        const fasce = lista.tiers
+          .filter((f) => f.role === ruolo)
+          .sort((a, b) => a.position - b.position)
+
         return (
-          <motion.section
-            key={fascia.id}
-            layout
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24 }}
-            className={`rounded-2xl border bg-verde-campo/30 p-4 ${COLORI_FASCIA[fascia.color].bordo}`}
-          >
-            <div className="flex items-center gap-2">
-              <span aria-hidden className={`size-3 shrink-0 rounded-full ${COLORI_FASCIA[fascia.color].punto}`} />
-              <input
-                defaultValue={fascia.name}
-                onBlur={(e) => {
-                  const v = e.target.value.trim()
-                  if (v && v !== fascia.name) aggiornaFascia.mutate({ id: fascia.id, campi: { name: v } })
-                }}
-                aria-label="Nome della fascia"
-                className="h-11 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-base font-bold text-nebbia outline-none hover:border-verde-acceso/30 focus:border-verde-acceso"
-              />
-              <span className="cifre-fisse shrink-0 text-sm text-fumo">{dentro.length}</span>
-              <button
-                type="button"
-                onClick={() => spostaFascia(i, -1)}
-                disabled={i === 0}
-                aria-label={`Sposta la fascia ${fascia.name} più in alto`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-fumo hover:text-nebbia disabled:opacity-25"
+          <section key={ruolo} className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className={`flex size-7 items-center justify-center rounded-full text-xs font-bold ${CLASSE_RUOLO[ruolo]}`}
               >
-                ▲
-              </button>
-              <button
-                type="button"
-                onClick={() => spostaFascia(i, 1)}
-                disabled={i === ordinate.length - 1}
-                aria-label={`Sposta la fascia ${fascia.name} più in basso`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-fumo hover:text-nebbia disabled:opacity-25"
-              >
-                ▼
-              </button>
+                {ruolo}
+              </span>
+              <h2 className="text-base font-bold text-nebbia">{NOME_RUOLO[ruolo]}</h2>
+              <span className="cifre-fisse text-xs text-fumo">
+                {lista.targets.filter((x) => x.players.role === ruolo).length}
+              </span>
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <select
-                value={fascia.color}
-                onChange={(e) =>
-                  aggiornaFascia.mutate({ id: fascia.id, campi: { color: e.target.value as ColoreFascia } })
-                }
-                aria-label={`Colore della fascia ${fascia.name}`}
-                className="h-10 rounded-lg border border-verde-acceso/30 bg-verde-notte px-2 text-xs text-nebbia outline-none"
-              >
-                {Object.entries(COLORI_FASCIA).map(([chiave, c]) => (
-                  <option key={chiave} value={chiave}>
-                    {c.nome}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col gap-3">
+              {fasce.map((fascia, i) => (
+                <Fascia
+                  key={fascia.id}
+                  fascia={fascia}
+                  posizione={i}
+                  quante={fasce.length}
+                  lista={lista}
+                  idLega={idLega}
+                  onAggiungi={() => setSelettore({ fascia: fascia.id, ruolo, nome: fascia.name })}
+                />
+              ))}
+            </div>
 
+            <div className="mt-3 flex gap-2">
+              <input
+                value={nuova[ruolo] ?? ''}
+                onChange={(e) => setNuova((n) => ({ ...n, [ruolo]: e.target.value }))}
+                placeholder={`Nuova fascia per i ${NOME_RUOLO[ruolo].toLowerCase()}`}
+                className="h-11 min-w-0 flex-1 rounded-xl border border-verde-acceso/30 bg-verde-notte px-3 text-sm text-nebbia outline-none focus:border-verde-acceso"
+              />
               <Bottone
                 aspetto="secondario"
-                onClick={() => setSelettore({ fascia: fascia.id, nome: fascia.name })}
+                disabilitato={(nuova[ruolo] ?? '').trim().length === 0}
+                onClick={() => {
+                  aggiungiFascia.mutate({
+                    idLista: lista.id,
+                    ruolo,
+                    nome: (nuova[ruolo] ?? '').trim(),
+                    colore: 'fumo',
+                    posizione: fasce.length,
+                  })
+                  setNuova((n) => ({ ...n, [ruolo]: '' }))
+                }}
               >
-                Aggiungi calciatori
+                Aggiungi
               </Bottone>
-
-              <button
-                type="button"
-                onClick={() => togliFascia.mutate(fascia.id)}
-                aria-label={`Elimina la fascia ${fascia.name}`}
-                className="ml-auto flex size-10 items-center justify-center rounded-lg text-fumo hover:bg-errore/15 hover:text-errore"
-              >
-                ✕
-              </button>
             </div>
-
-            <div className="mt-3">
-              <GruppiPerRuolo lista={lista} idLega={idLega} obiettivi={dentro} idFascia={fascia.id} />
-            </div>
-          </motion.section>
+          </section>
         )
       })}
 
@@ -373,49 +444,20 @@ function SezioneFasce({ lista, idLega }: { lista: ListaObiettivi; idLega: string
           <p className="mt-0.5 mb-3 text-xs text-fumo">
             Assegnali a una fascia dal menù dentro ogni scheda, oppure toglili.
           </p>
-          <GruppiPerRuolo lista={lista} idLega={idLega} obiettivi={senzaFascia} idFascia={null} />
+          <ElencoObiettivi lista={lista} idLega={idLega} obiettivi={senzaFascia} idFascia={null} />
         </section>
       )}
-
-      <section className="rounded-2xl border border-verde-campo bg-verde-campo/20 p-4">
-        <p className="mb-2 text-sm font-semibold text-nebbia">Aggiungi una fascia</p>
-        <div className="flex gap-2">
-          <input
-            value={nuova}
-            onChange={(e) => setNuova(e.target.value)}
-            placeholder="Es. Scommesse da 1 credito"
-            className="h-11 min-w-0 flex-1 rounded-xl border border-verde-acceso/30 bg-verde-notte px-3 text-sm text-nebbia outline-none focus:border-verde-acceso"
-          />
-          <Bottone
-            aspetto="secondario"
-            disabilitato={nuova.trim().length === 0}
-            onClick={() => {
-              aggiungiFascia.mutate({
-                idLista: lista.id,
-                nome: nuova.trim(),
-                colore: 'fumo',
-                posizione: ordinate.length,
-              })
-              setNuova('')
-            }}
-          >
-            Aggiungi
-          </Bottone>
-        </div>
-        <p className="mt-2 text-xs text-fumo">
-          Eliminare una fascia non cancella i calciatori: restano nella lista, senza fascia.
-        </p>
-      </section>
 
       {selettore && (
         <SelettoreCalciatore
           titolo={`Aggiungi a «${selettore.nome}»`}
-          giaPresenti={giaPresenti}
-          inCorso={aggiungi.isPending}
+          soloRuolo={selettore.ruolo}
+          giaPresenti={giaNelReparto(selettore.ruolo)}
+          inCorso={aggiungiA.isPending}
           onChiudi={() => setSelettore(null)}
           onConferma={(idCalciatori) =>
-            aggiungi.mutate(
-              { idLista: lista.id, idCalciatori, idFascia: selettore.fascia },
+            aggiungiA.mutate(
+              { idFascia: selettore.fascia, idCalciatori },
               { onSettled: () => setSelettore(null) },
             )
           }
@@ -425,84 +467,174 @@ function SezioneFasce({ lista, idLega }: { lista: ListaObiettivi; idLega: string
   )
 }
 
-/**
- * I calciatori di un gruppo, divisi per ruolo e riordinabili trascinando.
- *
- * L'ordine conta dentro il ruolo, non fra ruoli: durante l'asta ci si chiede
- * «chi provo a prendere adesso in attacco», non «chi viene prima fra un
- * portiere e un difensore».
- */
-function GruppiPerRuolo({
+function Fascia({
+  fascia,
+  posizione,
+  quante,
+  lista,
+  idLega,
+  onAggiungi,
+}: {
+  fascia: FasciaTipo
+  posizione: number
+  quante: number
+  lista: ListaObiettivi
+  idLega: string | undefined
+  onAggiungi: () => void
+}) {
+  const aggiornaFascia = useAggiornaFascia(idLega)
+  const togliFascia = useTogliFascia(idLega)
+
+  const dentro = lista.targets.filter((x) => x.tier_id === fascia.id)
+  const sorelle = lista.tiers
+    .filter((f) => f.role === fascia.role)
+    .sort((a, b) => a.position - b.position)
+
+  function sposta(direzione: -1 | 1) {
+    const altro = posizione + direzione
+    if (altro < 0 || altro >= sorelle.length) return
+    aggiornaFascia.mutate({ id: sorelle[posizione].id, campi: { position: sorelle[altro].position } })
+    aggiornaFascia.mutate({ id: sorelle[altro].id, campi: { position: sorelle[posizione].position } })
+  }
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
+      className={`rounded-xl border bg-verde-notte p-3 ${COLORI_FASCIA[fascia.color].bordo}`}
+    >
+      <div className="flex items-center gap-2">
+        <span aria-hidden className={`size-3 shrink-0 rounded-full ${COLORI_FASCIA[fascia.color].punto}`} />
+        <input
+          defaultValue={fascia.name}
+          onBlur={(e) => {
+            const v = e.target.value.trim()
+            if (v && v !== fascia.name) aggiornaFascia.mutate({ id: fascia.id, campi: { name: v } })
+          }}
+          aria-label="Nome della fascia"
+          className="h-11 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm font-bold text-nebbia outline-none hover:border-verde-acceso/30 focus:border-verde-acceso"
+        />
+        <span className="cifre-fisse shrink-0 text-xs text-fumo">{dentro.length}</span>
+        <button
+          type="button"
+          onClick={() => sposta(-1)}
+          disabled={posizione === 0}
+          aria-label={`Sposta la fascia ${fascia.name} più in alto`}
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg text-fumo hover:text-nebbia disabled:opacity-25"
+        >
+          ▲
+        </button>
+        <button
+          type="button"
+          onClick={() => sposta(1)}
+          disabled={posizione === quante - 1}
+          aria-label={`Sposta la fascia ${fascia.name} più in basso`}
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg text-fumo hover:text-nebbia disabled:opacity-25"
+        >
+          ▼
+        </button>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <select
+          value={fascia.color}
+          onChange={(e) =>
+            aggiornaFascia.mutate({ id: fascia.id, campi: { color: e.target.value as ColoreFascia } })
+          }
+          aria-label={`Colore della fascia ${fascia.name}`}
+          className="h-10 rounded-lg border border-verde-acceso/30 bg-verde-campo/60 px-2 text-xs text-nebbia outline-none"
+        >
+          {Object.entries(COLORI_FASCIA).map(([chiave, c]) => (
+            <option key={chiave} value={chiave}>
+              {c.nome}
+            </option>
+          ))}
+        </select>
+
+        <Bottone aspetto="secondario" onClick={onAggiungi}>
+          Aggiungi calciatori
+        </Bottone>
+
+        <button
+          type="button"
+          onClick={() => togliFascia.mutate(fascia.id)}
+          aria-label={`Elimina la fascia ${fascia.name}`}
+          className="ml-auto flex size-10 items-center justify-center rounded-lg text-fumo hover:bg-errore/15 hover:text-errore"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="mt-3">
+        <ElencoObiettivi
+          lista={lista}
+          idLega={idLega}
+          obiettivi={dentro}
+          idFascia={fascia.id}
+          fasceDelReparto={sorelle}
+        />
+      </div>
+    </motion.div>
+  )
+}
+
+/** I calciatori di un contenitore, in ordine, riordinabili trascinando. */
+function ElencoObiettivi({
   lista,
   idLega,
   obiettivi,
   idFascia,
+  fasceDelReparto,
 }: {
   lista: ListaObiettivi
   idLega: string | undefined
   obiettivi: Obiettivo[]
   idFascia: string | null
+  fasceDelReparto?: FasciaTipo[]
 }) {
   const aggiorna = useAggiornaObiettivo(idLega)
   const togli = useTogliObiettivo(idLega)
   const riordina = useRiordinaObiettivi(idLega)
 
-  const perRuolo = useMemo(() => {
-    return ORDINE_RUOLI.map((r) => ({
-      ruolo: r,
-      righe: obiettivi
-        .filter((t) => t.players.role === r)
-        .sort((a, b) => a.priority - b.priority || a.players.name.localeCompare(b.players.name, 'it')),
-    })).filter((g) => g.righe.length > 0)
-  }, [obiettivi])
+  const righe = useMemo(
+    () =>
+      [...obiettivi].sort(
+        (a, b) => a.priority - b.priority || a.players.name.localeCompare(b.players.name, 'it'),
+      ),
+    [obiettivi],
+  )
 
-  if (obiettivi.length === 0) {
+  if (righe.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-verde-campo px-4 py-3 text-xs text-fumo">
+      <p className="rounded-lg border border-dashed border-verde-campo px-3 py-2 text-xs text-fumo">
         Ancora nessun calciatore qui dentro.
       </p>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {perRuolo.map((g) => (
-        <div key={g.ruolo}>
-          <div className="mb-2 flex items-center gap-2">
-            <span
-              className={`flex size-6 items-center justify-center rounded-full text-[10px] font-bold ${CLASSE_RUOLO[g.ruolo]}`}
-            >
-              {g.ruolo}
-            </span>
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-fumo">
-              {NOME_RUOLO[g.ruolo]}
-            </h4>
-            <span className="cifre-fisse text-xs text-fumo">{g.righe.length}</span>
-          </div>
-
-          <ListaRiordinabile
-            elementi={g.righe}
-            chiave={(o) => o.id}
-            descrizione={(o) => o.players.name}
-            onRiordina={(nuovo) =>
-              riordina.mutate(
-                nuovo.map((o, i) => ({ id: o.id, priorita: i, fascia: idFascia })),
-              )
-            }
-            rendi={(o) => (
-              <SchedaObiettivo
-                obiettivo={o}
-                fasce={lista.tiers}
-                mostraFascia={lista.metodo === 'fasce'}
-                mostraTetto={lista.usa_tetti}
-                onAggiorna={(campi) => aggiorna.mutate({ id: o.id, campi })}
-                onTogli={() => togli.mutate(o.id)}
-              />
-            )}
-          />
-        </div>
-      ))}
-    </div>
+    <ListaRiordinabile
+      elementi={righe}
+      chiave={(o) => o.id}
+      descrizione={(o) => o.players.name}
+      onRiordina={(nuovo) =>
+        riordina.mutate(nuovo.map((o, i) => ({ id: o.id, priorita: i, fascia: idFascia })))
+      }
+      rendi={(o) => (
+        <SchedaObiettivo
+          obiettivo={o}
+          // Solo le fasce dello stesso reparto: spostare un attaccante fra i
+          // difensori non è una cosa che si possa fare.
+          fasce={fasceDelReparto ?? lista.tiers.filter((f) => f.role === o.players.role)}
+          mostraFascia={lista.metodo === 'fasce'}
+          mostraTetto={lista.usa_tetti}
+          onAggiorna={(campi) => aggiorna.mutate({ id: o.id, campi })}
+          onTogli={() => togli.mutate(o.id)}
+        />
+      )}
+    />
   )
 }
 
@@ -510,7 +642,15 @@ function GruppiPerRuolo({
 // Metodo degli slot
 // ═══════════════════════════════════════════════════════════════════════════
 
-function SezioneSlot({ lista, idLega }: { lista: ListaObiettivi; idLega: string | undefined }) {
+function SezioneSlot({
+  lista,
+  idLega,
+  ruoloScelto,
+}: {
+  lista: ListaObiettivi
+  idLega: string | undefined
+  ruoloScelto: Ruolo | null
+}) {
   const aggiungiSlot = useAggiungiSlot(idLega)
   const aggiornaSlot = useAggiornaSlot(idLega)
   const togliSlot = useTogliSlot(idLega)
@@ -522,6 +662,14 @@ function SezioneSlot({ lista, idLega }: { lista: ListaObiettivi; idLega: string 
 
   const [selettore, setSelettore] = useState<{ slot: string; ruolo: Ruolo; nome: string } | null>(null)
 
+  const perObiettivo = new Map(lista.targets.map((t) => [t.id, t]))
+  const inQualcheSlot = new Set(
+    lista.roster_slots.flatMap((s) => s.slot_candidates.map((c) => c.target_id)),
+  )
+  const orfani = lista.targets.filter(
+    (t) => !inQualcheSlot.has(t.id) && (!ruoloScelto || t.players.role === ruoloScelto),
+  )
+
   /** Chi è già candidato in quello slot: solo lui va escluso dalla scelta. */
   function giaInSlot(idSlot: string): Set<number> {
     const s = lista.roster_slots.find((x) => x.id === idSlot)
@@ -531,12 +679,6 @@ function SezioneSlot({ lista, idLega }: { lista: ListaObiettivi; idLega: string 
         .filter((n): n is number => typeof n === 'number'),
     )
   }
-
-  const perObiettivo = new Map(lista.targets.map((t) => [t.id, t]))
-  const inQualcheSlot = new Set(
-    lista.roster_slots.flatMap((s) => s.slot_candidates.map((c) => c.target_id)),
-  )
-  const orfani = lista.targets.filter((t) => !inQualcheSlot.has(t.id))
 
   if (lista.roster_slots.length === 0) {
     return (
@@ -564,7 +706,7 @@ function SezioneSlot({ lista, idLega }: { lista: ListaObiettivi; idLega: string 
 
   return (
     <>
-      {ORDINE_RUOLI.map((ruolo) => {
+      {(ruoloScelto ? [ruoloScelto] : ORDINE_RUOLI).map((ruolo) => {
         const slot = lista.roster_slots
           .filter((s) => s.role === ruolo)
           .sort((a, b) => a.position - b.position)
@@ -614,9 +756,7 @@ function SezioneSlot({ lista, idLega }: { lista: ListaObiettivi; idLega: string 
                         aria-label="Nome dello slot"
                         className="h-11 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm font-bold text-nebbia outline-none hover:border-verde-acceso/30 focus:border-verde-acceso"
                       />
-                      <span className="cifre-fisse shrink-0 text-xs text-fumo">
-                        {candidati.length}
-                      </span>
+                      <span className="cifre-fisse shrink-0 text-xs text-fumo">{candidati.length}</span>
                       <button
                         type="button"
                         onClick={() => togliSlot.mutate(s.id)}
@@ -750,7 +890,7 @@ function SezioneIncroci({ lista, idLega }: { lista: ListaObiettivi; idLega: stri
         {gruppi.map((g) => {
           const membri = [...g.pairing_members]
             .sort((a, b) => a.position - b.position)
-            .map((m) => perObiettivo.get(m.target_id))
+            .map((mm) => perObiettivo.get(mm.target_id))
             .filter((o): o is Obiettivo => Boolean(o))
 
           return (
@@ -780,7 +920,7 @@ function SezioneIncroci({ lista, idLega }: { lista: ListaObiettivi; idLega: stri
                   {membri.map((o) => (
                     <li
                       key={o.id}
-                      className="flex items-center gap-2 rounded-full bg-oro/15 py-1.5 pl-3 pr-2 text-sm text-nebbia"
+                      className="rounded-full bg-oro/15 px-3 py-1.5 text-sm text-nebbia"
                     >
                       <span className="truncate">
                         {o.players.name}
