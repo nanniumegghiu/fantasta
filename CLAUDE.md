@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 1.3 · **Data** · 2026-09-02
+**Versione documento** · 1.4 · **Data** · 2026-09-02
 
 ---
 
@@ -174,12 +174,14 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Registrazione e accesso con email | ✅ verificati con richieste reali |
 | Fetta 1: leghe, inviti, squadre, regolamento in PDF | ✅ 30 prove su 30 lato server |
 | Fetta 2: importazione listone e statistiche, tabella | ✅ 17 prove su 17 lato server |
+| Fetta 3: lista obiettivi con i quattro metodi | ✅ 24 prove su 24 lato server |
 | Tutte le schermate | 🟡 scritte e compilate, **mai aperte in un browser** |
 | Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
-| Fetta 3 in poi | 🔴 non iniziate |
+| Fetta 4 in poi: **l'asta** | 🔴 non iniziata |
 
 **Prossimo passo** · Aprire l'app in un browser e provare il giro completo su due dispositivi:
-creo la lega, mando il codice, il secondo entra, apro il listone. Poi Fetta 3: la lista obiettivi.
+creo la lega, mando il codice, il secondo entra, apro il listone e preparo gli obiettivi. Poi la
+Fetta 4: l'asta, che è il cuore dell'app e va costruita in sei sotto-fette.
 
 ---
 
@@ -193,6 +195,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-sicurezza.mjs` | Sette prove sui profili: prova a leggere e scrivere dati altrui e verifica di essere respinto. |
 | `node scripts/verifica-leghe.mjs` | Trenta prove su leghe, inviti, squadre e regolamento. Con `--pulisci` rimuove gli utenti di prova. |
 | `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciassette prove sulla lettura dei file e sull importazione del listone. Costruisce da zero un vero `.xlsx` per provarci sopra. |
+| `node scripts/verifica-obiettivi.mjs` | Ventiquattro prove sulla lista obiettivi. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 
 ---
 
@@ -217,6 +220,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.4 | 2026-09-02 | Fetta 3 costruita: lista obiettivi con i quattro metodi, invisibile a chiunque altro. |
 | 1.3 | 2026-09-02 | Fetta 2 costruita: lettore di fogli di calcolo senza dipendenze (ADR-0012), importazione con anteprima, tabella del listone. |
 | 1.2 | 2026-09-02 | Backend collegato e verificato. Fetta 1 costruita: leghe, inviti, squadre, regolamento in PDF, con 30 prove superate. ADR 0008-0011. |
 | 1.1 | 2026-09-02 | Chiuse 5 decisioni con 7 ADR. Nome del prodotto: Fantasta. Fetta 0 costruita: applicazione web installabile che compila, icone generate dal logo, accesso e rotte protette, prima migrazione con le sue policy. |

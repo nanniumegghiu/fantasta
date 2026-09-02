@@ -62,6 +62,7 @@ export function PaginaLega() {
 
       <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
         <RiquadroAsta lega={lega} />
+        <RiquadroObiettivi idLega={lega.id} />
         <RiquadroListone />
         {sonoAdmin && <RiquadroInvito lega={lega} />}
         <RiquadroPartecipanti lega={lega} idUtente={utente?.id} />
@@ -89,6 +90,23 @@ function RiquadroAsta({ lega }: { lega: LegaCompleta }) {
       <p className="mt-3 rounded-xl border border-oro/30 bg-oro/10 px-4 py-3 text-sm text-oro">
         L&apos;asta è la prossima parte da costruire. Per ora questa schermata non fa niente.
       </p>
+    </Riquadro>
+  )
+}
+
+function RiquadroObiettivi({ idLega }: { idLega: string }) {
+  return (
+    <Riquadro
+      titolo="I miei obiettivi"
+      sottotitolo="La tua preparazione all'asta. La vedi solo tu."
+    >
+      <p className="mb-3 text-sm text-fumo">
+        Fasce, tetti di spesa, slot della rosa ideale e incroci fra portieri: accendi solo i metodi
+        che usi davvero.
+      </p>
+      <Link to={`/lega/${idLega}/obiettivi`}>
+        <Bottone>Apri la mia lista</Bottone>
+      </Link>
     </Riquadro>
   )
 }

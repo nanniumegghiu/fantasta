@@ -2,7 +2,7 @@
 
 **Scopo** · Descrivere com'è organizzato il codice del client e come si esegue.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 Fette 0, 1 e 2 costruite, backend collegato · schermate mai aperte in un browser
+**Stato** · 🟡 Fette da 0 a 3 costruite, backend collegato · schermate mai aperte in un browser
 **Data** · 2026-09-02
 
 ---
@@ -41,7 +41,8 @@ app/
     ├── features/
     │   ├── auth/              sessione e metodi di accesso
     │   ├── leghe/             tipi e chiamate al backend delle leghe
-    │   └── listone/           lettura del listone e importazioni
+    │   ├── listone/           lettura del listone e importazioni
+    │   └── obiettivi/         la lista obiettivi e i suoi quattro metodi
     └── pages/                 schermate
 ```
 
@@ -74,6 +75,7 @@ volta sola non valeva la pena aprirlo.
 | `/leghe/entra` | Ingresso con il codice di sei caratteri. |
 | `/invito/:codice` | Lo stesso, ma col codice già scritto. È il link che gira su WhatsApp. |
 | `/lega/:id` | Riepilogo: asta, listone, invito, partecipanti, la mia squadra, regole, regolamento. |
+| `/lega/:id/obiettivi` | La lista obiettivi: fasce, tetti, note, slot, incroci. Privata. |
 | `/listone` | Tabella dei calciatori: filtri per ruolo e squadra, ordinamento su ogni colonna. |
 | `/importazione` | Caricamento di listone e statistiche. Solo amministratori dell applicazione. |
 | qualsiasi altro | Rimanda a `/leghe`. |
@@ -121,6 +123,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-02 | Fetta 3: schermata della lista obiettivi e selettore dei calciatori. |
 | 1.2 | 2026-09-02 | Fetta 2: lettore di fogli di calcolo, importazione, tabella del listone. Codice suddiviso per rotta. |
 | 1.1 | 2026-09-02 | Fetta 1: schermate delle leghe, inviti, squadre, regolamento in PDF. |
 | 1.0 | 2026-09-02 | Fetta 0: struttura, accesso, rotte protette, icone, prima migrazione. |

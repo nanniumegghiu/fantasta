@@ -3,7 +3,7 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🟡 Fette 0, 1 e 2 costruite e verificate lato server, mai viste in un browser
+**Stato** · 🟡 Fette 0, 1, 2 e 3 costruite e verificate lato server, mai viste in un browser
 **Data** · 2026-09-02
 
 ---
@@ -73,7 +73,7 @@ lo scorrimento è fluido con tutte le righe caricate.
 | Tabella con filtri per ruolo e squadra e ordinamento su ogni colonna | 🟡 scritta, **mai aperta in un browser** |
 | Prova sul file ufficiale vero | 🔴 serve il file |
 
-### Fetta 3 · Lista obiettivi
+### Fetta 3 · Lista obiettivi — 🟡 costruita, mai vista in un browser
 
 I quattro metodi richiesti, tutti facoltativi e combinabili: fasce, tetto di spesa, slot della rosa
 ideale, incrocio portieri. Note libere per calciatore.
@@ -81,6 +81,13 @@ ideale, incrocio portieri. Note libere per calciatore.
 **Si dimostra così**: costruisco una lista con tre fasce, metto i tetti, definisco sei slot in
 attacco con i candidati, creo un incrocio fra due portieri. Da un altro account, la stessa lista è
 **invisibile**.
+
+| Pezzo | Stato |
+|---|---|
+| Tabelle e policy dei quattro metodi | ✅ 24 prove su 24, `node scripts/verifica-obiettivi.mjs` |
+| Invisibilità agli altri, **amministratore compreso** | ✅ sette prove distinte, tutte a zero righe |
+| Schermata con fasce, tetti, note, slot e incroci | 🟡 scritta, **mai aperta in un browser** |
+| Contatore degli obiettivi ancora liberi durante l'asta | 🔴 arriva con la Fetta 4f |
 
 ### Fetta 4 · L'asta
 
@@ -135,7 +142,7 @@ non è decorativa: è il criterio di chiusura.
 
 ## Aperto / TODO
 
-- 🔴 Le schermate delle Fette 0, 1 e 2 non sono mai state aperte in un browser: è la verifica che manca.
+- 🔴 Le schermate delle Fette da 0 a 3 non sono mai state aperte in un browser: è la verifica che manca.
 - 🔴 Serve il file ufficiale del listone per provare l importazione sul formato vero.
 - 🔴 Pubblicazione online, necessaria perché il link giri davvero su WhatsApp.
 
@@ -143,6 +150,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-02 | Fetta 3 costruita: lista obiettivi con i quattro metodi. |
 | 1.2 | 2026-09-02 | Fetta 2 costruita: importazione e tabella del listone. |
 | 1.1 | 2026-09-02 | Fette 0 e 1 costruite. Vincolo di calendario chiarito. |
 | 1.0 | 2026-09-02 | Prima stesura. |

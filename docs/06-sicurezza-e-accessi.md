@@ -3,7 +3,7 @@
 **Scopo** · Stabilire chi può leggere e scrivere cosa, come funziona l'accesso, e come si gestiscono
 i codici di invito e le credenziali.
 **Proprietario** · security-officer, con potere di veto sulle consegne
-**Stato** · 🟡 accesso, leghe, inviti e archivio del regolamento realizzati e verificati · asta 🔴
+**Stato** · 🟡 accesso, leghe, inviti, listone e **liste obiettivi** realizzati e verificati · asta 🔴
 **Data** · 2026-09-02
 
 ---
@@ -71,7 +71,12 @@ dove serve.
 
 > ⚠️ **L'amministratore non è un superutente.** Conduce l'asta, ma **non può leggere le liste
 > obiettivi degli altri**. È la regola che rende l'app usabile fra amici: chi organizza non deve
-> avere un vantaggio. Va scritta nelle policy del database, non solo nell'interfaccia.
+> avere un vantaggio. Sta nelle policy del database, non solo nell'interfaccia.
+>
+> ✅ **Verificato il 2 settembre 2026.** Sette prove distinte con l'amministratore autenticato:
+> lista, obiettivi con tetti e note, fasce, slot, incroci, candidati e membri degli incroci. Tutte
+> hanno restituito zero righe. Sono in `scripts/verifica-obiettivi.mjs` e si rilanciano quando si
+> vuole.
 
 ### 2.4 Lo schermo condiviso
 
@@ -133,6 +138,7 @@ utente, e l'esito va mostrato. «Ho scritto la policy» non è una verifica.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-02 | Liste obiettivi: policy scritte e verificate violandole, compreso il caso dell amministratore di lega. |
 | 1.2 | 2026-09-02 | Aggiunto l amministratore dell applicazione, distinto da quello di lega: solo lui carica il listone. |
 | 1.1 | 2026-09-02 | Realizzate e verificate le policy di leghe, squadre, inviti e archivio del regolamento. La lettura dei profili si estende ai compagni di lega. |
 | 1.0 | 2026-09-02 | Prima stesura. |

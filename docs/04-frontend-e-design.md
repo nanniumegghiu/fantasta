@@ -3,7 +3,7 @@
 **Scopo** · Definire l'aspetto e il comportamento dell'interfaccia: colori, tipografia, animazioni,
 suoni, e l'elenco completo delle schermate.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 token e componenti di base costruiti · schermate da 1 a 9 fatte, mai viste in un browser · il resto 🔴
+**Stato** · 🟡 token e componenti costruiti · schermate da 1 a 12 fatte, mai viste in un browser · asta 🔴
 **Data** · 2026-09-02
 
 ---
@@ -185,5 +185,6 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Schermate di listone, importazione e lista obiettivi. |
 | 1.1 | 2026-09-02 | Carattere scelto, marchio diviso in due colori, primi componenti e schermate. |
 | 1.0 | 2026-09-02 | Prima stesura, palette estratta dal logo reale. |

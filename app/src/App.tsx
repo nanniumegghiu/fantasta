@@ -18,6 +18,9 @@ const PaginaEntraInLega = lazy(() =>
   import('@/pages/PaginaEntraInLega').then((m) => ({ default: m.PaginaEntraInLega })),
 )
 const PaginaLega = lazy(() => import('@/pages/PaginaLega').then((m) => ({ default: m.PaginaLega })))
+const PaginaObiettivi = lazy(() =>
+  import('@/pages/PaginaObiettivi').then((m) => ({ default: m.PaginaObiettivi })),
+)
 const PaginaListone = lazy(() =>
   import('@/pages/PaginaListone').then((m) => ({ default: m.PaginaListone })),
 )
@@ -147,6 +150,15 @@ function Rotte() {
         element={
           <SoloAutenticati>
             <PaginaLega />
+          </SoloAutenticati>
+        }
+      />
+
+      <Route
+        path="/lega/:id/obiettivi"
+        element={
+          <SoloAutenticati>
+            <PaginaObiettivi />
           </SoloAutenticati>
         }
       />
