@@ -284,6 +284,9 @@ useranno quelli da subito.
 | # | Decisione | Esito | ADR |
 |---|---|---|---|
 | D1 | Scadenza dell'asta | Oltre 6 settimane, nessuna pressione | — |
+| D7 | Ponte fra facepack e listone | Export da Football Manager, abbinamento manuale a coprire | `0010-ponte-facepack-listone.md` |
+| D8 | Formato di esportazione delle rose | Quattro colonne, fornite dall'utente | `0008-formato-esportazione-rose.md` |
+| — | Conferma dell'indirizzo email | Disattivata | `0009-conferma-email-disattivata.md` |
 | D2 | Backend | Supabase | `0001-backend-supabase.md` |
 | D3 | Piattaforma client | Applicazione web installabile | `0002-applicazione-web-installabile.md` |
 | D4 | Origine listone e statistiche | Importazione di file | `0003-listone-importazione-manuale.md` |
@@ -297,8 +300,7 @@ comportano compromessi di prodotto: `0005-timer-autoritativo-del-server.md` e
 
 | # | Cosa serve | Blocca |
 |---|---|---|
-| D7 | Nome esatto di tre file del facepack e quanti sono in tutto | La Fetta 5 |
-| D8 | Un file di esempio del caricamento rose di Fantacalcio | La Fetta 6 |
+| D7 | L'elenco esportato da Football Manager con identificativo e nome dei giocatori di Serie A, più i venti identificativi dei club | La Fetta 5, non prima |
 | D6, D9, D10, D11, D12 | Nulla: si procede con la raccomandazione, modificabile in qualsiasi momento a costo quasi nullo | Niente |
 
 ## Changelog

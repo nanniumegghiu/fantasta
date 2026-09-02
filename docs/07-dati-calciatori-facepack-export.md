@@ -57,31 +57,65 @@ dato, un trattino dice la verità.
 L'origine di questi dati è una **decisione aperta**: importazione manuale periodica oppure raccolta
 automatica. Vedi `docs/09-decisioni-aperte.md`.
 
-### 2.3 Il facepack
+### 2.3 Il facepack e il logopack
 
-L'utente possiede già una raccolta di foto. Il flusso previsto:
+L'utente possiede un facepack e un logopack per Football Manager 26. La cartella è stata **ispezionata
+davvero** il 2 settembre 2026, in
+`Documents/Sports Interactive/Football Manager 26/graphics`. Questi sono i numeri reali:
 
-1. **Caricamento in blocco.** Una schermata amministrativa accetta una cartella o un archivio ZIP.
-2. **Associazione automatica.** Tre tentativi in ordine:
-   - il nome del file è l'identificativo del listone, per esempio `2764.png`: associazione certa;
-   - il nome del file è nome e cognome, per esempio `lautaro_martinez.png`: si normalizza togliendo
-     accenti, maiuscole e separatori, e si confronta col listone;
-   - somiglianza approssimata, con soglia alta, per i casi come `martinez_l.png`.
-3. **Risoluzione manuale del resto.** Le foto non associate finiscono in una schermata di
-   abbinamento a due colonne: si trascina la foto sul calciatore. Cinquanta abbinamenti si fanno in
-   pochi minuti; il punto è che l'app **non finga** di aver associato tutto.
-4. **Ottimizzazione.** Ogni foto viene ridimensionata a un quadrato di 160 pixel e convertita in
-   WebP prima di essere salvata. Una tabella di 500 righe con 500 fotografie a piena risoluzione
-   sarebbe inutilizzabile su un telefono.
+| Cartella | File | Nome dei file |
+|---|---|---|
+| `faces/` | 501.690 | `<identificativo FM>.png` |
+| `iconfaces/` | 501.691 | `<identificativo FM>.png` |
+| `logos/clubs/normal/` | 80.568 | `<identificativo FM>.png` |
+| `kits/` | molti | `<identificativo FM>_home.png` |
+
+**Scoperta che cambia il progetto**: i file `config.xml` contengono solo mappature da identificativo
+a percorso interno del gioco, e **nessun nome**. Una ricerca della parola `name` nei 38 MB del
+config delle facce ha dato zero occorrenze. Gli identificativi sono quelli di Football Manager e non
+hanno relazione con quelli del listone di Fantacalcio.
+
+Serve quindi un **ponte**, deciso in ADR-0010: un elenco esportato da Football Manager che leghi
+identificativo e nome, con l'abbinamento manuale dentro l'app a coprire ciò che resta.
+
+Il flusso, una volta esistente il ponte:
+
+1. **Corrispondenza.** Una tabella lega l'identificativo del listone a quello di Football Manager,
+   registrando **come** è nata: importata, dedotta dal nome, o confermata a mano. Le conferme
+   manuali non vengono mai sovrascritte da un'importazione successiva.
+2. **Estrazione mirata.** Si copiano solo le foto dei calciatori presenti nel listone, circa
+   seicento, e i venti loghi di Serie A. **Non si caricano mai 501.690 immagini.**
+3. **Ottimizzazione.** Ogni foto ridotta a un quadrato di 160 pixel e convertita, prima del
+   caricamento. Una tabella da 500 righe con immagini a piena risoluzione è inusabile su un telefono.
+4. **Abbinamento manuale del resto.** Schermata a due colonne, si accosta la foto al calciatore.
+   Il punto è che l'app **non finga** di aver associato tutto.
 5. **Ricaduta.** Chi non ha la foto mostra un cerchio con le iniziali sul colore del ruolo. Mai un
    riquadro rotto.
 
-Le foto stanno nell'archivio file del backend, non nel repository: sono centinaia di file binari che
-non hanno niente da fare in un sistema di versionamento del codice. Per questo `facepack/` è
-nell'elenco dei file ignorati.
+Il facepack **resta sul computer dell'utente** e non entra nel repository: è già fra i file ignorati.
 
-> 🟡 **Da vedere.** Come sono nominati i file del facepack e quanti sono. Da questo dipende quanto
-> lavoro manuale resta all'utente al punto 3.
+#### Come ottenere l'elenco da Football Manager
+
+Da fare una volta sola. Serve a produrre il ponte fra identificativi e nomi.
+
+1. Apri Football Manager 26.
+2. Vai in **Preferenze**, sezione **Interfaccia**, e attiva **Mostra ID unici**. Da quel momento
+   l'identificativo compare nella scheda di ogni giocatore e di ogni club.
+3. Apri una schermata con **tutti i giocatori della Serie A**. Va bene la ricerca giocatori con
+   filtro sul campionato italiano.
+4. Aggiungi alle colonne visibili almeno: identificativo unico, nome, squadra.
+5. Seleziona tutte le righe con `Ctrl + A`, poi `Ctrl + P`. Football Manager propone di salvare la
+   schermata come pagina web o file di testo: scegli il formato disponibile e salva.
+6. Metti il file in `dati-privati/` dentro la cartella del progetto. Quella cartella è esclusa dal
+   versionamento.
+
+**Se il passaggio 4 non ti fa aggiungere l'identificativo fra le colonne, fermati e dimmelo.**
+In quel caso la strada dell'esportazione non è percorribile e si passa all'abbinamento manuale,
+come previsto da ADR-0010. Non provare a ricavare gli identificativi in altri modi: meglio saperlo
+subito che scoprirlo con seicento abbinamenti sbagliati.
+
+Per i **loghi delle squadre** basta molto meno: gli identificativi delle venti squadre di Serie A,
+che si leggono nella scheda di ogni club una volta attivata la preferenza del punto 2. Venti numeri.
 
 ### 2.4 Il listone svincolati durante l'asta
 
@@ -103,14 +137,21 @@ questo si nota subito.
 Quando tutte le rose sono complete, ogni utente può esportare **la propria rosa** o **tutte le
 rose**, in un file CSV pensato per essere caricato nell'app Fantacalcio.
 
-Colonne previste: identificativo del calciatore, ruolo, nome, squadra di Serie A, costo di
-acquisto, e il nome della squadra fantacalcistica per l'esportazione completa.
+Il formato è stato fornito dall'utente ed è fissato in **ADR-0008**. Quattro intestazioni esatte
+nella prima riga:
 
-> 🟡 **Punto onesto: non conosco con certezza il formato esatto accettato dal caricamento rose di
-> Fantacalcio.it, e non voglio scriverlo a memoria.** Serve un file di esempio, anche vuoto,
-> scaricato dalla sezione di caricamento rose della lega. Con quello l'esportazione si allinea al
-> byte. Finché non ce l'ho, l'app produrrà un CSV generico e leggibile, e l'interfaccia dirà
-> chiaramente che il formato non è ancora stato verificato contro l'app di destinazione.
+| Intestazione | Contenuto |
+|---|---|
+| `Id` | Codice numerico del calciatore nel listone ufficiale |
+| `Calciatore` | Cognome e nome, come nel listone |
+| `Fantasquadra` | Nome esatto della squadra della lega |
+| `Prezzo` | Fantamilioni spesi |
+
+L'identificativo è dichiarato facoltativo dalle istruzioni ufficiali, ma **noi lo includiamo
+sempre**: è l'unica difesa contro le omonimie, e in Serie A ce ne sono ogni anno.
+
+> 🟡 **Resta da provare davvero.** Avere la specifica non è avere un caricamento riuscito. Prima di
+> chiudere la Fetta 6 il file va caricato una volta nell'app di destinazione.
 
 ## 3. File coinvolti
 
@@ -133,12 +174,15 @@ manuale accanto a quella automatica.
 
 ## Aperto / TODO
 
-- 🔴 Origine delle statistiche: decisione aperta.
-- 🔴 Formato di esportazione: serve un file di esempio dall'utente.
-- 🟡 Struttura e dimensione del facepack: da vedere.
+- ✅ Origine dei dati dei calciatori: importazione di file, ADR-0003.
+- ✅ Formato di esportazione: fissato in ADR-0008. Resta da provare un caricamento vero.
+- ✅ Struttura del facepack: ispezionata, vedi 2.3. Ponte deciso in ADR-0010.
+- 🔴 Serve l'elenco esportato da Football Manager con identificativo e nome.
+- 🔴 Servono i venti identificativi dei club di Serie A per i loghi.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Facepack ispezionato con numeri reali, ponte deciso. Formato di esportazione fissato. |
 | 1.0 | 2026-09-02 | Prima stesura. |

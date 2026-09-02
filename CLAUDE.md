@@ -163,13 +163,15 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Decisioni | ✅ 5 chiuse con ADR, 7 aperte non bloccanti |
 | ADR | ✅ 7 scritti |
 | Applicazione: struttura, compilazione, icone | ✅ fatto, compilazione verificata |
+| Backend Supabase creato e attivo | ✅ progetto `fantasta`, migrazione applicata |
+| Regole di accesso provate violandole | ✅ 7 prove su 7, `node scripts/verifica-sicurezza.mjs` |
+| Registrazione e accesso con email | ✅ verificati con richieste reali |
 | Schermate di accesso e «Le mie leghe» | 🟡 scritte, **mai aperte in un browser** |
-| Collegamento al backend | 🔴 mancano le chiavi |
-| Prima migrazione, profili con policy | 🟡 scritta, **mai applicata** |
+| Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
 | Fetta 1 in poi | 🔴 non iniziate |
 
-**Prossimo passo** · Creare il progetto Supabase, applicare la migrazione dei profili, verificare
-l'accesso con Google e con email su un dispositivo vero. Poi Fetta 1: leghe, inviti e squadre.
+**Prossimo passo** · Aprire l'app in un browser e guardare le schermate. Poi Fetta 1: leghe, inviti
+e squadre.
 
 ---
 
