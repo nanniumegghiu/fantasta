@@ -70,18 +70,6 @@ export function useScegliMetodo(idLega: string | undefined) {
   )
 }
 
-/** Riporta alla schermata di scelta senza cancellare niente. */
-export function useRiapriScelta(idLega: string | undefined) {
-  return useAzione<string>(idLega, async (idLista) =>
-    esegui(
-      richiediSupabase()
-        .from('target_lists')
-        .update({ metodo_confermato: false })
-        .eq('id', idLista),
-    ),
-  )
-}
-
 export function useImpostaOpzione(idLega: string | undefined) {
   return useAzione<{ idLista: string; campo: 'usa_tetti' | 'usa_incroci'; acceso: boolean }>(
     idLega,

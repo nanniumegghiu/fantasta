@@ -47,6 +47,12 @@ documentazione, capisce cosa fa davvero.
 
 - [ ] Il documento ha una riga nuova con data e cosa cambia.
 
+### 7bis. Le azioni distruttive o irreversibili
+
+- [ ] Un pulsante che apre una schermata **non** scrive niente: scrive solo quello che conferma.
+- [ ] Il testo del pulsante di uscita dice la verità su cosa succede premendolo.
+- [ ] Da ogni schermata si può uscire senza compiere l'azione che propone.
+
 ### 8. CLAUDE.md
 
 - [ ] Se è cambiato lo stato del progetto o il prossimo passo, la sezione corrispondente è

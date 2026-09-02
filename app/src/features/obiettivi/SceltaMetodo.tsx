@@ -21,11 +21,14 @@ export function SceltaMetodo({
   idLega,
   primaVolta,
   onAnnulla,
+  onFatto,
 }: {
   lista: ListaObiettivi
   idLega: string | undefined
   primaVolta: boolean
   onAnnulla?: () => void
+  /** Chiamata dopo una scelta andata a buon fine: chiude questa schermata. */
+  onFatto?: () => void
 }) {
   const scegli = useScegliMetodo(idLega)
   const opzione = useImpostaOpzione(idLega)
@@ -44,6 +47,12 @@ export function SceltaMetodo({
           Due modi diversi di rispondere alla stessa domanda: in che ordine provi a comprare. Se ne
           sceglie uno.
         </p>
+        {!primaVolta && (
+          <p className="mt-2 rounded-xl border border-verde-campo bg-verde-campo/30 px-4 py-2 text-xs text-fumo">
+            Stai usando <strong className="text-nebbia">{lista.metodo === 'fasce' ? 'le fasce' : 'gli slot'}</strong>.
+            Qui non è ancora cambiato niente: cambia solo quando premi il pulsante in fondo.
+          </p>
+        )}
       </div>
 
       <Scheda
@@ -114,13 +123,15 @@ export function SceltaMetodo({
         <Bottone
           misura="grande"
           inCorso={scegli.isPending}
-          onClick={() => scegli.mutate({ idLista: lista.id, metodo })}
+          onClick={() =>
+            scegli.mutate({ idLista: lista.id, metodo }, { onSuccess: () => onFatto?.() })
+          }
         >
           {primaVolta ? 'Comincia con questo metodo' : 'Usa questo metodo'}
         </Bottone>
-        {!primaVolta && onAnnulla && (
+        {onAnnulla && (
           <Bottone aspetto="fantasma" misura="grande" onClick={onAnnulla}>
-            Lascia stare
+            Annulla, tengo {lista.metodo === 'fasce' ? 'le fasce' : 'gli slot'}
           </Bottone>
         )}
       </div>

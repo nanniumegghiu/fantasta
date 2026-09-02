@@ -38,6 +38,13 @@ tools: Read, Grep, Glob, Write, Edit, Bash
   messaggio di conferma per qualcosa che non è successo.
 - Nessun aggiornamento ottimistico sulle offerte d'asta: il numero sale quando il server conferma.
   Nel frattempo il bottone mostra uno stato di attesa.
+- **Aprire una schermata non è una scrittura.** Un pulsante che porta a una schermata di scelta non
+  deve cambiare niente: cambia solo il pulsante che conferma la scelta. Altrimenti chi torna
+  indietro si porta dietro una modifica che non ha mai voluto, e il pulsante «annulla» diventa una
+  bugia. È già successo con il cambio di metodo della lista obiettivi.
+- **Da una schermata di scelta si esce sempre.** Se una schermata chiede di decidere, deve avere una
+  via d'uscita visibile che non decide niente. Un vicolo cieco si riconosce solo usandola, quindi va
+  cercato apposta.
 - Gli stati vuoti, di caricamento e di errore fanno parte del componente, non sono un ripensamento.
 - Sulla pagina dello schermo condiviso **non deve comparire nessun dato privato**, nemmeno di chi
   l'ha aperta.

@@ -186,6 +186,11 @@ porterebbe prima o poi a tagliarlo nel punto sbagliato.
 
 ## Da sapere prima di intervenire
 
+**Aprire non è scrivere.** Un pulsante che porta a una schermata di scelta non deve cambiare niente
+sul server: cambia solo il pulsante che conferma. Se cambia prima, chi preme «annulla» si ritrova
+una modifica che non ha voluto e l'etichetta del pulsante diventa una bugia. Ed è la stessa ragione
+per cui da una schermata di scelta si deve sempre poter uscire senza scegliere.
+
 **La trappola dei campi password.** Il gestore delle password del browser riempie da solo i campi
 che gli sembrano di accesso, e lo fa anche in una registrazione nuova: l'utente si trova il campo
 già pieno di caratteri che non ha mai digitato e deve cancellarli. Perché non succeda servono tre

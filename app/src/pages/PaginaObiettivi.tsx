@@ -21,7 +21,6 @@ import {
   useCreaSlotStandard,
   useImpostaOpzione,
   useListaObiettivi,
-  useRiapriScelta,
   useRiordinaCandidati,
   useRiordinaObiettivi,
   useTogliFascia,
@@ -74,16 +73,15 @@ export function PaginaObiettivi() {
   if (!lista.metodo_confermato || cambioMetodo) {
     return (
       <div className="min-h-dvh">
-        <Intestazione
-          titolo="I miei obiettivi"
-          sottotitolo={lega?.name}
-          indietroA={cambioMetodo ? undefined : `/lega/${idLega}`}
-        />
+        {/* La freccia indietro c'è sempre: da una schermata di scelta si deve
+            poter uscire senza scegliere. */}
+        <Intestazione titolo="I miei obiettivi" sottotitolo={lega?.name} indietroA={`/lega/${idLega}`} />
         <SceltaMetodo
           lista={lista}
           idLega={idLega}
           primaVolta={!lista.metodo_confermato}
           onAnnulla={cambioMetodo ? () => setCambioMetodo(false) : undefined}
+          onFatto={() => setCambioMetodo(false)}
         />
       </div>
     )
@@ -206,7 +204,6 @@ function BarraMetodo({
   onCambia: () => void
 }) {
   const opzione = useImpostaOpzione(idLega)
-  const riapri = useRiapriScelta(idLega)
   const [aperta, setAperta] = useState(false)
 
   return (
@@ -248,19 +245,12 @@ function BarraMetodo({
             onChange={(acceso) => opzione.mutate({ idLista: lista.id, campo: 'usa_incroci', acceso })}
           />
           <div>
-            <Bottone
-              aspetto="secondario"
-              inCorso={riapri.isPending}
-              onClick={() => {
-                riapri.mutate(lista.id)
-                onCambia()
-              }}
-            >
+            <Bottone aspetto="secondario" onClick={onCambia}>
               Cambia metodo
             </Bottone>
             <p className="mt-2 text-xs text-fumo">
-              Cambiare metodo non cancella niente: quello che hai costruito resta e lo ritrovi
-              tornando indietro.
+              Si apre la schermata di scelta. Finché non confermi non cambia niente, e quello che
+              hai costruito con l&apos;altro metodo resta comunque dov&apos;è.
             </p>
           </div>
         </div>
