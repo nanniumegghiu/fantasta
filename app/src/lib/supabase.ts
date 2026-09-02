@@ -13,6 +13,14 @@ const chiaveAnonima = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
 
 export const backendConfigurato = Boolean(url && chiaveAnonima)
 
+/**
+ * Vero solo se il provider Google e' davvero attivo sul backend.
+ * Il valore lo scrive `scripts/prepara-backend.mjs` leggendo la configurazione
+ * reale, non una nostra supposizione: cosi' l'interfaccia non offre un accesso
+ * che fallirebbe.
+ */
+export const googleAbilitato = import.meta.env.VITE_GOOGLE_ABILITATO === 'true'
+
 export const supabase: SupabaseClient | null = backendConfigurato
   ? createClient(url as string, chiaveAnonima as string, {
       auth: {

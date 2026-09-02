@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
 import { useAccesso } from '@/features/auth/ContestoAccesso'
+import { googleAbilitato } from '@/lib/supabase'
 
 type Modo = 'accesso' | 'registrazione'
 
@@ -88,22 +89,32 @@ export function PaginaAccesso() {
           </p>
         </div>
 
-        <Bottone
-          aspetto="secondario"
-          misura="grande"
-          larghezzaPiena
-          inCorso={inCorso === 'google'}
-          onClick={conGoogle}
-          icona={<IconaGoogle />}
-        >
-          Continua con Google
-        </Bottone>
+        {/* Il pulsante compare solo se il provider e' davvero attivo sul
+            backend. Offrire un accesso che fallisce sarebbe una bugia. */}
+        {googleAbilitato ? (
+          <>
+            <Bottone
+              aspetto="secondario"
+              misura="grande"
+              larghezzaPiena
+              inCorso={inCorso === 'google'}
+              onClick={conGoogle}
+              icona={<IconaGoogle />}
+            >
+              Continua con Google
+            </Bottone>
 
-        <div className="my-6 flex items-center gap-3">
-          <span className="h-px flex-1 bg-verde-campo" />
-          <span className="text-xs text-fumo">oppure</span>
-          <span className="h-px flex-1 bg-verde-campo" />
-        </div>
+            <div className="my-6 flex items-center gap-3">
+              <span className="h-px flex-1 bg-verde-campo" />
+              <span className="text-xs text-fumo">oppure</span>
+              <span className="h-px flex-1 bg-verde-campo" />
+            </div>
+          </>
+        ) : (
+          <p className="mb-6 rounded-xl border border-verde-campo bg-verde-campo/30 px-4 py-3 text-center text-xs text-fumo">
+            L&apos;accesso con Google non è ancora attivo. Per ora si entra con email e password.
+          </p>
+        )}
 
         <form onSubmit={conEmail} className="flex flex-col gap-4">
           {registrazione && (

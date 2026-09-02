@@ -188,14 +188,21 @@ console.log('Progetto attivo.                    ')
 const url = `https://${ref}.supabase.co`
 const chiaveAnonima = await leggiChiaveAnonima(ref)
 
+// Lo stato reale del provider Google. L'interfaccia non deve mostrare un
+// pulsante che promette qualcosa che il backend non sa ancora fare.
+const configAuth = await api(`/projects/${ref}/config/auth`)
+const googleAttivo = configAuth.external_google_enabled === true
+
 const percorsoEnvApp = join(radice, 'app', '.env.local')
 writeFileSync(
   percorsoEnvApp,
   `# Generato da scripts/prepara-backend.mjs. Categoria: PUBBLICA.\n` +
     `VITE_SUPABASE_URL=${url}\n` +
-    `VITE_SUPABASE_ANON_KEY=${chiaveAnonima}\n`,
+    `VITE_SUPABASE_ANON_KEY=${chiaveAnonima}\n` +
+    `VITE_GOOGLE_ABILITATO=${googleAttivo}\n`,
 )
 console.log(`Scritto app/.env.local con URL e chiave anonima.`)
+console.log(`Accesso con Google: ${googleAttivo ? 'attivo' : 'non ancora configurato'}`)
 
 console.log('Applico le migrazioni:')
 const esito = await applicaMigrazioni(ref)
