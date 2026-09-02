@@ -182,6 +182,21 @@ porterebbe prima o poi a tagliarlo nel punto sbagliato.
 
 ## Da sapere prima di intervenire
 
+**La trappola dei campi password.** Il gestore delle password del browser riempie da solo i campi
+che gli sembrano di accesso, e lo fa anche in una registrazione nuova: l'utente si trova il campo
+già pieno di caratteri che non ha mai digitato e deve cancellarli. Perché non succeda servono tre
+cose insieme:
+
+1. un attributo **nome** esplicito e diverso su ogni campo, perché il browser decide cosa riempire
+   guardando quello;
+2. `autocomplete` impostato a **nuova password** nei moduli di registrazione;
+3. il campo va **ricreato da zero** quando si passa da accesso a registrazione, altrimenti resta in
+   pagina quello di prima con dentro quello che il browser ci aveva scritto.
+
+**Ogni campo password di registrazione ha la sua conferma.** Un errore di battitura su una password
+che non si vede lascia la persona chiusa fuori dal proprio account, e senza recupero via email non
+c'è modo di rientrare. La conferma non è una formalità, è l'unica rete.
+
 I nomi dei calciatori italiani sono lunghi e le squadre pure. Ogni componente va provato con il nome
 più lungo del listone, non con «Kean». I testi in italiano sono mediamente il 20% più lunghi degli
 equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.

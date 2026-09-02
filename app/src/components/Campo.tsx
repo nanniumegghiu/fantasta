@@ -8,6 +8,13 @@ type Props = {
   aiuto?: string
   errore?: string
   autoComplete?: string
+  /**
+   * Il nome del campo. Non e' un dettaglio: il riempimento automatico del
+   * browser si basa su questo e sull'id. Senza, il gestore delle password
+   * tira a indovinare e scrive la password salvata dentro il campo di una
+   * registrazione nuova.
+   */
+  nome?: string
   richiesto?: boolean
   placeholder?: string
 }
@@ -20,6 +27,7 @@ export function Campo({
   aiuto,
   errore,
   autoComplete,
+  nome,
   richiesto,
   placeholder,
 }: Props) {
@@ -35,6 +43,7 @@ export function Campo({
 
       <input
         id={id}
+        name={nome}
         type={tipo}
         value={valore}
         onChange={(e) => onChange(e.target.value)}

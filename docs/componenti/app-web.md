@@ -126,6 +126,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.5 | 2026-09-03 | Corretti due difetti segnalati all uso: il campo password si riempiva da solo e mancava la conferma in registrazione. |
 | 1.4 | 2026-09-03 | Fetta 4: vista personale dell asta, schermo condiviso, impostazioni pre-asta e pannello di conduzione. |
 | 1.3 | 2026-09-02 | Fetta 3: schermata della lista obiettivi e selettore dei calciatori. |
 | 1.2 | 2026-09-02 | Fetta 2: lettore di fogli di calcolo, importazione, tabella del listone. Codice suddiviso per rotta. |

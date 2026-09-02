@@ -14,6 +14,7 @@ export function PaginaAccesso() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [conferma, setConferma] = useState('')
   const [inCorso, setInCorso] = useState<'google' | 'email' | null>(null)
   const [errore, setErrore] = useState<string | null>(null)
   const [avviso, setAvviso] = useState<string | null>(null)
@@ -43,6 +44,10 @@ export function PaginaAccesso() {
     }
     if (password.length < 8) {
       setErrore('La password deve avere almeno 8 caratteri.')
+      return
+    }
+    if (registrazione && conferma !== password) {
+      setErrore('Le due password non coincidono. Ricontrolla la seconda.')
       return
     }
 
@@ -123,6 +128,7 @@ export function PaginaAccesso() {
               etichetta="Come ti chiami"
               valore={nome}
               onChange={setNome}
+              nome="nome-mostrato"
               autoComplete="nickname"
               placeholder="Il nome che vedranno gli altri"
               richiesto
@@ -134,20 +140,49 @@ export function PaginaAccesso() {
             tipo="email"
             valore={email}
             onChange={setEmail}
+            nome="email"
             autoComplete="email"
             placeholder="nome@esempio.it"
             richiesto
           />
 
+          {/* La chiave cambia con il modo: React ricrea il campo da zero, e
+              con esso sparisce qualsiasi cosa il gestore delle password del
+              browser avesse scritto nel campo di prima. */}
           <Campo
+            key={`password-${modo}`}
             etichetta="Password"
             tipo="password"
             valore={password}
             onChange={setPassword}
+            nome={registrazione ? 'password-nuova' : 'password'}
             autoComplete={registrazione ? 'new-password' : 'current-password'}
             aiuto={registrazione ? 'Almeno 8 caratteri.' : undefined}
             richiesto
           />
+
+          {registrazione && (
+            <Campo
+              key="conferma-password"
+              etichetta="Ripeti la password"
+              tipo="password"
+              valore={conferma}
+              onChange={setConferma}
+              nome="password-conferma"
+              autoComplete="new-password"
+              aiuto={
+                conferma.length > 0 && conferma !== password
+                  ? undefined
+                  : 'Serve a non restare fuori per un errore di battitura.'
+              }
+              errore={
+                conferma.length > 0 && conferma !== password
+                  ? 'Le due password non coincidono.'
+                  : undefined
+              }
+              richiesto
+            />
+          )}
 
           {errore && (
             <p
@@ -172,6 +207,7 @@ export function PaginaAccesso() {
             misura="grande"
             larghezzaPiena
             inCorso={inCorso === 'email'}
+            disabilitato={registrazione && (password.length < 8 || conferma !== password)}
           >
             {registrazione ? 'Crea il mio account' : 'Entra'}
           </Bottone>
@@ -183,6 +219,8 @@ export function PaginaAccesso() {
             type="button"
             onClick={() => {
               setModo(registrazione ? 'accesso' : 'registrazione')
+              setPassword('')
+              setConferma('')
               setErrore(null)
               setAvviso(null)
             }}
