@@ -18,6 +18,10 @@ const PaginaEntraInLega = lazy(() =>
   import('@/pages/PaginaEntraInLega').then((m) => ({ default: m.PaginaEntraInLega })),
 )
 const PaginaLega = lazy(() => import('@/pages/PaginaLega').then((m) => ({ default: m.PaginaLega })))
+const PaginaAsta = lazy(() => import('@/pages/PaginaAsta').then((m) => ({ default: m.PaginaAsta })))
+const PaginaSchermoAsta = lazy(() =>
+  import('@/pages/PaginaSchermoAsta').then((m) => ({ default: m.PaginaSchermoAsta })),
+)
 const PaginaObiettivi = lazy(() =>
   import('@/pages/PaginaObiettivi').then((m) => ({ default: m.PaginaObiettivi })),
 )
@@ -150,6 +154,25 @@ function Rotte() {
         element={
           <SoloAutenticati>
             <PaginaLega />
+          </SoloAutenticati>
+        }
+      />
+
+      <Route
+        path="/lega/:id/asta"
+        element={
+          <SoloAutenticati>
+            <PaginaAsta />
+          </SoloAutenticati>
+        }
+      />
+      {/* Lo schermo condiviso è una pagina a sé: non mostra nessun dato
+          privato, nemmeno di chi l'ha aperta. */}
+      <Route
+        path="/lega/:id/asta/schermo"
+        element={
+          <SoloAutenticati>
+            <PaginaSchermoAsta />
           </SoloAutenticati>
         }
       />

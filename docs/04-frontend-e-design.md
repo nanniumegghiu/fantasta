@@ -3,7 +3,7 @@
 **Scopo** · Definire l'aspetto e il comportamento dell'interfaccia: colori, tipografia, animazioni,
 suoni, e l'elenco completo delle schermate.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 token e componenti costruiti · schermate da 1 a 12 fatte, mai viste in un browser · asta 🔴
+**Stato** · 🟡 token e componenti costruiti · quindici schermate fatte, **mai viste in un browser**
 **Data** · 2026-09-02
 
 ---
@@ -132,6 +132,20 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
     e libero, crediti, obiettivi residui, accesso rapido a rose e listone.
 14. Vista amministratore dell'asta: la precedente più passa, assegna, annulla, pausa.
 15. **Schermo condiviso**: la vista da proiettare, senza comandi, con i suoni.
+
+    Disposizione richiesta dall'utente, in due fasce orizzontali.
+
+    **Fascia superiore, il momento presente.** A sinistra il calciatore chiamato con la cifra
+    dell'offerta corrente in caratteri enormi e il nome di chi l'ha fatta. A destra le sue
+    statistiche di campionato, con la giornata di riferimento. Il countdown occupa il centro
+    quando parte.
+
+    **Fascia inferiore, il quadro generale.** Tutte le squadre affiancate: per ognuna il nome, i
+    crediti residui, gli slot occupati reparto per reparto e il massimo che può ancora offrire.
+    È il riepilogo totale dell'asta, e resta sempre visibile mentre sopra si svolge la chiamata.
+
+    Il senso della divisione: chi guarda da tre metri deve capire in un colpo d'occhio *cosa sta
+    succedendo adesso* e *come sta andando la serata*, senza che nessuno debba cambiare schermata.
 16. Fine asta: riepilogo ed esportazione in CSV.
 
 ### 2.7 Struttura mobile
@@ -177,7 +191,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 - ✅ Carattere scelto: **Inter**, per le cifre a larghezza fissa che tengono fermo il countdown.
   Caricato da servizio esterno con ricaduta sui caratteri di sistema. Vedi
   `docs/componenti/app-web.md` per il dubbio ancora aperto sul portarlo dentro il progetto.
-- 🔴 I file audio vanno prodotti o reperiti con licenza libera.
+- ✅ Suoni: sintetizzati nel browser, senza nessun file audio da reperire o licenziare.
 - 🟡 Contrasto dichiarato ma non ancora misurato.
 - 🟡 Tema chiaro: previsto, non progettato.
 
@@ -185,6 +199,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-02 | Vista personale dell asta e schermo condiviso. Suoni sintetizzati invece che da file. |
 | 1.2 | 2026-09-02 | Schermate di listone, importazione e lista obiettivi. |
 | 1.1 | 2026-09-02 | Carattere scelto, marchio diviso in due colori, primi componenti e schermate. |
 | 1.0 | 2026-09-02 | Prima stesura, palette estratta dal logo reale. |

@@ -4,7 +4,7 @@
 crediti, metodi d'asta, timer, vincoli sulle offerte. È la fonte unica: il codice le implementa,
 non le reinventa.
 **Proprietario** · backend-engineer (le regole vivono sul server)
-**Stato** · 🔴 nessuna regola ancora implementata · documento completo
+**Stato** · 🟡 realizzate e verificate: crediti, massimo offribile, ruoli, turni, timer · varianti e poteri admin 🔴
 **Data** · 2026-09-02
 
 ---
@@ -196,4 +196,5 @@ credito residuo, reparto già completo.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Regole realizzate nel motore d asta e verificate sui casi limite. Solo chiamata libera totale, per ora. |
 | 1.0 | 2026-09-02 | Prima stesura: ruoli, crediti, massimo offribile, metodi, timer, poteri admin. |

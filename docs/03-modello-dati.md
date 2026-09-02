@@ -3,7 +3,7 @@
 **Scopo** · Elencare tutte le entità del sistema, i loro campi e le relazioni. È il contratto che
 frontend e backend concordano **prima** di scrivere interfaccia.
 **Proprietario** · backend-engineer
-**Stato** · 🟡 create e verificate tutte le tabelle tranne quelle dell asta e degli scambi
+**Stato** · 🟡 create e verificate tutte le tabelle tranne quelle degli scambi
 **Data** · 2026-09-02
 
 ---
@@ -137,8 +137,7 @@ teniamo solo ciò che serve mostrare.
 | `nominated_by_team_id` | uuid | Nullo nell'alfabetica e nella random |
 | `current_bid` | int | |
 | `current_bidder_team_id` | uuid | |
-| `last_bid_at` | timestamptz | **La base di calcolo del countdown** |
-| `countdown_started_at` | timestamptz | Valorizzato quando parte il conto alla rovescia |
+| `last_bid_at` | timestamptz | **L unico istante salvato**: attesa, countdown e scadenza si ricavano tutti da qui. Vedi `docs/05-asta-realtime.md` |
 | `awarded_team_id`, `final_price` | | Alla chiusura |
 
 **`bids`** — a sola aggiunta.
@@ -216,6 +215,9 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260902160000_ingresso_lega_con_esito.sql` | `entra_in_lega` che restituisce un esito invece di sollevare eccezioni |
 | `20260902180000_listone.sql` | `players`, `player_stats`, `app_admins`, funzioni di importazione, vista `listone` |
 | `20260902200000_obiettivi.sql` | `target_lists`, `tiers`, `targets`, `roster_slots`, `slot_candidates`, `goalkeeper_pairings`, `pairing_members` |
+| `20260902220000_asta.sql` | `auctions`, `auction_lots`, `bids`, `lot_passes`, `roster_players`, `auction_events`, vista `team_budget`, motore d asta |
+| `20260902230000_crediti_riconosci_il_server.sql` | Correzione: la difesa sui crediti bloccava il server stesso |
+| `20260902233000_registro_cancellazione_a_cascata.sql` | Correzione: il registro immutabile impediva di cancellare una lega |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

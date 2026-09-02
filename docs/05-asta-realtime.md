@@ -3,7 +3,7 @@
 **Scopo** · Descrivere il meccanismo che tiene sincronizzate tutte le superfici durante l'asta:
 canale realtime, timer autoritativo, offerte simultanee, riconnessioni.
 **Proprietario** · backend-engineer, con il frontend-engineer come consumatore del contratto
-**Stato** · 🔴 non implementato · meccanismo progettato
+**Stato** · 🟡 motore, timer e sincronia realizzati e verificati · varianti, poteri admin e passo 🔴
 **Data** · 2026-09-02
 
 ---
@@ -31,32 +31,35 @@ incrociano lì con quello che arriva dal canale.
 
 È il punto più delicato di tutta l'app, quindi vale la pena scriverlo per esteso.
 
-Il server non manda un tic ogni secondo. Salva **due istanti** sul lotto:
+Il server non manda un tic ogni secondo. Salva **un solo istante** sul lotto:
+`last_bid_at`, l'ora esatta dell'ultimo rilancio. Tutto il resto si ricava da lì.
 
-- `last_bid_at`, l'ora esatta dell'ultimo rilancio;
-- `countdown_started_at`, valorizzato quando il countdown parte davvero.
+```
+attesa     finché  adesso <  last_bid_at + inattività
+countdown  quando  adesso >= last_bid_at + inattività
+scaduto    quando  adesso >= last_bid_at + inattività + countdown
+```
+
+> **Semplificazione rispetto al disegno iniziale.** Il progetto prevedeva anche un secondo istante,
+> `countdown_started_at`, valorizzato all'avvio del conto alla rovescia. Realizzandolo si è visto
+> che è ricavabile, ed è quindi un dato in più da tenere allineato senza guadagnarci niente: due
+> istanti che possono divergere sono peggio di uno solo che non può. Il campo non esiste.
 
 Ogni superficie calcola da sola quanti secondi mancano, sottraendo dall'ora corrente. Il risultato è
 lo stesso per tutti perché la base è la stessa, e chi ricarica la pagina riprende esattamente da
 dove era.
 
-```
-stato = attesa        se  adesso − last_bid_at  <  secondi_inattivita
-stato = countdown     se  adesso − last_bid_at  >= secondi_inattivita
-secondi_mancanti = secondi_countdown − (adesso − countdown_started_at)
-```
-
 **Chi chiude il lotto quando il countdown finisce?** Non il telefono che arriva primo a zero: sarebbe
-il telefono a decidere, e un orologio sfasato falserebbe l'asta. Il meccanismo è doppio:
+il telefono a decidere, e un orologio sfasato falserebbe l'asta. Il meccanismo previsto è doppio:
 
-1. La superficie che vede il countdown a zero manda al server una richiesta «chiudi questo lotto».
-   Il server **ricalcola dai propri timestamp** e chiude solo se è davvero scaduto. Se non lo è,
-   rifiuta e non succede niente.
-2. In più, un compito pianificato sul server passa ogni pochi secondi a chiudere i lotti scaduti che
-   nessuno ha segnalato, per esempio perché tutti hanno chiuso l'app.
-
-Il secondo meccanismo è la rete di sicurezza; il primo è ciò che rende la chiusura istantanea agli
-occhi di chi è al tavolo.
+1. ✅ La superficie che vede il countdown a zero manda al server una richiesta «chiudi questo lotto».
+   Il server **ricalcola dai propri istanti** e chiude solo se è davvero scaduto. Se non lo è,
+   rifiuta e non succede niente. Verificato: la richiesta anticipata riceve «Il tempo non è ancora
+   finito».
+2. 🔴 **Non ancora costruito.** Un compito pianificato sul server che chiuda i lotti scaduti che
+   nessuno ha segnalato, per esempio perché tutti hanno chiuso l'app. Finché non c'è, un lotto
+   lasciato aperto da tutti resta aperto: in una stanza dove qualcuno sta sempre guardando lo
+   schermo non capita, ma è un buco dichiarato e non un dettaglio.
 
 ### 2.3 Scarto degli orologi
 
@@ -108,8 +111,15 @@ aggiornati mentre l'amministratore registra le aggiudicazioni.
 
 ## 3. File coinvolti
 
-🔴 Nessuno. Previsti: le funzioni server dell'asta, `app/src/features/auction/useAuctionChannel.ts`,
-`app/src/domain/timer.ts`.
+| File | Cosa contiene |
+|---|---|
+| `app/supabase/migrations/20260902220000_asta.sql` | Tabelle, policy, motore: chiamata, rilancio, chiusura, avanzamento del turno |
+| `app/src/features/asta/api.ts` | Interrogazioni, canale realtime, scarto degli orologi, azioni |
+| `app/src/features/asta/useTimer.ts` | Lo stato del countdown ricavato dagli istanti del server |
+| `app/src/features/asta/suoni.ts` | I suoni, sintetizzati senza file audio |
+| `app/src/pages/PaginaAsta.tsx` | La vista personale |
+| `app/src/pages/PaginaSchermoAsta.tsx` | Lo schermo condiviso |
+| `scripts/verifica-asta.mjs` | 26 prove sul motore |
 
 ## 4. Decisioni e perché
 
@@ -137,4 +147,5 @@ lotto si chiude e l'offerta viene rifiutata. Mai entrambe.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Motore realizzato. Semplificazione: il countdown si ricava dal solo `last_bid_at`, senza un secondo istante da tenere allineato. |
 | 1.0 | 2026-09-02 | Prima stesura. |

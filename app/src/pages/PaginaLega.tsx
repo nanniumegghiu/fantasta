@@ -61,7 +61,7 @@ export function PaginaLega() {
       />
 
       <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
-        <RiquadroAsta lega={lega} />
+        <RiquadroAsta lega={lega} sonoAdmin={sonoAdmin} />
         <RiquadroObiettivi idLega={lega.id} />
         <RiquadroListone />
         {sonoAdmin && <RiquadroInvito lega={lega} />}
@@ -76,20 +76,40 @@ export function PaginaLega() {
 
 // ─── Asta ───────────────────────────────────────────────────────────────────
 
-function RiquadroAsta({ lega }: { lega: LegaCompleta }) {
+function RiquadroAsta({ lega, sonoAdmin }: { lega: LegaCompleta; sonoAdmin: boolean }) {
   const pronti = lega.league_members.length
 
+  const testo = {
+    setup: 'Quando siete tutti dentro, si aprono le impostazioni e si comincia.',
+    auction: "L'asta è in corso.",
+    done: 'Asta conclusa: le rose sono complete.',
+  }[lega.status]
+
   return (
-    <Riquadro titolo="L'asta">
-      {/* Onesta': l'asta non esiste ancora. L'interfaccia lo dice invece di
-          mostrare un pulsante che non porta da nessuna parte. */}
-      <p className="text-sm text-fumo">
-        Siete in {pronti}. Quando sarete tutti dentro, da qui si apriranno le impostazioni
-        dell&apos;asta e la si potrà far partire.
-      </p>
-      <p className="mt-3 rounded-xl border border-oro/30 bg-oro/10 px-4 py-3 text-sm text-oro">
-        L&apos;asta è la prossima parte da costruire. Per ora questa schermata non fa niente.
-      </p>
+    <Riquadro titolo="L'asta" sottotitolo={`Siete in ${pronti}`}>
+      <p className="mb-3 text-sm text-fumo">{testo}</p>
+
+      <div className="flex flex-wrap gap-2">
+        <Link to={`/lega/${lega.id}/asta`}>
+          <Bottone misura="grande">
+            {lega.status === 'auction' ? "Entra nell'asta" : "Vai all'asta"}
+          </Bottone>
+        </Link>
+        {sonoAdmin && (
+          <Link to={`/lega/${lega.id}/asta/schermo`} target="_blank">
+            <Bottone aspetto="secondario" misura="grande">
+              Schermo condiviso
+            </Bottone>
+          </Link>
+        )}
+      </div>
+
+      {sonoAdmin && (
+        <p className="mt-3 text-xs text-fumo">
+          Lo schermo condiviso si apre in una scheda a parte: è la pagina da proiettare sul
+          televisore. Non mostra nessun dato privato, nemmeno i tuoi obiettivi.
+        </p>
+      )}
     </Riquadro>
   )
 }

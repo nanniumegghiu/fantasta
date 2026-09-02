@@ -3,7 +3,7 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🟡 Fette 0, 1, 2 e 3 costruite e verificate lato server, mai viste in un browser
+**Stato** · 🟡 Fette da 0 a 3 complete e 4a costruita, verificate lato server, mai viste in un browser
 **Data** · 2026-09-02
 
 ---
@@ -89,9 +89,18 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Schermata con fasce, tetti, note, slot e incroci | 🟡 scritta, **mai aperta in un browser** |
 | Contatore degli obiettivi ancora liberi durante l'asta | 🔴 arriva con la Fetta 4f |
 
-### Fetta 4 · L'asta
+### Fetta 4 · L'asta — 🟡 motore e schermo condiviso costruiti
 
 È il cuore dell'app e il pezzo più difficile. Va spezzata.
+| Sotto-fetta | Stato |
+|---|---|
+| **4a · Motore** | ✅ 26 prove su 26, `node scripts/verifica-asta.mjs`. Solo chiamata libera totale. |
+| **4b · Schermo condiviso** | 🟡 scritto con i suoni sintetizzati, **mai aperto in un browser** |
+| **4f · Aggancio obiettivi** | 🟡 la vista personale mostra tetto e nota del calciatore in asta |
+| **4c · Varianti** | 🔴 rifiutate esplicitamente dal server, non finte |
+| **4d · Poteri amministratore** | 🟡 solo pausa e ripresa. Passa, assegna e annulla 🔴 |
+| **4e · Chiamata con passo** | 🔴 |
+| Compito pianificato che chiude i lotti dimenticati | 🔴 |
 
 | Sotto-fetta | Contenuto | Come si dimostra |
 |---|---|---|
@@ -142,7 +151,7 @@ non è decorativa: è il criterio di chiusura.
 
 ## Aperto / TODO
 
-- 🔴 Le schermate delle Fette da 0 a 3 non sono mai state aperte in un browser: è la verifica che manca.
+- 🔴 Nessuna schermata è mai stata aperta in un browser: è la verifica che manca, e ormai riguarda quindici pagine.
 - 🔴 Serve il file ufficiale del listone per provare l importazione sul formato vero.
 - 🔴 Pubblicazione online, necessaria perché il link giri davvero su WhatsApp.
 
@@ -150,6 +159,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.4 | 2026-09-02 | Fetta 4a costruita: motore d asta, timer del server, schermo condiviso con i suoni. |
 | 1.3 | 2026-09-02 | Fetta 3 costruita: lista obiettivi con i quattro metodi. |
 | 1.2 | 2026-09-02 | Fetta 2 costruita: importazione e tabella del listone. |
 | 1.1 | 2026-09-02 | Fette 0 e 1 costruite. Vincolo di calendario chiarito. |
