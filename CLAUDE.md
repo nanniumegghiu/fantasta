@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 1.0 · **Data** · 2026-09-02
+**Versione documento** · 1.2 · **Data** · 2026-09-02
 
 ---
 
@@ -43,7 +43,7 @@ Il nome si scrive **Fantasta** nei testi e `fantasta` nel codice. Vedi ADR-0004.
 | `docs/08-roadmap.md` | In che ordine si costruisce, e come si dimostra ogni fetta | project-manager |
 | `docs/09-decisioni-aperte.md` | **Le scelte ancora da fare**, con pro, contro e raccomandazioni | project-manager |
 | `docs/adr/` | Le decisioni prese, una per file, immutabili | project-manager |
-| `docs/componenti/` | Dettaglio dei singoli moduli di codice | chi lo scrive |
+| `docs/componenti/app-web.md` | Struttura del codice del client, rotte e comandi | frontend-engineer |
 | `docs/qa/` | Rapporti del protocollo di test iper-critico | qa-lead |
 | `docs/decisioni/` | Registro dei brainstorming, per non riaprire discussioni chiuse | doc-supervisor |
 
@@ -79,7 +79,9 @@ Progetto Fantacalcio/
 - Il facepack e i file del listone **non stanno nel repository**: sono centinaia di file binari e
   fogli di calcolo che non hanno niente da fare in un sistema di versionamento. Vanno nell'archivio
   file del backend. Per questo `facepack/`, `*.xlsx` e `*.csv` sono ignorati.
-- `app/` non esiste ancora **di proposito**: si crea dopo le decisioni sullo stack, non prima.
+- `app/` è nato **dopo** le decisioni sullo stack, non prima: è la regola del metodo.
+- Gli `scripts/` alla radice sono automazioni che parlano col backend con le credenziali di
+  sviluppo. Quelli dentro `app/scripts/` riguardano solo la compilazione del client.
 
 ---
 
@@ -142,7 +144,10 @@ Sistema: Windows 11, shell PowerShell.
 | Client | **Applicazione web installabile**, React con Vite e TypeScript | `0002` |
 | Dati dei calciatori | **Importazione di file**, non raccolta automatica | `0003` |
 | Countdown d'asta | Istanti salvati dal server, non contatori locali | `0005` |
-| Dipendenze autorizzate | Elenco chiuso, una per una con il motivo | `0006` |
+| Dipendenze autorizzate | Elenco chiuso, una per una con il motivo | `0006`, `0007` |
+| Esportazione delle rose | Quattro colonne fissate dalle istruzioni ufficiali | `0008` |
+| Conferma dell'indirizzo email | Disattivata: il servizio incluso manda 2 email all'ora | `0009` |
+| Foto del facepack | Ponte automatico verso gli identificativi di Football Manager | `0011` supera `0010` |
 
 Nessun pacchetto che non compaia in ADR-0006 è autorizzato. Se un comando ne installa uno, o si
 toglie o si scrive un ADR che supera il precedente.
@@ -166,12 +171,25 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Backend Supabase creato e attivo | ✅ progetto `fantasta`, migrazione applicata |
 | Regole di accesso provate violandole | ✅ 7 prove su 7, `node scripts/verifica-sicurezza.mjs` |
 | Registrazione e accesso con email | ✅ verificati con richieste reali |
-| Schermate di accesso e «Le mie leghe» | 🟡 scritte, **mai aperte in un browser** |
+| Fetta 1: leghe, inviti, squadre, regolamento in PDF | ✅ 30 prove su 30 lato server |
+| Tutte le schermate | 🟡 scritte e compilate, **mai aperte in un browser** |
 | Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
-| Fetta 1 in poi | 🔴 non iniziate |
+| Fetta 2 in poi | 🔴 non iniziate |
 
-**Prossimo passo** · Aprire l'app in un browser e guardare le schermate. Poi Fetta 1: leghe, inviti
-e squadre.
+**Prossimo passo** · Aprire l'app in un browser e provare il giro completo su due dispositivi:
+creo la lega, mando il codice, il secondo entra. Poi Fetta 2: listone e statistiche.
+
+---
+
+## 7bis. Le automazioni pronte
+
+Tutte si lanciano dalla cartella del progetto, non da `app/`.
+
+| Comando | Cosa fa |
+|---|---|
+| `node scripts/prepara-backend.mjs` | Crea il progetto Supabase se manca, scrive le chiavi in `app/.env.local` e applica le migrazioni non ancora applicate. Ripetibile senza danni. |
+| `node scripts/verifica-sicurezza.mjs` | Sette prove sui profili: prova a leggere e scrivere dati altrui e verifica di essere respinto. |
+| `node scripts/verifica-leghe.mjs` | Trenta prove su leghe, inviti, squadre e regolamento. Con `--pulisci` rimuove gli utenti di prova. |
 
 ---
 
@@ -196,5 +214,6 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Backend collegato e verificato. Fetta 1 costruita: leghe, inviti, squadre, regolamento in PDF, con 30 prove superate. ADR 0008-0011. |
 | 1.1 | 2026-09-02 | Chiuse 5 decisioni con 7 ADR. Nome del prodotto: Fantasta. Fetta 0 costruita: applicazione web installabile che compila, icone generate dal logo, accesso e rotte protette, prima migrazione con le sue policy. |
 | 1.0 | 2026-09-02 | Prima sessione: struttura, 10 documenti di area, 6 agenti, 5 skill, palette dal logo, 12 decisioni aperte. Nessun codice, come previsto dal metodo. |

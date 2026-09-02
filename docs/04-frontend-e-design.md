@@ -3,7 +3,7 @@
 **Scopo** · Definire l'aspetto e il comportamento dell'interfaccia: colori, tipografia, animazioni,
 suoni, e l'elenco completo delle schermate.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 token e primi componenti costruiti, schermate 1, 2 e 4 fatte · il resto 🔴
+**Stato** · 🟡 token e componenti di base costruiti · schermate da 1 a 9 fatte, mai viste in un browser · il resto 🔴
 **Data** · 2026-09-02
 
 ---
@@ -48,8 +48,8 @@ una regola dichiarata, non ancora misurata.
 
 ### 2.3 Tipografia
 
-Un carattere solo, con due pesi di lavoro. **Inter** o **Manrope**: geometrici, moderni, ottimi coi
-numeri, gratuiti. I numeri dell'asta usano la variante a **cifre di larghezza fissa**, altrimenti il
+Un carattere solo: **Inter**, scelto per le cifre a larghezza fissa che tengono fermo il countdown.
+È geometrico, moderno e gratuito. I numeri dell'asta usano la variante a **cifre di larghezza fissa**, altrimenti il
 countdown «balla» mentre scende da 10 a 9.
 
 | Ruolo | Dimensione mobile | Dimensione schermo condiviso |
@@ -148,8 +148,16 @@ Area di tocco minima 44 x 44 px. I bottoni di rilancio sono più grandi: si prem
 
 ## 3. File coinvolti
 
-🔴 Nessuno. Previsti: `app/src/styles/tokens.css`, `app/src/components/`, `app/public/sounds/`,
-`app/src/features/auction/`.
+| File | Cosa contiene |
+|---|---|
+| `app/src/styles/index.css` | I token, presi dal logo, e le regole di base |
+| `app/src/components/` | Bottone, Campo, CampoNumero, Interruttore, Intestazione, MarchioFantasta |
+| `app/src/pages/` | Le schermate realizzate |
+| `app/public/sounds/` | 🔴 non esiste ancora: i suoni arrivano con la Fetta 4b |
+
+Il nome scritto **Fantasta** vive in un componente solo, `MarchioFantasta`: «Fant» in bianco e
+«asta» in arancione, così la parola ASTA emerge dentro il nome. Scriverlo a mano nelle schermate
+porterebbe prima o poi a tagliarlo nel punto sbagliato.
 
 ## 4. Decisioni e perché
 
@@ -177,4 +185,5 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Carattere scelto, marchio diviso in due colori, primi componenti e schermate. |
 | 1.0 | 2026-09-02 | Prima stesura, palette estratta dal logo reale. |

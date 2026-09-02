@@ -3,7 +3,7 @@
 **Scopo** · Stabilire chi può leggere e scrivere cosa, come funziona l'accesso, e come si gestiscono
 i codici di invito e le credenziali.
 **Proprietario** · security-officer, con potere di veto sulle consegne
-**Stato** · 🔴 non implementato · politiche definite
+**Stato** · 🟡 accesso, leghe, inviti e archivio del regolamento realizzati e verificati · asta 🔴
 **Data** · 2026-09-02
 
 ---
@@ -21,8 +21,11 @@ un'app deve rendere impossibile, non improbabile.
 
 Due strade, entrambe richieste dall'utente:
 
-- **Google**, un tocco, nessuna password da ricordare;
-- **Email e password**, con verifica dell'indirizzo.
+- **Google**, un tocco, nessuna password da ricordare. 🔴 Provider non ancora configurato: finché
+  è spento il pulsante non compare, invece di comparire e fallire.
+- **Email e password**, almeno 8 caratteri. ✅ Funzionante. La **conferma dell'indirizzo è
+  disattivata** per la ragione spiegata in ADR-0009: il servizio di invio incluso manda 2 email
+  all'ora, e con dieci amici che si registrano insieme non funzionerebbe.
 
 Chi accede con Google e poi con la stessa email via password ritrova lo stesso profilo: l'identità è
 l'indirizzo email.
@@ -97,7 +100,11 @@ doverlo riscoprire dopo.
 
 ## 3. File coinvolti
 
-🔴 Nessuno. Le policy vivranno nelle stesse migrazioni che creano le tabelle.
+- `app/supabase/migrations/20260902120000_profili.sql` — profili e loro policy
+- `app/supabase/migrations/20260902140000_leghe.sql` — leghe, partecipanti, squadre, inviti, archivio
+- `app/supabase/migrations/20260902160000_ingresso_lega_con_esito.sql` — ingresso con esito
+- `scripts/verifica-sicurezza.mjs` — 7 prove sui profili
+- `scripts/verifica-leghe.mjs` — 30 prove su leghe, inviti, squadre e regolamento
 
 ## 4. Decisioni e perché
 
@@ -115,12 +122,15 @@ utente, e l'esito va mostrato. «Ho scritto la policy» non è una verifica.
 
 ## Aperto / TODO
 
-- 🔴 Configurazione dell'invio email, necessaria per verifica indirizzo e recupero password.
-- 🔴 Limitatore di tentativi sul codice di invito: da implementare, non è automatico.
+- ✅ Limitatore sui codici di invito: dieci fallimenti in dieci minuti e ci si ferma. Verificato.
+- ✅ Archivio del regolamento privato, con indirizzi firmati a scadenza. Verificato.
+- 🔴 Invio email non configurato: conferma indirizzo e recupero password restano spenti, ADR-0009.
+- 🟡 Un utente che amministra una lega non si può cancellare: il vincolo lo impedisce, perché nessuna lega deve restare senza amministratore. Va deciso cosa offrire a chi vuole andarsene.
 - 🟡 Va deciso se l'amministratore può espellere un partecipante e cosa succede alla sua rosa.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Realizzate e verificate le policy di leghe, squadre, inviti e archivio del regolamento. La lettura dei profili si estende ai compagni di lega. |
 | 1.0 | 2026-09-02 | Prima stesura. |

@@ -4,7 +4,7 @@
 onesti, costo di inversione e la mia raccomandazione motivata. Quando una decisione è presa si
 sposta fra quelle chiuse e diventa un ADR in `docs/adr/`.
 **Proprietario** · project-manager
-**Stato** · 🟡 5 decisioni chiuse con ADR, 7 ancora aperte
+**Stato** · 🟡 8 decisioni chiuse, 4 minori ancora aperte e nessuna bloccante
 **Data** · 2026-09-02
 
 ---

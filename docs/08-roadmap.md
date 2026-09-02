@@ -3,7 +3,7 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🔴 nessuna fetta completata
+**Stato** · 🟡 Fette 0 e 1 costruite e verificate lato server, mai viste in un browser
 **Data** · 2026-09-02
 
 ---
@@ -16,11 +16,10 @@ strati e produce una cosa che si accende.
 
 ## 2. Le fette
 
-### ⚠️ Vincolo di calendario da chiarire subito
+### Vincolo di calendario: chiarito
 
-Oggi è il 2 settembre 2026. Le aste del fantacalcio si fanno tipicamente **fra fine agosto e metà
-settembre**. Se l'asta di questa lega è fra due settimane, l'ordine qui sotto va accorciato in modo
-brutale e alcune cose vanno sacrificate. È la prima domanda in `docs/09-decisioni-aperte.md`.
+L'asta è a più di sei settimane di distanza. Nessuna pressione: si segue l'ordine intero, facepack
+compreso, e si chiude con la revisione iper-critica prima di usare l'app sul serio.
 
 ---
 
@@ -42,13 +41,21 @@ vuota col mio nome, esco e rientro.
 | Accesso con Google | 🔴 provider non ancora configurato |
 | Pubblicazione online | 🔴 |
 
-### Fetta 1 · Leghe, inviti e squadre
+### Fetta 1 · Leghe, inviti e squadre — 🟡 costruita, mai vista in un browser
 
 Creazione lega con tutte le regole, caricamento del PDF del regolamento, codice di invito
 condivisibile su WhatsApp, ingresso in lega, creazione della propria squadra con nome.
 
 **Si dimostra così**: da un telefono creo la lega, mando il codice su WhatsApp a un secondo
 dispositivo, che entra e crea la sua squadra. Entrambi vediamo l'elenco dei partecipanti aggiornato.
+
+| Pezzo | Stato |
+|---|---|
+| Tabelle, policy, funzioni di creazione e ingresso | ✅ 30 prove su 30, `node scripts/verifica-leghe.mjs` |
+| Codice di invito, rigenerazione, limite ai tentativi | ✅ verificato |
+| Regolamento in PDF, archivio privato con indirizzi firmati | ✅ verificato |
+| Schermate: elenco leghe, creazione, ingresso, riepilogo | 🟡 scritte e compilate, **mai aperte in un browser** |
+| Prova vera su due dispositivi | 🔴 |
 
 ### Fetta 2 · Listone e statistiche
 
@@ -120,10 +127,12 @@ non è decorativa: è il criterio di chiusura.
 
 ## Aperto / TODO
 
-- 🔴 Data dell'asta reale: determina se questa roadmap regge o va tagliata.
+- 🔴 Le schermate delle Fette 0 e 1 non sono mai state aperte in un browser: è la verifica che manca.
+- 🔴 Pubblicazione online, necessaria perché il link giri davvero su WhatsApp.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Fette 0 e 1 costruite. Vincolo di calendario chiarito. |
 | 1.0 | 2026-09-02 | Prima stesura. |

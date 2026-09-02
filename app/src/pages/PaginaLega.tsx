@@ -1,0 +1,437 @@
+import { useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { motion } from 'motion/react'
+import { Bottone } from '@/components/Bottone'
+import { Campo } from '@/components/Campo'
+import { Intestazione } from '@/components/Intestazione'
+import { useAccesso } from '@/features/auth/ContestoAccesso'
+import {
+  indirizzoRegolamento,
+  useCaricaRegolamento,
+  useImpostaInvitoAttivo,
+  useLega,
+  useProfili,
+  useRigeneraCodice,
+  useRinominaSquadra,
+} from '@/features/leghe/api'
+import { totaleSlot, type LegaCompleta } from '@/features/leghe/tipi'
+
+export function PaginaLega() {
+  const { id } = useParams()
+  const { utente } = useAccesso()
+  const { data: lega, isPending, error } = useLega(id)
+
+  if (isPending) {
+    return (
+      <div className="min-h-dvh">
+        <Intestazione titolo="Lega" indietroA="/leghe" />
+        <div className="mx-auto max-w-3xl px-4 py-6">
+          <div className="h-40 animate-pulse rounded-2xl border border-verde-campo bg-verde-campo/30" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !lega) {
+    return (
+      <div className="min-h-dvh">
+        <Intestazione titolo="Lega" indietroA="/leghe" />
+        <div className="mx-auto max-w-3xl px-4 py-6">
+          <p
+            role="alert"
+            className="rounded-2xl border border-errore/40 bg-errore/10 p-5 text-sm text-errore"
+          >
+            {error
+              ? error.message
+              : 'Questa lega non esiste, oppure non ne fai parte.'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const sonoAdmin = lega.admin_user_id === utente?.id
+
+  return (
+    <div className="min-h-dvh">
+      <Intestazione
+        titolo={lega.name}
+        sottotitolo={`Stagione ${lega.season}`}
+        indietroA="/leghe"
+      />
+
+      <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
+        <RiquadroAsta lega={lega} />
+        {sonoAdmin && <RiquadroInvito lega={lega} />}
+        <RiquadroPartecipanti lega={lega} idUtente={utente?.id} />
+        <RiquadroMiaSquadra lega={lega} idUtente={utente?.id} />
+        <RiquadroRegole lega={lega} />
+        <RiquadroRegolamento lega={lega} sonoAdmin={sonoAdmin} />
+      </main>
+    </div>
+  )
+}
+
+// ─── Asta ───────────────────────────────────────────────────────────────────
+
+function RiquadroAsta({ lega }: { lega: LegaCompleta }) {
+  const pronti = lega.league_members.length
+
+  return (
+    <Riquadro titolo="L'asta">
+      {/* Onesta': l'asta non esiste ancora. L'interfaccia lo dice invece di
+          mostrare un pulsante che non porta da nessuna parte. */}
+      <p className="text-sm text-fumo">
+        Siete in {pronti}. Quando sarete tutti dentro, da qui si apriranno le impostazioni
+        dell&apos;asta e la si potrà far partire.
+      </p>
+      <p className="mt-3 rounded-xl border border-oro/30 bg-oro/10 px-4 py-3 text-sm text-oro">
+        L&apos;asta è la prossima parte da costruire. Per ora questa schermata non fa niente.
+      </p>
+    </Riquadro>
+  )
+}
+
+// ─── Invito ─────────────────────────────────────────────────────────────────
+
+function RiquadroInvito({ lega }: { lega: LegaCompleta }) {
+  const rigenera = useRigeneraCodice()
+  const attiva = useImpostaInvitoAttivo()
+  const [copiato, setCopiato] = useState(false)
+  const [errore, setErrore] = useState<string | null>(null)
+
+  const link = `${window.location.origin}/invito/${lega.invite_code}`
+  const testo =
+    `Ti aspetto nella lega "${lega.name}" su Fantasta.\n` +
+    `Codice: ${lega.invite_code}\n${link}`
+
+  async function copia() {
+    try {
+      await navigator.clipboard.writeText(testo)
+      setCopiato(true)
+      setTimeout(() => setCopiato(false), 2500)
+    } catch {
+      // Alcuni browser bloccano gli appunti se la pagina non è sicura.
+      setErrore('Il browser non mi lascia copiare. Seleziona il codice a mano.')
+    }
+  }
+
+  return (
+    <Riquadro titolo="Invita gli amici" sottotitolo="Solo tu vedi questo codice.">
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-verde-acceso/30 bg-verde-notte px-4 py-5">
+        <p className="text-xs uppercase tracking-wide text-fumo">Codice di invito</p>
+        <p className="cifre-fisse text-4xl font-extrabold tracking-[0.3em] text-oro">
+          {lega.invite_code}
+        </p>
+        {!lega.invite_active && (
+          <p className="text-sm font-semibold text-errore">Disattivato: nessuno può entrare.</p>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(testo)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex-1"
+        >
+          <Bottone misura="grande" larghezzaPiena icona={<IconaWhatsApp />}>
+            Manda su WhatsApp
+          </Bottone>
+        </a>
+        <Bottone aspetto="secondario" misura="grande" onClick={() => void copia()}>
+          {copiato ? 'Copiato' : 'Copia il link'}
+        </Bottone>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Bottone
+          aspetto="fantasma"
+          inCorso={rigenera.isPending}
+          onClick={() => {
+            setErrore(null)
+            rigenera.mutate(lega.id, {
+              onError: (e) => setErrore(e.message),
+            })
+          }}
+        >
+          Genera un codice nuovo
+        </Bottone>
+        <Bottone
+          aspetto="fantasma"
+          inCorso={attiva.isPending}
+          onClick={() => {
+            setErrore(null)
+            attiva.mutate(
+              { idLega: lega.id, attivo: !lega.invite_active },
+              { onError: (e) => setErrore(e.message) },
+            )
+          }}
+        >
+          {lega.invite_active ? 'Disattiva il codice' : 'Riattiva il codice'}
+        </Bottone>
+      </div>
+
+      <p className="mt-3 text-xs text-fumo">
+        Se generi un codice nuovo, il vecchio smette di funzionare all&apos;istante. Utile se è
+        finito nella chat sbagliata.
+      </p>
+
+      {errore && <p className="mt-2 text-sm text-errore">{errore}</p>}
+    </Riquadro>
+  )
+}
+
+// ─── Partecipanti ───────────────────────────────────────────────────────────
+
+function RiquadroPartecipanti({
+  lega,
+  idUtente,
+}: {
+  lega: LegaCompleta
+  idUtente: string | undefined
+}) {
+  const { data: profili } = useProfili(lega.league_members.map((m) => m.user_id))
+
+  return (
+    <Riquadro
+      titolo="Partecipanti"
+      sottotitolo={`${lega.league_members.length} di ${lega.max_members}`}
+    >
+      <ul className="flex flex-col divide-y divide-verde-campo">
+        {lega.league_members.map((m) => {
+          const squadra = lega.teams.find((t) => t.user_id === m.user_id)
+          const profilo = profili?.[m.user_id]
+          const iniziali = (profilo?.display_name ?? '?').slice(0, 2).toUpperCase()
+
+          return (
+            <li key={m.user_id} className="flex items-center gap-3 py-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-verde-campo text-sm font-bold text-nebbia">
+                {iniziali}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-nebbia">
+                  {squadra?.name ?? 'Squadra senza nome'}
+                  {m.user_id === idUtente && <span className="text-fumo"> · tu</span>}
+                </p>
+                <p className="truncate text-xs text-fumo">
+                  {profilo?.display_name ?? 'Partecipante'}
+                  {m.role === 'admin' && ' · amministratore'}
+                </p>
+              </div>
+              <span className="cifre-fisse shrink-0 text-sm font-bold text-oro">
+                {squadra?.credits_remaining ?? lega.credits_initial}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+
+      {lega.league_members.length < lega.max_members && (
+        <p className="mt-3 text-xs text-fumo">
+          Mancano ancora {lega.max_members - lega.league_members.length} partecipanti al numero
+          massimo. Si può fare l&apos;asta anche in meno.
+        </p>
+      )}
+    </Riquadro>
+  )
+}
+
+// ─── La mia squadra ─────────────────────────────────────────────────────────
+
+function RiquadroMiaSquadra({
+  lega,
+  idUtente,
+}: {
+  lega: LegaCompleta
+  idUtente: string | undefined
+}) {
+  const squadra = lega.teams.find((t) => t.user_id === idUtente)
+  const rinomina = useRinominaSquadra()
+  const [modifica, setModifica] = useState(false)
+  const [nome, setNome] = useState(squadra?.name ?? '')
+  const [errore, setErrore] = useState<string | null>(null)
+
+  if (!squadra) return null
+
+  async function salva() {
+    setErrore(null)
+    if (nome.trim().length < 2) return setErrore('Il nome deve avere almeno due caratteri.')
+    try {
+      await rinomina.mutateAsync({ idSquadra: squadra!.id, nome })
+      setModifica(false)
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : 'Non sono riuscito a cambiare il nome.')
+    }
+  }
+
+  return (
+    <Riquadro titolo="La mia squadra">
+      {modifica ? (
+        <div className="flex flex-col gap-3">
+          <Campo etichetta="Nome della squadra" valore={nome} onChange={setNome} richiesto />
+          {errore && <p className="text-sm text-errore">{errore}</p>}
+          <div className="flex gap-2">
+            <Bottone onClick={() => void salva()} inCorso={rinomina.isPending}>
+              Salva
+            </Bottone>
+            <Bottone
+              aspetto="fantasma"
+              onClick={() => {
+                setNome(squadra.name)
+                setErrore(null)
+                setModifica(false)
+              }}
+            >
+              Annulla
+            </Bottone>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-bold text-nebbia">{squadra.name}</p>
+            <p className="cifre-fisse text-sm text-fumo">
+              {squadra.credits_remaining} crediti · rosa da {totaleSlot(lega)} calciatori
+            </p>
+          </div>
+          <Bottone aspetto="secondario" onClick={() => setModifica(true)}>
+            Rinomina
+          </Bottone>
+        </div>
+      )}
+    </Riquadro>
+  )
+}
+
+// ─── Regole ─────────────────────────────────────────────────────────────────
+
+function RiquadroRegole({ lega }: { lega: LegaCompleta }) {
+  const righe: Array<[string, string]> = [
+    ['Crediti a testa', String(lega.credits_initial)],
+    ['Offerta minima', String(lega.min_bid)],
+    ['Rosa', `${lega.slots_p}-${lega.slots_d}-${lega.slots_c}-${lega.slots_a}, ${totaleSlot(lega)} calciatori`],
+    ['Scambi', lega.trades_enabled ? 'permessi' : 'non permessi'],
+    [
+      'Scambi con crediti',
+      lega.trades_with_credits_enabled ? 'permessi' : 'non permessi',
+    ],
+  ]
+
+  return (
+    <Riquadro titolo="Le regole">
+      <dl className="divide-y divide-verde-campo">
+        {righe.map(([voce, valore]) => (
+          <div key={voce} className="flex items-baseline justify-between gap-4 py-2.5">
+            <dt className="text-sm text-fumo">{voce}</dt>
+            <dd className="cifre-fisse text-right text-sm font-semibold text-nebbia">{valore}</dd>
+          </div>
+        ))}
+      </dl>
+    </Riquadro>
+  )
+}
+
+// ─── Regolamento in PDF ─────────────────────────────────────────────────────
+
+function RiquadroRegolamento({ lega, sonoAdmin }: { lega: LegaCompleta; sonoAdmin: boolean }) {
+  const carica = useCaricaRegolamento()
+  const input = useRef<HTMLInputElement>(null)
+  const [errore, setErrore] = useState<string | null>(null)
+  const [apertura, setApertura] = useState(false)
+
+  async function apri() {
+    if (!lega.rules_pdf_path) return
+    setErrore(null)
+    setApertura(true)
+    try {
+      const url = await indirizzoRegolamento(lega.rules_pdf_path)
+      window.open(url, '_blank', 'noopener')
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : 'Non riesco ad aprire il regolamento.')
+    } finally {
+      setApertura(false)
+    }
+  }
+
+  async function scegli(file: File | undefined) {
+    if (!file) return
+    setErrore(null)
+    try {
+      await carica.mutateAsync({ idLega: lega.id, file })
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : 'Caricamento non riuscito.')
+    }
+  }
+
+  return (
+    <Riquadro titolo="Il regolamento" sottotitolo="Un PDF, fino a 10 MB.">
+      {lega.rules_pdf_path ? (
+        <Bottone aspetto="secondario" onClick={() => void apri()} inCorso={apertura}>
+          Apri il regolamento
+        </Bottone>
+      ) : (
+        <p className="text-sm text-fumo">
+          {sonoAdmin
+            ? 'Non hai ancora caricato il regolamento della lega.'
+            : "L'amministratore non ha ancora caricato il regolamento."}
+        </p>
+      )}
+
+      {sonoAdmin && (
+        <div className="mt-3">
+          <input
+            ref={input}
+            type="file"
+            accept="application/pdf"
+            className="sr-only"
+            onChange={(e) => void scegli(e.target.files?.[0])}
+          />
+          <Bottone
+            aspetto="fantasma"
+            inCorso={carica.isPending}
+            onClick={() => input.current?.click()}
+          >
+            {lega.rules_pdf_path ? 'Sostituisci il PDF' : 'Carica il PDF'}
+          </Bottone>
+        </div>
+      )}
+
+      {errore && <p className="mt-2 text-sm text-errore">{errore}</p>}
+    </Riquadro>
+  )
+}
+
+// ─── Contenitore comune ─────────────────────────────────────────────────────
+
+function Riquadro({
+  titolo,
+  sottotitolo,
+  children,
+}: {
+  titolo: string
+  sottotitolo?: string
+  children: React.ReactNode
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.26 }}
+      className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4"
+    >
+      <h2 className="text-base font-bold text-nebbia">{titolo}</h2>
+      {sottotitolo && <p className="mt-0.5 text-xs text-fumo">{sottotitolo}</p>}
+      <div className="mt-3">{children}</div>
+    </motion.section>
+  )
+}
+
+function IconaWhatsApp() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className="size-5">
+      <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.23 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z" />
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.87 9.87 0 004.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm0 18.13c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 01-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 012.41 5.83c0 4.54-3.7 8.24-8.24 8.24z" />
+    </svg>
+  )
+}

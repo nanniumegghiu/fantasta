@@ -3,7 +3,7 @@
 **Scopo** · Elencare tutte le entità del sistema, i loro campi e le relazioni. È il contratto che
 frontend e backend concordano **prima** di scrivere interfaccia.
 **Proprietario** · backend-engineer
-**Stato** · 🔴 nessuna tabella creata · modello progettato al 90%
+**Stato** · 🟡 create e verificate: profiles, leagues, league_members, teams · il resto 🔴
 **Data** · 2026-09-02
 
 ---
@@ -207,8 +207,19 @@ portieri con una nota sull'alternanza dei calendari.
 
 ## 3. File coinvolti
 
-🔴 Nessuno. Le migrazioni andranno in `app/supabase/migrations/` (o equivalente secondo lo stack
-scelto), i tipi generati in `app/src/types/database.ts`.
+Migrazioni applicate, in `app/supabase/migrations/`:
+
+| File | Cosa crea |
+|---|---|
+| `20260902120000_profili.sql` | `profiles`, trigger di creazione, policy |
+| `20260902140000_leghe.sql` | `leagues`, `league_members`, `teams`, `invite_attempts`, funzioni di appartenenza, archivio del regolamento |
+| `20260902160000_ingresso_lega_con_esito.sql` | `entra_in_lega` che restituisce un esito invece di sollevare eccezioni |
+
+La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
+
+> **Nota sulle funzioni del database.** Un esito previsto si **restituisce**, non si solleva come
+> eccezione: in PostgreSQL l'eccezione annulla l'intera transazione, comprese le scritture che
+> servivano. Il caso concreto che ce l'ha insegnato è in `docs/decisioni/2026-09-02-eccezioni-e-transazioni.md`.
 
 ## 4. Decisioni e perché
 
@@ -235,4 +246,5 @@ lo scalo dei crediti, e l'asta diventa incontestabile solo a parole.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Fetta 1 realizzata: leagues, league_members, teams e invite_attempts esistono davvero. Aggiunte le funzioni di ingresso. |
 | 1.0 | 2026-09-02 | Prima stesura completa, indipendente dal database concreto. |

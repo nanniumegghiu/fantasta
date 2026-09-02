@@ -3,7 +3,7 @@
 **Scopo** · Spiegare com'è fatto il sistema nel suo insieme: quali pezzi esistono, chi parla con
 chi, e dove si trova l'autorità su ogni decisione.
 **Proprietario** · project-manager
-**Stato** · ✅ stack deciso, vedi ADR-0001 e ADR-0002 · 🟡 realizzato solo lo strato di accesso
+**Stato** · ✅ stack deciso · 🟡 realizzati accesso e leghe · 🔴 realtime, motore d'asta e tre superfici
 **Data** · 2026-09-02
 
 ---
@@ -79,7 +79,7 @@ i momenti morti.
 
 ### 2.5 Perché una applicazione web installabile e non un'app da store
 
-Proposta, non ancora decisa. Una applicazione web moderna installabile sulla schermata iniziale
+Deciso in ADR-0002. Una applicazione web moderna installabile sulla schermata iniziale
 copre tutti e tre gli usi con un codice solo: il telefono di ognuno, il televisore, il portatile
 dell'amministratore. Si condivide con un link su WhatsApp, esattamente come il codice di invito, e
 si aggiorna senza che nessuno debba scaricare niente in mezzo a un'asta. I limiti reali sono due:
@@ -89,7 +89,9 @@ documentati in `docs/04-frontend-e-design.md`.
 
 ## 3. File coinvolti
 
-🔴 Nessuno: il codice non esiste ancora. La struttura prevista è descritta in `CLAUDE.md`.
+Il codice esiste: struttura e rotte in `docs/componenti/app-web.md`. Del disegno qui descritto è
+realizzato solo lo strato di accesso e delle leghe. Il canale realtime, il motore d'asta e le tre
+superfici dell'asta sono ancora 🔴 progettati e non costruiti.
 
 ## 4. Decisioni e perché
 
@@ -118,4 +120,5 @@ valore deve essere uguale per tutti, lo calcola il server.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Stack deciso e primi strati realizzati. |
 | 1.0 | 2026-09-02 | Prima stesura, indipendente dallo stack. |

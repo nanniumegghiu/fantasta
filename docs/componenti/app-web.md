@@ -2,7 +2,7 @@
 
 **Scopo** · Descrivere com'è organizzato il codice del client e come si esegue.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 Fetta 0 costruita, backend non ancora collegato
+**Stato** · 🟡 Fette 0 e 1 costruite, backend collegato · schermate mai aperte in un browser
 **Data** · 2026-09-02
 
 ---
@@ -32,8 +32,11 @@ app/
     ├── lib/
     │   ├── supabase.ts        client del backend
     │   └── messaggioErrore.ts errori tradotti in italiano, in un posto solo
-    ├── components/            Bottone, Campo
-    ├── features/auth/         sessione e metodi di accesso
+    ├── components/            Bottone, Campo, CampoNumero, Interruttore,
+    │                          Intestazione, MarchioFantasta
+    ├── features/
+    │   ├── auth/              sessione e metodi di accesso
+    │   └── leghe/             tipi e chiamate al backend delle leghe
     └── pages/                 schermate
 ```
 
@@ -58,11 +61,19 @@ volta sola non valeva la pena aprirlo.
 
 ### Le rotte
 
-| Indirizzo | Chi ci accede |
+| Indirizzo | Cosa mostra |
 |---|---|
-| `/accesso` | Solo chi **non** ha una sessione. Chi è già dentro viene rimandato a `/leghe`. |
-| `/leghe` | Solo chi ha una sessione. Gli altri tornano ad `/accesso`. |
+| `/accesso` | Solo per chi **non** ha una sessione. |
+| `/leghe` | Le mie leghe, con le due azioni principali in basso. |
+| `/leghe/nuova` | Creazione lega con tutte le regole. |
+| `/leghe/entra` | Ingresso con il codice di sei caratteri. |
+| `/invito/:codice` | Lo stesso, ma col codice già scritto. È il link che gira su WhatsApp. |
+| `/lega/:id` | Riepilogo: asta, invito, partecipanti, la mia squadra, regole, regolamento. |
 | qualsiasi altro | Rimanda a `/leghe`. |
+
+Chi arriva da un link di invito senza aver fatto l'accesso viene mandato ad `/accesso`, e **dopo
+l'accesso torna al link di invito**: il codice non si perde per strada. La destinazione è tenuta
+nella memoria di sessione del browser.
 
 ### Quando il backend non è configurato
 
@@ -92,7 +103,7 @@ condiviso non scarichi anche l'importazione del listone.
 
 ## Aperto / TODO
 
-- 🔴 Backend non collegato: mancano le due chiavi.
+- 🔴 Nessuna schermata è mai stata aperta in un browser.
 - 🟡 Suddivisione del codice per rotta, prima della Fetta 4.
 - 🟡 Il carattere Inter arriva da un servizio esterno. Se durante un'asta la rete è lenta, si vede
   il carattere di sistema. Valutare se portarlo dentro il progetto.
@@ -101,4 +112,5 @@ condiviso non scarichi anche l'importazione del listone.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.1 | 2026-09-02 | Fetta 1: schermate delle leghe, inviti, squadre, regolamento in PDF. |
 | 1.0 | 2026-09-02 | Fetta 0: struttura, accesso, rotte protette, icone, prima migrazione. |
