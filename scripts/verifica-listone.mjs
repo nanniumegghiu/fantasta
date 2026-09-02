@@ -359,21 +359,32 @@ esito(
   `esito: ${daNonAdmin.riga?.esito} · ${daNonAdmin.riga?.messaggio}`,
 )
 
+const idImportati = listone.righe.map((r) => r.id).join(',')
+
 const primaImportazione = await rpc(amministratore, 'importa_listone', {
   p_stagione: '2026/27',
   p_righe: listone.righe,
 })
+// Si controlla che ci siano le SUE righe, non quante ce ne sono in tutto:
+// una prova che dipende da cosa hanno lasciato le altre passa o fallisce
+// a seconda dell'ordine, ed è inutile due volte.
+const scritti = await sql(
+  `select id, name, role, serie_a_team, quotation, active from public.players
+   where id in (${idImportati}) order by id;`,
+)
 esito(
   'L amministratore carica il listone',
-  primaImportazione.riga?.esito === 'ok' && primaImportazione.riga?.inseriti === 5,
-  `inseriti ${primaImportazione.riga?.inseriti}, aggiornati ${primaImportazione.riga?.aggiornati}, ritirati ${primaImportazione.riga?.ritirati}`,
+  primaImportazione.riga?.esito === 'ok' &&
+    scritti.length === 5 &&
+    scritti.every((r) => r.active) &&
+    scritti.find((r) => r.id === 2764)?.name === 'Lautaro Martinez',
+  `esito ${primaImportazione.riga?.esito}; righe scritte ${scritti.length} su 5, tutte attive: ${scritti.every((r) => r.active)}`,
 )
 
 const seconda = await rpc(amministratore, 'importa_listone', {
   p_stagione: '2026/27',
   p_righe: listone.righe,
 })
-const idImportati = listone.righe.map((r) => r.id).join(',')
 const quanti = (await sql(
   `select count(*)::int as n from public.players where id in (${idImportati});`,
 ))[0].n

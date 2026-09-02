@@ -218,6 +218,9 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260902220000_asta.sql` | `auctions`, `auction_lots`, `bids`, `lot_passes`, `roster_players`, `auction_events`, vista `team_budget`, motore d asta |
 | `20260902230000_crediti_riconosci_il_server.sql` | Correzione: la difesa sui crediti bloccava il server stesso |
 | `20260902233000_registro_cancellazione_a_cascata.sql` | Correzione: il registro immutabile impediva di cancellare una lega |
+| `20260903000000_asta_completa.sql` | Le sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore |
+| `20260903010000_rete_di_sicurezza_pianificata.sql` | Il compito che ogni dieci secondi chiude i lotti scaduti dimenticati |
+| `20260903020000_elimina_lega.sql` | `elimina_lega`: cancellazione a cascata, con il nome della lega da riscrivere |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 
@@ -250,6 +253,7 @@ lo scalo dei crediti, e l'asta diventa incontestabile solo a parole.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.4 | 2026-09-03 | Tabelle dell asta, correzioni ai trigger, eliminazione della lega. |
 | 1.3 | 2026-09-02 | Fetta 3: lista obiettivi con i quattro metodi. Slot e incroci puntano agli obiettivi, non ai calciatori. |
 | 1.2 | 2026-09-02 | Fetta 2: listone e statistiche esistono davvero, con le funzioni di importazione e la vista che li unisce. Aggiunto il concetto di amministratore dell applicazione. |
 | 1.1 | 2026-09-02 | Fetta 1 realizzata: leagues, league_members, teams e invite_attempts esistono davvero. Aggiunte le funzioni di ingresso. |

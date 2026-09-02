@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
@@ -8,6 +8,7 @@ import { useAccesso } from '@/features/auth/ContestoAccesso'
 import {
   indirizzoRegolamento,
   useCaricaRegolamento,
+  useEliminaLega,
   useImpostaInvitoAttivo,
   useLega,
   useProfili,
@@ -69,6 +70,7 @@ export function PaginaLega() {
         <RiquadroMiaSquadra lega={lega} idUtente={utente?.id} />
         <RiquadroRegole lega={lega} />
         <RiquadroRegolamento lega={lega} sonoAdmin={sonoAdmin} />
+        {sonoAdmin && <ZonaPericolosa lega={lega} />}
       </main>
     </div>
   )
@@ -448,6 +450,123 @@ function RiquadroRegolamento({ lega, sonoAdmin }: { lega: LegaCompleta; sonoAdmi
 
       {errore && <p className="mt-2 text-sm text-errore">{errore}</p>}
     </Riquadro>
+  )
+}
+
+// ─── Zona pericolosa ────────────────────────────────────────────────────────
+
+/**
+ * L'eliminazione della lega.
+ *
+ * È l'unica azione dell'app che non si può annullare, e porta via anche il
+ * lavoro degli altri: le loro rose e le loro liste obiettivi. Per questo non è
+ * un pulsante ma un percorso: si apre, si legge cosa sparisce, si riscrive il
+ * nome della lega. Il server chiede comunque il nome, quindi non basta un
+ * difetto dell'interfaccia per cancellare una serata.
+ */
+function ZonaPericolosa({ lega }: { lega: LegaCompleta }) {
+  const naviga = useNavigate()
+  const elimina = useEliminaLega()
+  const [aperta, setAperta] = useState(false)
+  const [conferma, setConferma] = useState('')
+  const [errore, setErrore] = useState<string | null>(null)
+
+  const coincide = conferma.trim().toLowerCase() === lega.name.trim().toLowerCase()
+  const astaInCorso = lega.status === 'auction'
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.26 }}
+      className="rounded-2xl border border-errore/30 bg-errore/5 p-4"
+    >
+      <h2 className="text-base font-bold text-errore">Elimina la lega</h2>
+      <p className="mt-0.5 text-xs text-fumo">
+        Solo tu che l&apos;hai creata puoi farlo. Non si torna indietro.
+      </p>
+
+      {!aperta ? (
+        <div className="mt-3">
+          <Bottone aspetto="fantasma" onClick={() => setAperta(true)}>
+            Voglio eliminare questa lega
+          </Bottone>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-col gap-3">
+          <div className="rounded-xl border border-errore/40 bg-verde-notte p-3">
+            <p className="text-sm font-semibold text-nebbia">Sparisce tutto questo, per sempre:</p>
+            <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-sm text-fumo">
+              <li>
+                <span className="cifre-fisse text-nebbia">{lega.league_members.length}</span>{' '}
+                partecipanti e le loro squadre
+              </li>
+              <li>le rose costruite finora, con i crediti spesi</li>
+              <li>
+                <strong className="text-nebbia">le liste obiettivi di tutti</strong>, con tetti e
+                note che ognuno si è scritto
+              </li>
+              <li>l&apos;asta, il suo registro e il regolamento caricato</li>
+            </ul>
+            {astaInCorso && (
+              <p className="mt-3 rounded-lg border border-oro/40 bg-oro/10 px-3 py-2 text-sm text-oro">
+                Attenzione: l&apos;asta è in corso. Quello che avete costruito stasera se ne va con
+                la lega.
+              </p>
+            )}
+          </div>
+
+          <Campo
+            etichetta={`Riscrivi il nome della lega: ${lega.name}`}
+            valore={conferma}
+            onChange={setConferma}
+            nome="conferma-eliminazione"
+            autoComplete="off"
+            placeholder={lega.name}
+            aiuto="Serve a essere sicuri che non sia un tocco sbagliato."
+          />
+
+          {errore && (
+            <p role="alert" className="rounded-xl border border-errore/40 bg-errore/10 px-4 py-3 text-sm text-errore">
+              {errore}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <Bottone
+              aspetto="secondario"
+              disabilitato={!coincide}
+              inCorso={elimina.isPending}
+              onClick={() => {
+                setErrore(null)
+                elimina.mutate(
+                  { idLega: lega.id, conferma, percorsoPdf: lega.rules_pdf_path },
+                  {
+                    onSuccess: (e) => {
+                      if (e.esito === 'ok') naviga('/leghe', { replace: true })
+                      else setErrore(e.messaggio)
+                    },
+                    onError: (e) => setErrore(e.message),
+                  },
+                )
+              }}
+            >
+              Elimina definitivamente
+            </Bottone>
+            <Bottone
+              aspetto="fantasma"
+              onClick={() => {
+                setAperta(false)
+                setConferma('')
+                setErrore(null)
+              }}
+            >
+              Lascia stare
+            </Bottone>
+          </div>
+        </div>
+      )}
+    </motion.section>
   )
 }
 

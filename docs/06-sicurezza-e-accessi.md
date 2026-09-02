@@ -68,6 +68,7 @@ dove serve.
 | Lotti e offerte | I partecipanti | Solo il server |
 | Registro eventi | I partecipanti | Solo il server, e mai in modifica o cancellazione |
 | PDF del regolamento | I partecipanti | Solo l'amministratore |
+| Eliminazione della lega | — | Solo l'amministratore, **riscrivendo il nome della lega**. Nessuna policy di cancellazione sulla tabella: si passa solo dalla funzione |
 
 > ⚠️ **L'amministratore non è un superutente.** Conduce l'asta, ma **non può leggere le liste
 > obiettivi degli altri**. È la regola che rende l'app usabile fra amici: chi organizza non deve
@@ -131,6 +132,9 @@ utente, e l'esito va mostrato. «Ho scritto la policy» non è una verifica.
 - ✅ Limitatore sui codici di invito: dieci fallimenti in dieci minuti e ci si ferma. Verificato.
 - ✅ Archivio del regolamento privato, con indirizzi firmati a scadenza. Verificato.
 - 🔴 Invio email non configurato: conferma indirizzo e recupero password restano spenti, ADR-0009.
+- ✅ Eliminazione della lega da parte del suo amministratore: realizzata e verificata, 11 prove.
+  Porta via a cascata partecipanti, squadre, rose, asta, registro e liste obiettivi, e lascia in
+  piedi persone e listone.
 - 🟡 Un utente che amministra una lega non si può cancellare: il vincolo lo impedisce, perché nessuna lega deve restare senza amministratore. Va deciso cosa offrire a chi vuole andarsene.
 - 🟡 Va deciso se l'amministratore può espellere un partecipante e cosa succede alla sua rosa.
 
@@ -138,6 +142,7 @@ utente, e l'esito va mostrato. «Ho scritto la policy» non è una verifica.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.4 | 2026-09-03 | Eliminazione della lega: solo l amministratore, solo riscrivendo il nome, controllato dal server. |
 | 1.3 | 2026-09-02 | Liste obiettivi: policy scritte e verificate violandole, compreso il caso dell amministratore di lega. |
 | 1.2 | 2026-09-02 | Aggiunto l amministratore dell applicazione, distinto da quello di lega: solo lui carica il listone. |
 | 1.1 | 2026-09-02 | Realizzate e verificate le policy di leghe, squadre, inviti e archivio del regolamento. La lettura dei profili si estende ai compagni di lega. |

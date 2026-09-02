@@ -226,3 +226,54 @@ export async function indirizzoRegolamento(percorso: string): Promise<string> {
   if (error) throw new Error(messaggioErrore(error))
   return data.signedUrl
 }
+
+// ─── Eliminazione della lega ────────────────────────────────────────────────
+
+export type EsitoEliminazione = {
+  esito: 'ok' | 'non_autorizzato' | 'lega_inesistente' | 'conferma_sbagliata'
+  messaggio: string
+  partecipanti: number
+  calciatori: number
+}
+
+/**
+ * Elimina la lega e tutto ciò che le appartiene.
+ *
+ * L'ORDINE CONTA. Il PDF del regolamento si cancella **prima**: il permesso di
+ * toccarlo dipende dall'essere amministratore di quella lega, e appena la lega
+ * sparisce quel permesso sparisce con lei, lasciando il file orfano
+ * nell'archivio per sempre.
+ */
+export function useEliminaLega() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (v: {
+      idLega: string
+      conferma: string
+      percorsoPdf: string | null
+    }): Promise<EsitoEliminazione> => {
+      const sb = richiediSupabase()
+
+      if (v.percorsoPdf) {
+        const { error } = await sb.storage.from(SECCHIO).remove([v.percorsoPdf])
+        // Se il file non si cancella non ci si ferma: l'utente ha chiesto di
+        // eliminare la lega, non il PDF. Resterebbe un file orfano, che è un
+        // fastidio, non un danno.
+        if (error) console.warn('Regolamento non rimosso dall archivio:', error.message)
+      }
+
+      const { data, error } = await sb.rpc('elimina_lega', {
+        p_lega: v.idLega,
+        p_conferma: v.conferma,
+      })
+      if (error) throw new Error(messaggioErrore(error))
+      const righe = (data ?? []) as EsitoEliminazione[]
+      if (!righe[0]) throw new Error('Il server non ha risposto come previsto.')
+      return righe[0]
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leghe'] })
+      qc.invalidateQueries({ queryKey: ['lega'] })
+    },
+  })
+}

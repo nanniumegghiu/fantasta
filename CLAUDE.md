@@ -201,6 +201,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-obiettivi.mjs` | Ventiquattro prove sulla lista obiettivi. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 | `node scripts/verifica-asta.mjs` | Ventisei prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete. |
 | `node scripts/verifica-asta-completa.mjs` | Trentuno prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore e la rete di sicurezza. |
+| `node scripts/verifica-eliminazione-lega.mjs` | Undici prove sull eliminazione di una lega: chi può, la conferma del nome, e che non resti niente in giro. |
 
 ---
 
