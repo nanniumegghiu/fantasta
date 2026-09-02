@@ -1,0 +1,41 @@
+# ─── Segreti: mai versionati ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.local
+secrets/
+*.pem
+*.key
+service-account*.json
+
+# ─── Dipendenze e build ─────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# ─── Dati pesanti / materiale utente ────────────────────────────────────────
+# Il facepack e i listoni scaricati non stanno nel repository: si caricano
+# nello Storage del backend. Vedi docs/07-dati-calciatori-e-facepack.md
+facepack/
+dati-privati/
+*.xlsx
+*.csv
+!docs/**/*.csv
+
+# ─── Sistema operativo ed editor ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# ─── Log ────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
