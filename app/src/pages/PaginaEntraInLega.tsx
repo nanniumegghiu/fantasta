@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
@@ -26,6 +26,9 @@ export function PaginaEntraInLega() {
   const lega = anteprima.data
   const codiceCompleto = codice.trim().length === 6
   const codiceSconosciuto = codiceCompleto && !anteprima.isFetching && anteprima.data === null
+  // Chi è già dentro non deve rifare niente: il link di invito viene riaperto
+  // di continuo, anche solo per ritrovare la lega.
+  const giaDentro = Boolean(lega?.sono_gia_dentro)
 
   async function invia(e: React.FormEvent) {
     e.preventDefault()
@@ -36,8 +39,15 @@ export function PaginaEntraInLega() {
 
     try {
       const risultato = await entra.mutateAsync({ codice, nomeSquadra })
-      if (risultato.esito === 'ok' || risultato.esito === 'gia_dentro') {
+      if (risultato.esito === 'ok') {
         naviga(`/lega/${risultato.lega}`, { replace: true })
+        return
+      }
+      if (risultato.esito === 'gia_dentro') {
+        // Non si porta dentro in silenzio: si dice che non è stato creato
+        // niente di nuovo, e si lascia decidere a chi guarda.
+        setErrore(`${risultato.messaggio} Non ho creato una seconda squadra.`)
+        void anteprima.refetch()
         return
       }
       // Ogni altro esito è previsto e porta con sé il suo messaggio in italiano.
@@ -91,30 +101,27 @@ export function PaginaEntraInLega() {
             className="mt-4 rounded-2xl border border-verde-acceso/40 bg-verde-acceso/10 p-4"
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-verde-acceso">
-              Stai per entrare in
+              {giaDentro ? 'Fai già parte di' : 'Stai per entrare in'}
             </p>
             <p className="mt-1 text-lg font-bold text-nebbia">{lega.nome}</p>
             <p className="cifre-fisse text-sm text-fumo">
               Stagione {lega.stagione} · {lega.partecipanti} di {lega.massimo} partecipanti
             </p>
-            {!lega.aperta && (
+            {giaDentro && (
+              <p className="mt-2 text-sm text-nebbia">
+                {lega.mia_squadra
+                  ? `La tua squadra è «${lega.mia_squadra}».`
+                  : 'Sei già fra i partecipanti.'}{' '}
+                Non devi rientrare.
+              </p>
+            )}
+            {!giaDentro && !lega.aperta && (
               <p className="mt-2 text-sm font-semibold text-oro">
                 Questa lega non accetta più ingressi.
               </p>
             )}
           </motion.div>
         )}
-
-        <div className="mt-5">
-          <Campo
-            etichetta="Il nome della tua squadra"
-            valore={nomeSquadra}
-            onChange={setNomeSquadra}
-            placeholder="Es. F.C. Pirlo"
-            aiuto="Lo vedranno tutti gli altri durante l'asta."
-            richiesto
-          />
-        </div>
 
         {errore && (
           <p
@@ -125,17 +132,40 @@ export function PaginaEntraInLega() {
           </p>
         )}
 
-        <div className="mt-6">
-          <Bottone
-            type="submit"
-            misura="grande"
-            larghezzaPiena
-            inCorso={entra.isPending}
-            disabilitato={Boolean(lega && !lega.aperta)}
-          >
-            Entra nella lega
-          </Bottone>
-        </div>
+        {giaDentro ? (
+          <div className="mt-6">
+            <Link to={`/lega/${lega?.lega}`}>
+              <Bottone misura="grande" larghezzaPiena>
+                Vai alla lega
+              </Bottone>
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="mt-5">
+              <Campo
+                etichetta="Il nome della tua squadra"
+                valore={nomeSquadra}
+                onChange={setNomeSquadra}
+                placeholder="Es. F.C. Pirlo"
+                aiuto="Lo vedranno tutti gli altri durante l'asta."
+                richiesto
+              />
+            </div>
+
+            <div className="mt-6">
+              <Bottone
+                type="submit"
+                misura="grande"
+                larghezzaPiena
+                inCorso={entra.isPending}
+                disabilitato={Boolean(lega && !lega.aperta)}
+              >
+                Entra nella lega
+              </Bottone>
+            </div>
+          </>
+        )}
       </form>
     </div>
   )

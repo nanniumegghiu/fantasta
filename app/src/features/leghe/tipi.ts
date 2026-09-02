@@ -105,6 +105,11 @@ export type AnteprimaInvito = {
   partecipanti: number
   massimo: number
   aperta: boolean
+  /** Il link di invito viene riaperto di continuo: essere già dentro è normale. */
+  sono_gia_dentro: boolean
+  /** Valorizzato solo per chi è già dentro: serve a portarcelo. */
+  lega: string | null
+  mia_squadra: string | null
 }
 
 export const NOMI_RUOLO = { P: 'Portieri', D: 'Difensori', C: 'Centrocampisti', A: 'Attaccanti' }

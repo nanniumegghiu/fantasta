@@ -45,6 +45,7 @@ Difese previste:
 | Rischio | Difesa |
 |---|---|
 | Qualcuno indovina un codice a forza bruta | Limite di tentativi per utente e per indirizzo di rete; codice a 6 caratteri su 32 simboli, oltre un miliardo di combinazioni |
+| Chi è già dentro riapre il link | L'anteprima lo dice **prima**: nessuno rifà il giro d'ingresso, e non nasce una seconda squadra |
 | Il codice gira in una chat sbagliata | L'amministratore può **rigenerarlo** o disattivarlo in qualsiasi momento |
 | Entrano più persone del previsto | La lega ha un numero massimo di partecipanti: superato, il codice smette di funzionare |
 | Qualcuno entra a asta iniziata | Con l'asta aperta gli inviti sono automaticamente bloccati |

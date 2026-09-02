@@ -187,14 +187,38 @@ esito(
   `esito: ${esitoIngresso(ingresso).esito} · ${esitoIngresso(ingresso).messaggio}`,
 )
 
+// Chi è già dentro lo deve sapere PRIMA di rifare tutto il giro: il link di
+// invito gira su WhatsApp e viene riaperto di continuo.
+const anteprimaDaDentro = await rpc(amico, 'anteprima_invito', { p_codice: riga.invite_code })
+esito(
+  'Chi è già nella lega lo scopre dall anteprima, prima di ricominciare',
+  anteprimaDaDentro.corpo?.[0]?.sono_gia_dentro === true &&
+    anteprimaDaDentro.corpo?.[0]?.lega === legaId &&
+    anteprimaDaDentro.corpo?.[0]?.mia_squadra === 'F.C. Pirlo',
+  `già dentro: ${anteprimaDaDentro.corpo?.[0]?.sono_gia_dentro}, con la squadra "${anteprimaDaDentro.corpo?.[0]?.mia_squadra}"`,
+)
+
+const anteprimaDaFuori = await rpc(estraneo, 'anteprima_invito', { p_codice: riga.invite_code })
+esito(
+  'Chi non è dentro non riceve l identificativo della lega',
+  anteprimaDaFuori.corpo?.[0]?.sono_gia_dentro === false &&
+    anteprimaDaFuori.corpo?.[0]?.lega === null &&
+    anteprimaDaFuori.corpo?.[0]?.nome === 'Lega di Prova',
+  `vede il nome "${anteprimaDaFuori.corpo?.[0]?.nome}" ma identificativo ${JSON.stringify(anteprimaDaFuori.corpo?.[0]?.lega)}`,
+)
+
 const doppione = await rpc(amico, 'entra_in_lega', {
   p_codice: riga.invite_code,
   p_nome_squadra: 'Un Altro Nome',
 })
+const squadreDopo = (await sql(`select count(*)::int n from public.teams
+  where league_id = '${legaId}' and user_id = '${amico.id}';`))[0].n
 esito(
-  'Chi e gia dentro non entra due volte',
-  esitoIngresso(doppione).esito === 'gia_dentro' && esitoIngresso(doppione).lega === legaId,
-  `esito: ${esitoIngresso(doppione).esito} · riporta alla stessa lega senza creare doppioni`,
+  'Chi e gia dentro non entra due volte ne si ritrova una seconda squadra',
+  esitoIngresso(doppione).esito === 'gia_dentro' &&
+    esitoIngresso(doppione).lega === legaId &&
+    squadreDopo === 1,
+  `esito: ${esitoIngresso(doppione).esito} · squadre sue in quella lega: ${squadreDopo}`,
 )
 
 const nomeOccupato = await rpc(estraneo, 'entra_in_lega', {

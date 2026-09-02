@@ -230,6 +230,7 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260902233000_registro_cancellazione_a_cascata.sql` | Correzione: il registro immutabile impediva di cancellare una lega |
 | `20260903000000_asta_completa.sql` | Le sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore |
 | `20260903010000_rete_di_sicurezza_pianificata.sql` | Il compito che ogni dieci secondi chiude i lotti scaduti dimenticati |
+| `20260903120000_invito_dice_se_sei_gia_dentro.sql` | L anteprima dell invito dice se chi guarda fa già parte della lega |
 | `20260903100000_lista_obiettivi_un_metodo_solo.sql` | `metodo` al posto dei due interruttori, riordino, aggiunte dirette a slot e incroci |
 | `20260903020000_elimina_lega.sql` | `elimina_lega`: cancellazione a cascata, con il nome della lega da riscrivere |
 

@@ -74,7 +74,7 @@ volta sola non valeva la pena aprirlo.
 | `/leghe` | Le mie leghe, con le due azioni principali in basso. |
 | `/leghe/nuova` | Creazione lega con tutte le regole. |
 | `/leghe/entra` | Ingresso con il codice di sei caratteri. |
-| `/invito/:codice` | Lo stesso, ma col codice già scritto. È il link che gira su WhatsApp. |
+| `/invito/:codice` | Lo stesso, ma col codice già scritto. È il link che gira su WhatsApp. A chi fa già parte della lega non chiede niente: gli propone di andarci. |
 | `/lega/:id` | Riepilogo: asta, listone, invito, partecipanti, la mia squadra, regole, regolamento. |
 | `/lega/:id/asta` | La vista personale: rilanci, passo, budget, poteri se sei l amministratore. |
 | `/lega/:id/asta/schermo` | Lo schermo condiviso da proiettare. Nessun dato privato. |
