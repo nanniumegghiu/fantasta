@@ -3,7 +3,7 @@
 **Scopo** · Descrivere da dove arrivano i dati dei calciatori, come si associano le foto del
 facepack, e in che formato escono le rose a fine asta.
 **Proprietario** · backend-engineer
-**Stato** · 🔴 non implementato · 🟡 due punti dipendono da file che devo ancora vedere
+**Stato** · 🔴 non implementato · ✅ tutte le scelte chiuse, nulla resta in attesa dell'utente
 **Data** · 2026-09-02
 
 ---
@@ -54,8 +54,8 @@ schermo e nelle tabelle compare sempre la dicitura «aggiornate alla giornata N�
 non è mai stata fatta, le colonne mostrano un trattino e una nota, **non zeri**: uno zero sembra un
 dato, un trattino dice la verità.
 
-L'origine di questi dati è una **decisione aperta**: importazione manuale periodica oppure raccolta
-automatica. Vedi `docs/09-decisioni-aperte.md`.
+L'origine di questi dati è l'importazione di un file, decisa in ADR-0003, con la struttura pronta ad
+accogliere in futuro un aggiornamento automatico senza toccare lo schema.
 
 ### 2.3 Il facepack e il logopack
 
@@ -75,8 +75,8 @@ a percorso interno del gioco, e **nessun nome**. Una ricerca della parola `name`
 config delle facce ha dato zero occorrenze. Gli identificativi sono quelli di Football Manager e non
 hanno relazione con quelli del listone di Fantacalcio.
 
-Serve quindi un **ponte**, deciso in ADR-0010: un elenco esportato da Football Manager che leghi
-identificativo e nome, con l'abbinamento manuale dentro l'app a coprire ciò che resta.
+Serve quindi un **ponte** fra i due mondi. Come si costruisce è spiegato subito sotto: si è scoperto
+che si può fare da soli, senza chiedere niente all'utente.
 
 Il flusso, una volta esistente il ponte:
 
@@ -94,28 +94,33 @@ Il flusso, una volta esistente il ponte:
 
 Il facepack **resta sul computer dell'utente** e non entra nel repository: è già fra i file ignorati.
 
-#### Come ottenere l'elenco da Football Manager
+#### Il ponte si costruisce da solo
 
-Da fare una volta sola. Serve a produrre il ponte fra identificativi e nomi.
+Deciso in **ADR-0011**, che supera ADR-0010. L'utente non deve produrre nessun file.
 
-1. Apri Football Manager 26.
-2. Vai in **Preferenze**, sezione **Interfaccia**, e attiva **Mostra ID unici**. Da quel momento
-   l'identificativo compare nella scheda di ogni giocatore e di ogni club.
-3. Apri una schermata con **tutti i giocatori della Serie A**. Va bene la ricerca giocatori con
-   filtro sul campionato italiano.
-4. Aggiungi alle colonne visibili almeno: identificativo unico, nome, squadra.
-5. Seleziona tutte le righe con `Ctrl + A`, poi `Ctrl + P`. Football Manager propone di salvare la
-   schermata come pagina web o file di testo: scegli il formato disponibile e salva.
-6. Metti il file in `dati-privati/` dentro la cartella del progetto. Quella cartella è esclusa dal
-   versionamento.
+Esiste un servizio pubblico di ricerca degli identificativi di Football Manager, quello che alimenta
+il sito `fmref.com`, interrogabile via HTTP. Restituisce per ogni persona l'identificativo del gioco,
+la squadra con il suo identificativo, il campionato e la reputazione.
 
-**Se il passaggio 4 non ti fa aggiungere l'identificativo fra le colonne, fermati e dimmelo.**
-In quel caso la strada dell'esportazione non è percorribile e si passa all'abbinamento manuale,
-come previsto da ADR-0010. Non provare a ricavare gli identificativi in altri modi: meglio saperlo
-subito che scoprirlo con seicento abbinamenti sbagliati.
+Procedimento, una volta a stagione:
 
-Per i **loghi delle squadre** basta molto meno: gli identificativi delle venti squadre di Serie A,
-che si leggono nella scheda di ogni club una volta attivata la preferenza del punto 2. Venti numeri.
+1. Si importa il listone ufficiale.
+2. L'app scarica **in blocco** i giocatori della Serie A, sette richieste in tutto, e le venti
+   squadre con i loro identificativi.
+3. Abbina per cognome e squadra. Le omonimie, il 2% misurato, si sciolgono col nome di battesimo.
+4. Copia dal facepack soltanto le foto abbinate, le riduce e le carica.
+5. Il resto va nella schermata di abbinamento manuale.
+
+**Tre vincoli non negoziabili**, parte della decisione:
+
+- si scarica in blocco, mai un giocatore alla volta: sette richieste, non seicento;
+- **mai durante l'asta**: la corrispondenza vive nel nostro database e la sera dell'asta il servizio
+  esterno non viene interpellato per nessun motivo;
+- il passo 2 deve fallire in modo pulito, perché l'indirizzo non è documentato e può chiudere. In
+  quel caso resta l'abbinamento manuale.
+
+Copertura misurata sul facepack reale: sopra il 95% per i calciatori che entrano nel listone,
+20 loghi su 20 per le squadre.
 
 ### 2.4 Il listone svincolati durante l'asta
 
@@ -177,12 +182,12 @@ manuale accanto a quella automatica.
 - ✅ Origine dei dati dei calciatori: importazione di file, ADR-0003.
 - ✅ Formato di esportazione: fissato in ADR-0008. Resta da provare un caricamento vero.
 - ✅ Struttura del facepack: ispezionata, vedi 2.3. Ponte deciso in ADR-0010.
-- 🔴 Serve l'elenco esportato da Football Manager con identificativo e nome.
-- 🔴 Servono i venti identificativi dei club di Serie A per i loghi.
+- ✅ Ponte automatico deciso e misurato, ADR-0011. Niente piu esportazioni manuali.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Ponte automatico tramite servizio pubblico di ricerca, ADR-0011. |
 | 1.1 | 2026-09-02 | Facepack ispezionato con numeri reali, ponte deciso. Formato di esportazione fissato. |
 | 1.0 | 2026-09-02 | Prima stesura. |

@@ -1,7 +1,15 @@
 # ADR-0010 · Come si legano le foto del facepack ai calciatori del listone
 
-**Stato** · Accettato · **Data** · 2026-09-02 · **Decide** · l'utente, su raccomandazione del
+**Stato** · 🔶 SUPERATO da ADR-0011 il 2026-09-02 · era Accettato · **Data** · 2026-09-02 · **Decide** · l'utente, su raccomandazione del
 backend-engineer
+
+---
+
+> **Questo ADR è superato.** La sua premessa, cioè che servisse un elenco esportato a mano da
+> Football Manager, si è rivelata falsa: esiste un servizio pubblico che restituisce gli
+> identificativi. Vedi `0011-ponte-automatico-tramite-fmref.md`. Il testo resta qui perché la storia
+> delle decisioni vale quanto la decisione corrente, e perché l'abbinamento manuale che descrive
+> resta la via di riserva.
 
 ---
 

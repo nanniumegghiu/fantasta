@@ -4,6 +4,7 @@ import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
 import { useAccesso } from '@/features/auth/ContestoAccesso'
 import { googleAbilitato } from '@/lib/supabase'
+import { MarchioFantasta } from '@/components/MarchioFantasta'
 
 type Modo = 'accesso' | 'registrazione'
 
@@ -81,8 +82,8 @@ export function PaginaAccesso() {
             height={96}
             className="mb-4 size-24"
           />
-          <h1 className="text-4xl font-extrabold tracking-tight text-nebbia">
-            Fanta<span className="text-arancio">sta</span>
+          <h1>
+            <MarchioFantasta className="text-4xl" />
           </h1>
           <p className="mt-2 text-sm text-fumo">
             L&apos;asta del fantacalcio Classic, fra amici.

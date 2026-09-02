@@ -284,7 +284,7 @@ useranno quelli da subito.
 | # | Decisione | Esito | ADR |
 |---|---|---|---|
 | D1 | Scadenza dell'asta | Oltre 6 settimane, nessuna pressione | — |
-| D7 | Ponte fra facepack e listone | Export da Football Manager, abbinamento manuale a coprire | `0010-ponte-facepack-listone.md` |
+| D7 | Ponte fra facepack e listone | Automatico, tramite servizio pubblico di ricerca | `0011-ponte-automatico-tramite-fmref.md` supera `0010` |
 | D8 | Formato di esportazione delle rose | Quattro colonne, fornite dall'utente | `0008-formato-esportazione-rose.md` |
 | — | Conferma dell'indirizzo email | Disattivata | `0009-conferma-email-disattivata.md` |
 | D2 | Backend | Supabase | `0001-backend-supabase.md` |
@@ -300,12 +300,12 @@ comportano compromessi di prodotto: `0005-timer-autoritativo-del-server.md` e
 
 | # | Cosa serve | Blocca |
 |---|---|---|
-| D7 | L'elenco esportato da Football Manager con identificativo e nome dei giocatori di Serie A, più i venti identificativi dei club | La Fetta 5, non prima |
 | D6, D9, D10, D11, D12 | Nulla: si procede con la raccomandazione, modificabile in qualsiasi momento a costo quasi nullo | Niente |
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | D7 riaperta e richiusa: il ponte e automatico. Non serve piu niente dall utente. |
 | 1.1 | 2026-09-02 | Chiuse D1, D2, D3, D4, D5 con i relativi ADR. |
 | 1.0 | 2026-09-02 | Prima raccolta: 12 decisioni aperte. |
