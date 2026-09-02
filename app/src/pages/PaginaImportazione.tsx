@@ -42,8 +42,9 @@ export function PaginaImportazione() {
         <Intestazione titolo="Importazione" indietroA="/leghe" />
         <div className="mx-auto max-w-3xl px-4 py-6">
           <p className="rounded-2xl border border-oro/40 bg-oro/10 p-5 text-sm text-oro">
-            Il listone è unico per tutte le leghe e lo carica solo un amministratore
-            dell&apos;applicazione. Non è un permesso che si può dare da qui.
+            Il listone è unico per tutte le leghe e lo carica una persona sola per tutti: chi ha
+            fondato l&apos;applicazione. Tu non devi caricare niente, e quando lui aggiorna il
+            listone o le statistiche te li ritrovi già pronti, su qualsiasi dispositivo.
           </p>
         </div>
       </div>
@@ -55,6 +56,18 @@ export function PaginaImportazione() {
       <Intestazione titolo="Importazione" sottotitolo="Listone e statistiche" indietroA="/leghe" />
 
       <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
+        {/* Il punto piu' importante di questa schermata, detto per primo. */}
+        <p className="flex items-start gap-2 rounded-2xl border border-verde-acceso/40 bg-verde-acceso/10 px-4 py-3 text-sm text-nebbia">
+          <span aria-hidden className="text-base">
+            🌍
+          </span>
+          <span>
+            Quello che carichi qui vale <strong>per tutti</strong>: tutte le leghe, tutti i
+            partecipanti, tutti i dispositivi. Lo fai una volta e nessun altro deve rifarlo, né dal
+            telefono né dal computer.
+          </span>
+        </p>
+
         <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
           <Campo
             etichetta="Stagione"
@@ -77,6 +90,10 @@ export function PaginaImportazione() {
             <li>
               Ricaricare lo stesso file non crea doppioni: aggiorna. Un calciatore che sparisce dal
               listone non viene mai cancellato, esce solo dall&apos;elenco.
+            </li>
+            <li>
+              Le statistiche si possono ricaricare a ogni giornata: chi gioca vede sempre i numeri
+              aggiornati senza fare niente.
             </li>
             <li>
               Il file ufficiale delle statistiche non contiene i minuti giocati: quella colonna

@@ -48,8 +48,14 @@ async function sql(query) {
 if (process.argv.includes('--pulisci')) {
   await sql(`delete from public.leagues
     where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
-  await sql('delete from public.player_stats;')
-  await sql('delete from public.players;')
+  // ─── Attenzione ───────────────────────────────────────────────────────────
+  // Il listone è UNICO e vale per tutti: cancellarlo per intero qui
+  // butterebbe via il lavoro vero del proprietario del progetto. È già
+  // successo una volta. Si cancellano soltanto i calciatori di prova, che per
+  // questo hanno identificativi da 900000 in su: quelli del listone ufficiale
+  // sono di quattro o cinque cifre e non arrivano mai lì.
+  await sql('delete from public.player_stats where player_id >= 900000;')
+  await sql('delete from public.players where id >= 900000;')
   await sql("delete from auth.users where email like '%@fantasta.test';")
   console.log('Dati di prova rimossi.')
   process.exit(0)
@@ -99,10 +105,10 @@ const amico = await registra('amico')
 await sql(`insert into public.app_admins (user_id) values ('${admin.id}') on conflict do nothing;`)
 
 const CALCIATORI = [
-  { id: 8400, nome: 'Portiere Uno', ruolo: 'P', squadra: 'Prova FC', quotazione: 10 },
-  { id: 8401, nome: 'Difensore Uno', ruolo: 'D', squadra: 'Prova FC', quotazione: 10 },
-  { id: 8402, nome: 'Centrocampo Uno', ruolo: 'C', squadra: 'Prova FC', quotazione: 10 },
-  { id: 8403, nome: 'Attacco Uno', ruolo: 'A', squadra: 'Prova FC', quotazione: 10 },
+  { id: 908400, nome: 'Portiere Uno', ruolo: 'P', squadra: 'Prova FC', quotazione: 10 },
+  { id: 908401, nome: 'Difensore Uno', ruolo: 'D', squadra: 'Prova FC', quotazione: 10 },
+  { id: 908402, nome: 'Centrocampo Uno', ruolo: 'C', squadra: 'Prova FC', quotazione: 10 },
+  { id: 908403, nome: 'Attacco Uno', ruolo: 'A', squadra: 'Prova FC', quotazione: 10 },
 ]
 await rpc(admin, 'importa_listone', { p_stagione: '2026/27', p_righe: CALCIATORI })
 
@@ -125,7 +131,7 @@ for (const u of [admin, amico]) {
   await fetch(`${URL_BASE}/rest/v1/targets`, {
     method: 'POST',
     headers: testa(u),
-    body: JSON.stringify({ list_id: lista, player_id: 8400, max_price: 12, note: 'da prendere' }),
+    body: JSON.stringify({ list_id: lista, player_id: 908400, max_price: 12, note: 'da prendere' }),
   })
 }
 
@@ -138,7 +144,7 @@ await rpc(admin, 'apri_asta', { p_lega: lega, p_sorteggia: false })
 const a = (await sql(`select id, nomination_order, current_turn_index from public.auctions where league_id = '${lega}';`))[0]
 const squadre = await sql(`select id, user_id from public.teams where league_id = '${lega}';`)
 const chiamante = squadre.find((s) => s.id === a.nomination_order[a.current_turn_index]).user_id === admin.id ? admin : amico
-const lotto = (await rpc(chiamante, 'chiama_calciatore', { p_lega: lega, p_player_id: 8400, p_importo: 5 })).riga.lotto
+const lotto = (await rpc(chiamante, 'chiama_calciatore', { p_lega: lega, p_player_id: 908400, p_importo: 5 })).riga.lotto
 await sql(`update public.auction_lots set last_bid_at = now() - interval '30 seconds' where id = '${lotto}';`)
 await rpc(chiamante, 'chiudi_lotto_se_scaduto', { p_lotto: lotto })
 
@@ -241,7 +247,7 @@ esito(
 )
 
 const utentiVivi = (await sql(`select count(*)::int n from auth.users where id in ('${admin.id}','${amico.id}');`))[0].n
-const listoneVivo = (await sql('select count(*)::int n from public.players where id = 8400;'))[0].n
+const listoneVivo = (await sql('select count(*)::int n from public.players where id = 908400;'))[0].n
 esito(
   'Le persone e il listone restano: si elimina la lega, non il mondo',
   utentiVivi === 2 && listoneVivo === 1,

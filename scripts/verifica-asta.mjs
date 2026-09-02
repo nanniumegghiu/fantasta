@@ -53,8 +53,14 @@ async function sql(query) {
 if (process.argv.includes('--pulisci')) {
   await sql(`delete from public.leagues
     where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
-  await sql('delete from public.player_stats;')
-  await sql('delete from public.players;')
+  // ─── Attenzione ───────────────────────────────────────────────────────────
+  // Il listone è UNICO e vale per tutti: cancellarlo per intero qui
+  // butterebbe via il lavoro vero del proprietario del progetto. È già
+  // successo una volta. Si cancellano soltanto i calciatori di prova, che per
+  // questo hanno identificativi da 900000 in su: quelli del listone ufficiale
+  // sono di quattro o cinque cifre e non arrivano mai lì.
+  await sql('delete from public.player_stats where player_id >= 900000;')
+  await sql('delete from public.players where id >= 900000;')
   await sql("delete from auth.users where email like '%@fantasta.test';")
   await sql("select cron.schedule('fantasta-lotti-scaduti', '10 seconds', 'select public.chiudi_lotti_scaduti();');")
   console.log('Dati di prova rimossi, rete di sicurezza riaccesa.')
@@ -143,7 +149,7 @@ await sql(`insert into public.app_admins (user_id) values ('${admin.id}') on con
 
 const RUOLI = ['P', 'D', 'C', 'A']
 const CALCIATORI = []
-let id = 8100
+let id = 908100
 for (const r of RUOLI) {
   for (let i = 1; i <= 3; i++) {
     CALCIATORI.push({ id: id++, nome: `${r}${i} Prova`, ruolo: r, squadra: 'Prova FC', quotazione: 5 })
@@ -233,7 +239,7 @@ const diTurno = utenteDi(asta.nomination_order[asta.current_turn_index])
 const nonDiTurno = diTurno === admin ? amico : admin
 
 const fuoriTurno = await rpc(nonDiTurno, 'chiama_calciatore', {
-  p_lega: lega, p_player_id: 8100, p_importo: 1,
+  p_lega: lega, p_player_id: 908100, p_importo: 1,
 })
 esito(
   'Non si chiama fuori dal proprio turno',
@@ -242,7 +248,7 @@ esito(
 )
 
 const troppoAlta = await rpc(diTurno, 'chiama_calciatore', {
-  p_lega: lega, p_player_id: 8100, p_importo: 18,
+  p_lega: lega, p_player_id: 908100, p_importo: 18,
 })
 esito(
   'Non si puo offrire oltre il massimo, nemmeno chiamando',
@@ -251,7 +257,7 @@ esito(
 )
 
 const chiamata = await rpc(diTurno, 'chiama_calciatore', {
-  p_lega: lega, p_player_id: 8100, p_importo: 5,
+  p_lega: lega, p_player_id: 908100, p_importo: 5,
 })
 const lotto = chiamata.riga?.lotto
 esito(
@@ -261,7 +267,7 @@ esito(
 )
 
 const doppiaChiamata = await rpc(diTurno, 'chiama_calciatore', {
-  p_lega: lega, p_player_id: 8101, p_importo: 1,
+  p_lega: lega, p_player_id: 908101, p_importo: 1,
 })
 esito(
   'Non si apre un secondo lotto mentre uno e in corso',
@@ -345,7 +351,7 @@ esito(
 const giaPreso = await rpc(
   utenteDi((await sql(`select nomination_order[current_turn_index+1] t from public.auctions where id='${asta.id}';`))[0].t),
   'chiama_calciatore',
-  { p_lega: lega, p_player_id: 8100, p_importo: 1 },
+  { p_lega: lega, p_player_id: 908100, p_importo: 1 },
 )
 esito(
   'Un calciatore gia comprato non si richiama',
@@ -358,7 +364,7 @@ esito(
 const turnoOra = (await sql(`select nomination_order[current_turn_index+1] t from public.auctions where id='${asta.id}';`))[0].t
 const chiamanteVero = utenteDi(turnoOra)
 const lottoVero = (await rpc(chiamanteVero, 'chiama_calciatore', {
-  p_lega: lega, p_player_id: 8103, p_importo: 2,
+  p_lega: lega, p_player_id: 908103, p_importo: 2,
 })).riga?.lotto
 
 console.log('\n         (aspetto 7 secondi veri per far scadere il countdown…)')
@@ -382,7 +388,7 @@ if (conDifensore) {
   const indice = asta.nomination_order.indexOf(conDifensore.id)
   await sql(`update public.auctions set current_turn_index = ${indice} where id = '${asta.id}';`)
   const pieno = await rpc(utenteDi(conDifensore.id), 'chiama_calciatore', {
-    p_lega: lega, p_player_id: 8104, p_importo: 1,
+    p_lega: lega, p_player_id: 908104, p_importo: 1,
   })
   esito(
     'Chi ha il reparto pieno non puo chiamare un altro di quel ruolo',
@@ -406,7 +412,7 @@ const offertaFinta = await scriviDiretto(amico, 'bids', {
   lot_id: lotto, team_id: squadraDi(amico), amount: 999,
 })
 const rosaFinta = await scriviDiretto(amico, 'roster_players', {
-  league_id: lega, team_id: squadraDi(amico), player_id: 8105, price: 0,
+  league_id: lega, team_id: squadraDi(amico), player_id: 908105, price: 0,
 })
 esito(
   'Nessuno scrive offerte o acquisti passando dalle tabelle',

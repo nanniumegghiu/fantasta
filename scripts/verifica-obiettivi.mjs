@@ -48,8 +48,14 @@ async function sql(query) {
 if (process.argv.includes('--pulisci')) {
   await sql(`delete from public.leagues
     where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
-  await sql('delete from public.player_stats;')
-  await sql('delete from public.players;')
+  // ─── Attenzione ───────────────────────────────────────────────────────────
+  // Il listone è UNICO e vale per tutti: cancellarlo per intero qui
+  // butterebbe via il lavoro vero del proprietario del progetto. È già
+  // successo una volta. Si cancellano soltanto i calciatori di prova, che per
+  // questo hanno identificativi da 900000 in su: quelli del listone ufficiale
+  // sono di quattro o cinque cifre e non arrivano mai lì.
+  await sql('delete from public.player_stats where player_id >= 900000;')
+  await sql('delete from public.players where id >= 900000;')
   await sql("delete from auth.users where email like '%@fantasta.test';")
   console.log('Dati di prova rimossi.')
   process.exit(0)
@@ -116,12 +122,12 @@ const estraneo = await registra('estraneo')
 await sql(`insert into public.app_admins (user_id) values ('${admin.id}') on conflict do nothing;`)
 
 const CALCIATORI = [
-  { id: 9001, nome: 'Lautaro Martinez', ruolo: 'A', squadra: 'Inter', quotazione: 35 },
-  { id: 9002, nome: 'Kean', ruolo: 'A', squadra: 'Fiorentina', quotazione: 28 },
-  { id: 9003, nome: 'Di Gregorio', ruolo: 'P', squadra: 'Juventus', quotazione: 15 },
-  { id: 9004, nome: 'Falcone', ruolo: 'P', squadra: 'Lecce', quotazione: 9 },
-  { id: 9005, nome: 'Montipo', ruolo: 'P', squadra: 'Hellas Verona', quotazione: 8 },
-  { id: 9006, nome: 'Bastoni', ruolo: 'D', squadra: 'Inter', quotazione: 18 },
+  { id: 909001, nome: 'Lautaro Martinez', ruolo: 'A', squadra: 'Inter', quotazione: 35 },
+  { id: 909002, nome: 'Kean', ruolo: 'A', squadra: 'Fiorentina', quotazione: 28 },
+  { id: 909003, nome: 'Di Gregorio', ruolo: 'P', squadra: 'Juventus', quotazione: 15 },
+  { id: 909004, nome: 'Falcone', ruolo: 'P', squadra: 'Lecce', quotazione: 9 },
+  { id: 909005, nome: 'Montipo', ruolo: 'P', squadra: 'Hellas Verona', quotazione: 8 },
+  { id: 909006, nome: 'Bastoni', ruolo: 'D', squadra: 'Inter', quotazione: 18 },
 ]
 await rpc(admin, 'importa_listone', { p_stagione: '2026/27', p_righe: CALCIATORI })
 
@@ -172,7 +178,7 @@ const idFasciaTop = fasce.corpo ? (await leggi(amico, `tiers?select=id&list_id=e
 
 const obiettivo = await scrivi(amico, 'targets', 'POST', {
   list_id: listaAmico,
-  player_id: 9001,
+  player_id: 909001,
   tier_id: idFasciaTop,
   max_price: 90,
   note: 'Non oltre 90, poi vado su Kean',
@@ -184,10 +190,10 @@ esito(
 )
 
 const altri = await scrivi(amico, 'targets', 'POST', [
-  { list_id: listaAmico, player_id: 9002, max_price: 55 },
-  { list_id: listaAmico, player_id: 9003, max_price: 25 },
-  { list_id: listaAmico, player_id: 9004, max_price: 12 },
-  { list_id: listaAmico, player_id: 9005, max_price: 10 },
+  { list_id: listaAmico, player_id: 909002, max_price: 55 },
+  { list_id: listaAmico, player_id: 909003, max_price: 25 },
+  { list_id: listaAmico, player_id: 909004, max_price: 12 },
+  { list_id: listaAmico, player_id: 909005, max_price: 10 },
 ])
 esito(
   'Si aggiungono piu obiettivi in una volta',
@@ -197,7 +203,7 @@ esito(
 
 const doppio = await scrivi(amico, 'targets', 'POST', {
   list_id: listaAmico,
-  player_id: 9001,
+  player_id: 909001,
 })
 esito(
   'Lo stesso calciatore non entra due volte nella stessa lista',
@@ -242,8 +248,8 @@ const incrocio = await scrivi(amico, 'goalkeeper_pairings', 'POST', {
   note: 'Quando il Lecce gioca in casa, il Verona è fuori: si alternano bene',
 })
 const idIncrocio = incrocio.corpo?.[0]?.id
-const idFalcone = (await leggi(amico, `targets?select=id&list_id=eq.${listaAmico}&player_id=eq.9004`)).corpo[0].id
-const idMontipo = (await leggi(amico, `targets?select=id&list_id=eq.${listaAmico}&player_id=eq.9005`)).corpo[0].id
+const idFalcone = (await leggi(amico, `targets?select=id&list_id=eq.${listaAmico}&player_id=eq.909004`)).corpo[0].id
+const idMontipo = (await leggi(amico, `targets?select=id&list_id=eq.${listaAmico}&player_id=eq.909005`)).corpo[0].id
 const membri = await scrivi(amico, 'pairing_members', 'POST', [
   { pairing_id: idIncrocio, target_id: idFalcone, position: 0 },
   { pairing_id: idIncrocio, target_id: idMontipo, position: 1 },
@@ -317,7 +323,7 @@ esito(
 
 const scrivaAdmin = await scrivi(admin, 'targets', 'POST', {
   list_id: listaAmico,
-  player_id: 9006,
+  player_id: 909006,
   note: 'intruso',
 })
 esito(

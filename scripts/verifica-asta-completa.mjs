@@ -51,8 +51,14 @@ async function sql(query) {
 if (process.argv.includes('--pulisci')) {
   await sql(`delete from public.leagues
     where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
-  await sql('delete from public.player_stats;')
-  await sql('delete from public.players;')
+  // ─── Attenzione ───────────────────────────────────────────────────────────
+  // Il listone è UNICO e vale per tutti: cancellarlo per intero qui
+  // butterebbe via il lavoro vero del proprietario del progetto. È già
+  // successo una volta. Si cancellano soltanto i calciatori di prova, che per
+  // questo hanno identificativi da 900000 in su: quelli del listone ufficiale
+  // sono di quattro o cinque cifre e non arrivano mai lì.
+  await sql('delete from public.player_stats where player_id >= 900000;')
+  await sql('delete from public.players where id >= 900000;')
   await sql("delete from auth.users where email like '%@fantasta.test';")
   await sql("select cron.schedule('fantasta-lotti-scaduti', '10 seconds', 'select public.chiudi_lotti_scaduti();');")
   console.log('Dati di prova rimossi, rete di sicurezza riaccesa.')
@@ -130,7 +136,7 @@ const terzo = await registra('terzo')
 await sql(`insert into public.app_admins (user_id) values ('${admin.id}') on conflict do nothing;`)
 
 const CALCIATORI = []
-let id = 8200
+let id = 908200
 for (const [ruolo, base] of [['P', 'portiere'], ['D', 'difensore'], ['C', 'centrocampo'], ['A', 'attacco']]) {
   for (const lettera of ['A', 'B', 'C', 'D']) {
     CALCIATORI.push({

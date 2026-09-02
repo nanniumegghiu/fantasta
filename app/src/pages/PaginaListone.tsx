@@ -178,8 +178,8 @@ export function PaginaListone() {
       {righe && righe.length === 0 && (
         <div className="mx-auto w-full max-w-5xl px-4 py-6">
           <div className="rounded-2xl border border-oro/40 bg-oro/10 p-5 text-sm text-oro">
-            Il listone non è ancora stato caricato. Serve un amministratore
-            dell&apos;applicazione, dalla schermata di importazione.
+            Il listone non è ancora stato caricato. Lo carica una volta sola chi ha fondato
+            l&apos;applicazione, e da quel momento lo vedono tutti su qualsiasi dispositivo.
           </div>
         </div>
       )}

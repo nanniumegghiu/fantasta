@@ -50,8 +50,14 @@ async function sql(query) {
 }
 
 if (process.argv.includes('--pulisci')) {
-  await sql('delete from public.player_stats;')
-  await sql('delete from public.players;')
+  // ─── Attenzione ───────────────────────────────────────────────────────────
+  // Il listone è UNICO e vale per tutti: cancellarlo per intero qui
+  // butterebbe via il lavoro vero del proprietario del progetto. È già
+  // successo una volta. Si cancellano soltanto i calciatori di prova, che per
+  // questo hanno identificativi da 900000 in su: quelli del listone ufficiale
+  // sono di quattro o cinque cifre e non arrivano mai lì.
+  await sql('delete from public.player_stats where player_id >= 900000;')
+  await sql('delete from public.players where id >= 900000;')
   await sql("delete from public.app_admin_emails where email like '%@fantasta.test';")
   await sql("delete from auth.users where email like '%@fantasta.test';")
   console.log('Listone, statistiche e utenti di prova rimossi.')
@@ -202,26 +208,26 @@ function creaXlsx(righe) {
 const RIGHE_LISTONE = [
   ['Quotazioni Fantacalcio Stagione 2026 27', '', '', '', '', '', ''],
   ['Id', 'R', 'RM', 'Nome', 'Squadra', 'Qt.A', 'Qt.A M'],
-  [2764, 'A', 'Pc', 'Lautaro Martinez', 'Inter', 35, 34],
-  [571, 'P', 'Por', 'Di Gregorio', 'Juventus', 15, 14],
-  [4220, 'd', 'Dc', "Dell'Orco", 'Lecce', 6, 6],
-  [138, 'C', 'M;C', 'Çalhanoğlu', 'Inter', 22, 21],
-  [999, 'C', 'C', '', 'Como', 5, 5],
-  [2764, 'A', 'Pc', 'Doppione da scartare', 'Inter', 35, 34],
+  [902764, 'A', 'Pc', 'Lautaro Martinez', 'Inter', 35, 34],
+  [900571, 'P', 'Por', 'Di Gregorio', 'Juventus', 15, 14],
+  [904220, 'd', 'Dc', "Dell'Orco", 'Lecce', 6, 6],
+  [900138, 'C', 'M;C', 'Çalhanoğlu', 'Inter', 22, 21],
+  [900999, 'C', 'C', '', 'Como', 5, 5],
+  [902764, 'A', 'Pc', 'Doppione da scartare', 'Inter', 35, 34],
   ['', 'A', 'Pc', 'Senza identificativo', 'Roma', 12, 12],
   [777, 'Z', '?', 'Ruolo strano', 'Pisa', 4, 4],
-  [321, 'A', 'Pc', 'Kean', 'Fiorentina', 28, 27],
+  [900321, 'A', 'Pc', 'Kean', 'Fiorentina', 28, 27],
   ['', '', '', '', '', '', ''],
 ]
 
 const RIGHE_STATISTICHE = [
   ['Statistiche Fantacalcio Stagione 2026 27', '', '', '', '', '', '', '', '', ''],
   ['Id', 'R', 'Nome', 'Squadra', 'Pv', 'Mv', 'Fm', 'Gf', 'Ass', 'Amm', 'Esp'],
-  [2764, 'A', 'Lautaro Martinez', 'Inter', '12', '6,58', '8,25', '7', '3', '2', '0'],
-  [571, 'P', 'Di Gregorio', 'Juventus', '13', '6,15', '5,92', '0', '0', '1', '0'],
-  [138, 'C', 'Çalhanoğlu', 'Inter', '11', '6,45', '7,10', '4', '2', '3', '1'],
-  [321, 'A', 'Kean', 'Fiorentina', '13', '6,73', '8,90', '9', '1', '2', '0'],
-  [88888, 'A', 'Non nel listone', 'Ignota', '1', '6,00', '6,00', '0', '0', '0', '0'],
+  [902764, 'A', 'Lautaro Martinez', 'Inter', '12', '6,58', '8,25', '7', '3', '2', '0'],
+  [900571, 'P', 'Di Gregorio', 'Juventus', '13', '6,15', '5,92', '0', '0', '1', '0'],
+  [900138, 'C', 'Çalhanoğlu', 'Inter', '11', '6,45', '7,10', '4', '2', '3', '1'],
+  [900321, 'A', 'Kean', 'Fiorentina', '13', '6,73', '8,90', '9', '1', '2', '0'],
+  [988888, 'A', 'Non nel listone', 'Ignota', '1', '6,00', '6,00', '0', '0', '0', '0'],
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -272,14 +278,14 @@ esito(
 
 esito(
   'Prende la quotazione del Classic, non quella del Mantra',
-  listone.righe.find((r) => r.id === 2764)?.quotazione === 35,
-  `Lautaro: Qt.A ${listone.righe.find((r) => r.id === 2764)?.quotazione} (nel file Qt.A M vale 34)`,
+  listone.righe.find((r) => r.id === 902764)?.quotazione === 35,
+  `Lautaro: Qt.A ${listone.righe.find((r) => r.id === 902764)?.quotazione} (nel file Qt.A M vale 34)`,
 )
 
 esito(
   'Riconosce il ruolo anche scritto minuscolo',
-  listone.righe.find((r) => r.id === 4220)?.ruolo === 'D',
-  `Dell'Orco, nel file "d", interpretato "${listone.righe.find((r) => r.id === 4220)?.ruolo}"`,
+  listone.righe.find((r) => r.id === 904220)?.ruolo === 'D',
+  `Dell'Orco, nel file "d", interpretato "${listone.righe.find((r) => r.id === 904220)?.ruolo}"`,
 )
 
 const motivi = listone.scartate.map((s) => s.motivo).sort()
@@ -297,8 +303,8 @@ const statistiche = interpretaStatistiche(leggiCsv(
 
 esito(
   'Legge le medie con la virgola decimale',
-  statistiche.righe.find((r) => r.id === 2764)?.media === 6.58,
-  `Lautaro: nel file "6,58", interpretato ${statistiche.righe.find((r) => r.id === 2764)?.media}`,
+  statistiche.righe.find((r) => r.id === 902764)?.media === 6.58,
+  `Lautaro: nel file "6,58", interpretato ${statistiche.righe.find((r) => r.id === 902764)?.media}`,
 )
 
 esito(
@@ -377,7 +383,7 @@ esito(
   primaImportazione.riga?.esito === 'ok' &&
     scritti.length === 5 &&
     scritti.every((r) => r.active) &&
-    scritti.find((r) => r.id === 2764)?.name === 'Lautaro Martinez',
+    scritti.find((r) => r.id === 902764)?.name === 'Lautaro Martinez',
   `esito ${primaImportazione.riga?.esito}; righe scritte ${scritti.length} su 5, tutte attive: ${scritti.every((r) => r.active)}`,
 )
 
@@ -394,12 +400,12 @@ esito(
   `seconda importazione: 0 nuovi, ${seconda.riga?.aggiornati} aggiornati, in tabella ${quanti} calciatori`,
 )
 
-const ridotto = listone.righe.filter((r) => r.id !== 321)
+const ridotto = listone.righe.filter((r) => r.id !== 900321)
 const terza = await rpc(amministratore, 'importa_listone', {
   p_stagione: '2026/27',
   p_righe: ridotto,
 })
-const kean = (await sql("select active from public.players where id = 321;"))[0]
+const kean = (await sql("select active from public.players where id = 900321;"))[0]
 esito(
   'Chi sparisce dal listone non viene cancellato, solo ritirato',
   terza.riga?.ritirati === 1 && kean.active === false,
@@ -417,11 +423,12 @@ esito(
   `aggiornate ${stat.riga?.aggiornati}, ignorate ${stat.riga?.ignorati} · ${stat.riga?.messaggio}`,
 )
 
-const vista = await leggi(normale, 'listone?select=name,role,quotation,avg_vote,goals,matchday&id=eq.2764')
+const vista = await leggi(normale, 'listone?select=name,role,quotation,avg_vote,goals,matchday&id=eq.902764')
+const eAdmin = await rpc(normale, 'e_admin_app', {})
 esito(
-  'Chiunque abbia fatto l accesso legge il listone con le statistiche unite',
+  'Un utente qualunque, che non ha caricato niente, vede il listone del fondatore',
   vista.corpo?.[0]?.name === 'Lautaro Martinez' && Number(vista.corpo?.[0]?.avg_vote) === 6.58,
-  `HTTP ${vista.stato}: ${JSON.stringify(vista.corpo?.[0])}`,
+  `HTTP ${vista.stato}, amministratore dell'applicazione: ${eAdmin.riga}; vede ${JSON.stringify(vista.corpo?.[0])}`,
 )
 
 const senzaAccesso = await leggi(null, 'listone?select=name&limit=1')
@@ -445,6 +452,35 @@ esito(
   scrivaDiretta.status >= 400,
   `HTTP ${scrivaDiretta.status}: ${(await scrivaDiretta.text()).slice(0, 90)}`,
 )
+
+// ═══════════════════════════════════════════════════════════════════════════
+// La pulizia non deve toccare il listone vero
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Questa prova nasce da un danno reale: gli script di verifica cancellavano
+// TUTTI i calciatori, e hanno buttato via il listone che il proprietario del
+// progetto aveva appena caricato. Da allora i calciatori di prova hanno
+// identificativi da 900000 in su e la pulizia cancella solo quelli.
+//
+// La sentinella ha un identificativo da listone ufficiale: se dopo la pulizia
+// non c'e' piu', vuol dire che qualcuno ha riallargato la cancellazione.
+
+await sql(`insert into public.players (id, season, name, role, serie_a_team, quotation)
+  values (4999, '2026/27', 'Sentinella Non Cancellabile', 'A', 'Prova FC', 1)
+  on conflict (id) do nothing;`)
+
+// Esattamente le stesse istruzioni del ramo --pulisci.
+await sql('delete from public.player_stats where player_id >= 900000;')
+await sql('delete from public.players where id >= 900000;')
+
+const sentinella = (await sql('select count(*)::int n from public.players where id = 4999;'))[0].n
+const provaSparita = (await sql('select count(*)::int n from public.players where id >= 900000;'))[0].n
+esito(
+  'La pulizia porta via i calciatori di prova e lascia stare il listone vero',
+  sentinella === 1 && provaSparita === 0,
+  `sentinella con identificativo 4999 ancora presente: ${sentinella === 1}; calciatori di prova rimasti: ${provaSparita}`,
+)
+await sql('delete from public.players where id = 4999;')
 
 // ─── Riepilogo ──────────────────────────────────────────────────────────────
 

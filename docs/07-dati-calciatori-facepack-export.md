@@ -23,6 +23,12 @@ leggere.
 
 ### 2.1 Il listone
 
+> **Il listone è unico per tutta l'applicazione.** Non è per lega e non è per utente: esiste una
+> volta sola, lo carica il fondatore, e da quel momento lo vede chiunque abbia fatto l'accesso, su
+> qualsiasi dispositivo. Nessun partecipante deve caricare niente, e non esiste un modo per farlo:
+> la scrittura è riservata agli amministratori dell'applicazione. Verificato con un utente che non
+> ha nessun potere e che vede comunque quello che ha caricato il fondatore.
+
 Il listone entra nel sistema tramite **importazione di un file** fatta dall'amministratore
 dell'applicazione, non dal singolo utente. Il file atteso è quello ufficiale delle quotazioni, in
 formato Excel o CSV, con almeno queste colonne:
@@ -197,6 +203,7 @@ manuale accanto a quella automatica.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.4 | 2026-09-03 | Chiarito che il listone è unico per tutti. Corretti gli script di verifica che lo cancellavano. |
 | 1.3 | 2026-09-02 | Importazione realizzata: lettore di .xlsx e .csv scritto nel progetto, ADR-0012. Anteprima obbligatoria prima di scrivere. |
 | 1.2 | 2026-09-02 | Ponte automatico tramite servizio pubblico di ricerca, ADR-0011. |
 | 1.1 | 2026-09-02 | Facepack ispezionato con numeri reali, ponte deciso. Formato di esportazione fissato. |

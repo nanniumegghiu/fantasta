@@ -190,6 +190,12 @@ l'esportazione delle rose.
 
 ## 7bis. Le automazioni pronte
 
+> ⚠️ **Gli script di verifica girano sul database vero.** Il ramo `--pulisci` cancella dati. I
+> calciatori di prova hanno identificativi da **900000 in su** e la pulizia tocca solo quelli: il
+> listone caricato dall'utente non si tocca. Se scrivi una prova nuova che crea calciatori, usa
+> quell'intervallo. È già successo di cancellare il listone vero: vedi
+> `docs/decisioni/2026-09-03-il-listone-cancellato-dalle-prove.md`.
+
 Tutte si lanciano dalla cartella del progetto, non da `app/`.
 
 | Comando | Cosa fa |
