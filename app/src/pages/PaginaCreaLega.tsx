@@ -8,15 +8,7 @@ import { Interruttore } from '@/components/Interruttore'
 import { Intestazione } from '@/components/Intestazione'
 import { useCreaLega } from '@/features/leghe/api'
 import { REGOLE_PREDEFINITE, type RegoleLega } from '@/features/leghe/tipi'
-
-/** La stagione corrente, proposta come predefinita: si cambia se serve. */
-function stagioneCorrente(): string {
-  const ora = new Date()
-  const anno = ora.getFullYear()
-  // Le stagioni cominciano d'estate: da luglio in poi si guarda all'anno dopo.
-  const inizio = ora.getMonth() >= 6 ? anno : anno - 1
-  return `${inizio}/${String((inizio + 1) % 100).padStart(2, '0')}`
-}
+import { stagioneCorrente } from '@/domain/stagione'
 
 export function PaginaCreaLega() {
   const naviga = useNavigate()

@@ -2,7 +2,7 @@
 
 **Scopo** · Descrivere com'è organizzato il codice del client e come si esegue.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 Fette 0 e 1 costruite, backend collegato · schermate mai aperte in un browser
+**Stato** · 🟡 Fette 0, 1 e 2 costruite, backend collegato · schermate mai aperte in un browser
 **Data** · 2026-09-02
 
 ---
@@ -29,6 +29,10 @@ app/
     ├── main.tsx               punto di partenza
     ├── App.tsx                rotte e protezione degli accessi
     ├── styles/index.css       token del design system
+    ├── domain/                regole e formati, senza DOM: girano anche in Node
+    │   ├── fogli.ts           lettura di .xlsx e .csv, senza librerie (ADR-0012)
+    │   ├── listone.ts         riconoscimento delle colonne e righe scartate
+    │   └── stagione.ts        la stagione corrente, in un posto solo
     ├── lib/
     │   ├── supabase.ts        client del backend
     │   └── messaggioErrore.ts errori tradotti in italiano, in un posto solo
@@ -36,7 +40,8 @@ app/
     │                          Intestazione, MarchioFantasta
     ├── features/
     │   ├── auth/              sessione e metodi di accesso
-    │   └── leghe/             tipi e chiamate al backend delle leghe
+    │   ├── leghe/             tipi e chiamate al backend delle leghe
+    │   └── listone/           lettura del listone e importazioni
     └── pages/                 schermate
 ```
 
@@ -68,7 +73,9 @@ volta sola non valeva la pena aprirlo.
 | `/leghe/nuova` | Creazione lega con tutte le regole. |
 | `/leghe/entra` | Ingresso con il codice di sei caratteri. |
 | `/invito/:codice` | Lo stesso, ma col codice già scritto. È il link che gira su WhatsApp. |
-| `/lega/:id` | Riepilogo: asta, invito, partecipanti, la mia squadra, regole, regolamento. |
+| `/lega/:id` | Riepilogo: asta, listone, invito, partecipanti, la mia squadra, regole, regolamento. |
+| `/listone` | Tabella dei calciatori: filtri per ruolo e squadra, ordinamento su ogni colonna. |
+| `/importazione` | Caricamento di listone e statistiche. Solo amministratori dell applicazione. |
 | qualsiasi altro | Rimanda a `/leghe`. |
 
 Chi arriva da un link di invito senza aver fatto l'accesso viene mandato ad `/accesso`, e **dopo
@@ -97,14 +104,16 @@ Tutti quelli elencati nella struttura qui sopra.
 
 ## Da sapere prima di intervenire
 
-Il file compilato pesa circa 611 kB, 184 kB compressi. È accettabile adesso, non lo sarà quando
-arriveranno asta e listone. Prima della Fetta 4 va suddiviso per rotta, così che lo schermo
-condiviso non scarichi anche l'importazione del listone.
+Il codice è **suddiviso per rotta**: chi apre l'asta non scarica l'importazione del listone. Il
+blocco comune pesa circa 633 kB, 190 kB compressi, ed è quasi tutto libreria condivisa; le singole
+schermate vanno da 3 a 32 kB. La soglia di avviso della compilazione resta superata dal blocco
+comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 ## Aperto / TODO
 
 - 🔴 Nessuna schermata è mai stata aperta in un browser.
-- 🟡 Suddivisione del codice per rotta, prima della Fetta 4.
+- ✅ Suddivisione del codice per rotta: fatta.
+- 🟡 Il blocco comune resta sopra la soglia di avviso: quasi tutto libreria condivisa.
 - 🟡 Il carattere Inter arriva da un servizio esterno. Se durante un'asta la rete è lenta, si vede
   il carattere di sistema. Valutare se portarlo dentro il progetto.
 
@@ -112,5 +121,6 @@ condiviso non scarichi anche l'importazione del listone.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Fetta 2: lettore di fogli di calcolo, importazione, tabella del listone. Codice suddiviso per rotta. |
 | 1.1 | 2026-09-02 | Fetta 1: schermate delle leghe, inviti, squadre, regolamento in PDF. |
 | 1.0 | 2026-09-02 | Fetta 0: struttura, accesso, rotte protette, icone, prima migrazione. |

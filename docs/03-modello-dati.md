@@ -3,7 +3,7 @@
 **Scopo** · Elencare tutte le entità del sistema, i loro campi e le relazioni. È il contratto che
 frontend e backend concordano **prima** di scrivere interfaccia.
 **Proprietario** · backend-engineer
-**Stato** · 🟡 create e verificate: profiles, leagues, league_members, teams · il resto 🔴
+**Stato** · 🟡 create e verificate: profiles, leagues, league_members, teams, players, player_stats · asta e obiettivi 🔴
 **Data** · 2026-09-02
 
 ---
@@ -214,6 +214,7 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260902120000_profili.sql` | `profiles`, trigger di creazione, policy |
 | `20260902140000_leghe.sql` | `leagues`, `league_members`, `teams`, `invite_attempts`, funzioni di appartenenza, archivio del regolamento |
 | `20260902160000_ingresso_lega_con_esito.sql` | `entra_in_lega` che restituisce un esito invece di sollevare eccezioni |
+| `20260902180000_listone.sql` | `players`, `player_stats`, `app_admins`, funzioni di importazione, vista `listone` |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 
@@ -246,5 +247,6 @@ lo scalo dei crediti, e l'asta diventa incontestabile solo a parole.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Fetta 2: listone e statistiche esistono davvero, con le funzioni di importazione e la vista che li unisce. Aggiunto il concetto di amministratore dell applicazione. |
 | 1.1 | 2026-09-02 | Fetta 1 realizzata: leagues, league_members, teams e invite_attempts esistono davvero. Aggiunte le funzioni di ingresso. |
 | 1.0 | 2026-09-02 | Prima stesura completa, indipendente dal database concreto. |

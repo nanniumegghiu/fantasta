@@ -3,7 +3,7 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🟡 Fette 0 e 1 costruite e verificate lato server, mai viste in un browser
+**Stato** · 🟡 Fette 0, 1 e 2 costruite e verificate lato server, mai viste in un browser
 **Data** · 2026-09-02
 
 ---
@@ -57,13 +57,21 @@ dispositivo, che entra e crea la sua squadra. Entrambi vediamo l'elenco dei part
 | Schermate: elenco leghe, creazione, ingresso, riepilogo | 🟡 scritte e compilate, **mai aperte in un browser** |
 | Prova vera su due dispositivi | 🔴 |
 
-### Fetta 2 · Listone e statistiche
+### Fetta 2 · Listone e statistiche — 🟡 costruita, mai vista in un browser
 
 Importazione del listone, importazione delle statistiche, tabella con filtri per ruolo e squadra e
 ordinamento su ogni colonna.
 
 **Si dimostra così**: su un telefono, filtro i centrocampisti del Napoli ordinati per media voto, e
 lo scorrimento è fluido con tutte le righe caricate.
+
+| Pezzo | Stato |
+|---|---|
+| Lettore di file .xlsx e .csv, senza dipendenze | ✅ 17 prove, `node --experimental-strip-types scripts/verifica-listone.mjs` |
+| Riconoscimento delle colonne, righe scartate con il motivo | ✅ verificato |
+| Importazione ripetibile, chi sparisce viene ritirato e non cancellato | ✅ verificato |
+| Tabella con filtri per ruolo e squadra e ordinamento su ogni colonna | 🟡 scritta, **mai aperta in un browser** |
+| Prova sul file ufficiale vero | 🔴 serve il file |
 
 ### Fetta 3 · Lista obiettivi
 
@@ -127,12 +135,14 @@ non è decorativa: è il criterio di chiusura.
 
 ## Aperto / TODO
 
-- 🔴 Le schermate delle Fette 0 e 1 non sono mai state aperte in un browser: è la verifica che manca.
+- 🔴 Le schermate delle Fette 0, 1 e 2 non sono mai state aperte in un browser: è la verifica che manca.
+- 🔴 Serve il file ufficiale del listone per provare l importazione sul formato vero.
 - 🔴 Pubblicazione online, necessaria perché il link giri davvero su WhatsApp.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Fetta 2 costruita: importazione e tabella del listone. |
 | 1.1 | 2026-09-02 | Fette 0 e 1 costruite. Vincolo di calendario chiarito. |
 | 1.0 | 2026-09-02 | Prima stesura. |

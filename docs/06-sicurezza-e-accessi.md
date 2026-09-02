@@ -61,7 +61,8 @@ dove serve.
 | Elenco partecipanti | I suoi partecipanti | Amministratore, più chi entra col codice |
 | Squadra, nome e crediti | Tutti i partecipanti della lega | Il nome lo scrive il proprietario. **I crediti solo il server** |
 | Rose, chi ha comprato chi | Tutti i partecipanti | Solo il server, come esito dell'asta |
-| Listone e statistiche | Ogni utente autenticato | Nessuno dall'app: solo l'importazione amministrativa |
+| Listone e statistiche | Ogni utente autenticato | **Nessuno dalla tabella.** Solo le funzioni di importazione, che verificano di persona chi le chiama |
+| Chi è amministratore dell'applicazione | Ognuno sa se lo è lui, nessuno sa chi altro lo è | Nessuno dall'app |
 | **Lista obiettivi, fasce, slot, note** | **Solo il proprietario** | **Solo il proprietario** |
 | Asta, stato e impostazioni | I partecipanti | Amministratore per le impostazioni, server per lo stato |
 | Lotti e offerte | I partecipanti | Solo il server |
@@ -132,5 +133,6 @@ utente, e l'esito va mostrato. «Ho scritto la policy» non è una verifica.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.2 | 2026-09-02 | Aggiunto l amministratore dell applicazione, distinto da quello di lega: solo lui carica il listone. |
 | 1.1 | 2026-09-02 | Realizzate e verificate le policy di leghe, squadre, inviti e archivio del regolamento. La lettura dei profili si estende ai compagni di lega. |
 | 1.0 | 2026-09-02 | Prima stesura. |

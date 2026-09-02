@@ -4,11 +4,13 @@ import { Bottone } from '@/components/Bottone'
 import { Intestazione } from '@/components/Intestazione'
 import { useAccesso } from '@/features/auth/ContestoAccesso'
 import { useMieLeghe } from '@/features/leghe/api'
+import { useSonoAmministratoreApp } from '@/features/listone/api'
 import { totaleSlot, type LegaCompleta } from '@/features/leghe/tipi'
 
 export function PaginaLeghe() {
   const { nomeMostrato, utente, esci } = useAccesso()
   const { data: leghe, isPending, error, refetch } = useMieLeghe()
+  const { data: sonoAmministratoreApp } = useSonoAmministratoreApp()
 
   return (
     <div className="min-h-dvh">
@@ -23,7 +25,19 @@ export function PaginaLeghe() {
       />
 
       <main className="mx-auto max-w-3xl px-4 py-6 pb-28">
-        <h1 className="text-2xl font-extrabold tracking-tight text-nebbia">Le mie leghe</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-extrabold tracking-tight text-nebbia">Le mie leghe</h1>
+          <div className="flex gap-2">
+            <Link to="/listone">
+              <Bottone aspetto="secondario">Listone</Bottone>
+            </Link>
+            {sonoAmministratoreApp && (
+              <Link to="/importazione">
+                <Bottone aspetto="fantasma">Importa</Bottone>
+              </Link>
+            )}
+          </div>
+        </div>
 
         {isPending && <Scheletro />}
 

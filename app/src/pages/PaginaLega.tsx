@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
@@ -62,6 +62,7 @@ export function PaginaLega() {
 
       <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
         <RiquadroAsta lega={lega} />
+        <RiquadroListone />
         {sonoAdmin && <RiquadroInvito lega={lega} />}
         <RiquadroPartecipanti lega={lega} idUtente={utente?.id} />
         <RiquadroMiaSquadra lega={lega} idUtente={utente?.id} />
@@ -88,6 +89,16 @@ function RiquadroAsta({ lega }: { lega: LegaCompleta }) {
       <p className="mt-3 rounded-xl border border-oro/30 bg-oro/10 px-4 py-3 text-sm text-oro">
         L&apos;asta è la prossima parte da costruire. Per ora questa schermata non fa niente.
       </p>
+    </Riquadro>
+  )
+}
+
+function RiquadroListone() {
+  return (
+    <Riquadro titolo="Il listone" sottotitolo="Chi c'è, quanto vale, come sta andando.">
+      <Link to="/listone">
+        <Bottone aspetto="secondario">Apri il listone</Bottone>
+      </Link>
     </Riquadro>
   )
 }

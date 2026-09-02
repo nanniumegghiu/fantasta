@@ -1,13 +1,29 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { backendConfigurato } from '@/lib/supabase'
 import { FornitoreAccesso, useAccesso } from '@/features/auth/ContestoAccesso'
 import { PaginaAccesso } from '@/pages/PaginaAccesso'
 import { PaginaLeghe } from '@/pages/PaginaLeghe'
-import { PaginaCreaLega } from '@/pages/PaginaCreaLega'
-import { PaginaEntraInLega } from '@/pages/PaginaEntraInLega'
-import { PaginaLega } from '@/pages/PaginaLega'
 import { PaginaBackendNonConfigurato } from '@/pages/PaginaBackendNonConfigurato'
+
+// Le schermate meno frequenti si scaricano solo quando servono. Sullo schermo
+// condiviso e sul telefono, la sera dell'asta, conta quanto codice arriva
+// prima che la pagina sia usabile: l'importazione del listone non deve pesare
+// sul caricamento di chi sta solo rilanciando.
+const PaginaCreaLega = lazy(() =>
+  import('@/pages/PaginaCreaLega').then((m) => ({ default: m.PaginaCreaLega })),
+)
+const PaginaEntraInLega = lazy(() =>
+  import('@/pages/PaginaEntraInLega').then((m) => ({ default: m.PaginaEntraInLega })),
+)
+const PaginaLega = lazy(() => import('@/pages/PaginaLega').then((m) => ({ default: m.PaginaLega })))
+const PaginaListone = lazy(() =>
+  import('@/pages/PaginaListone').then((m) => ({ default: m.PaginaListone })),
+)
+const PaginaImportazione = lazy(() =>
+  import('@/pages/PaginaImportazione').then((m) => ({ default: m.PaginaImportazione })),
+)
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -135,6 +151,23 @@ function Rotte() {
         }
       />
 
+      <Route
+        path="/listone"
+        element={
+          <SoloAutenticati>
+            <PaginaListone />
+          </SoloAutenticati>
+        }
+      />
+      <Route
+        path="/importazione"
+        element={
+          <SoloAutenticati>
+            <PaginaImportazione />
+          </SoloAutenticati>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/leghe" replace />} />
     </Routes>
   )
@@ -147,7 +180,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <FornitoreAccesso>
-          <Rotte />
+          <Suspense fallback={<Caricamento />}>
+            <Rotte />
+          </Suspense>
         </FornitoreAccesso>
       </BrowserRouter>
     </QueryClientProvider>

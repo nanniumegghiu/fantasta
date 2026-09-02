@@ -3,7 +3,7 @@
 **Scopo** · Descrivere da dove arrivano i dati dei calciatori, come si associano le foto del
 facepack, e in che formato escono le rose a fine asta.
 **Proprietario** · backend-engineer
-**Stato** · 🔴 non implementato · ✅ tutte le scelte chiuse, nulla resta in attesa dell'utente
+**Stato** · 🟡 importazione di listone e statistiche realizzata e verificata su file costruiti · 🔴 mai provata sul file ufficiale vero · facepack ed esportazione 🔴
 **Data** · 2026-09-02
 
 ---
@@ -39,9 +39,18 @@ L'importazione è **idempotente**: rilanciarla sullo stesso file non crea duplic
 calciatore che sparisce dal listone non viene cancellato se qualcuno l'ha già comprato: verrebbe giù
 mezza rosa.
 
-> 🟡 **Da verificare sul file reale.** I nomi esatti delle colonne cambiano di stagione in stagione.
-> L'importatore va scritto tollerante: riconosce le colonne per contenuto e non solo per intestazione,
-> e prima di scrivere mostra un'anteprima con quante righe ha letto e quante non ha capito.
+L'importatore è **tollerante**, come previsto: salta le righe di titolo sopra le intestazioni,
+riconosce le colonne per contenuto e non per posizione, accetta i numeri con la virgola decimale e
+sceglie la quotazione del Classic anche quando accanto c'è quella del Mantra. Prima di scrivere
+qualsiasi cosa mostra **cosa ha capito**: quale riga conteneva le intestazioni, quale colonna ha
+usato per ogni campo, quante righe ha letto e quali ha scartato con il motivo.
+
+Il lettore di `.xlsx` e `.csv` è scritto dentro il progetto, senza librerie: vedi **ADR-0012**, che
+spiega anche i rischi accettati e come sono mitigati.
+
+> 🔴 **Mai provato sul file ufficiale vero.** È stato verificato su un `.xlsx` costruito a immagine
+> di quello, con riga di titolo, accenti, apostrofi e virgole decimali. Non è la stessa cosa: serve
+> il file vero per considerare chiusa questa parte.
 
 ### 2.2 Le statistiche
 
@@ -188,6 +197,7 @@ manuale accanto a quella automatica.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.3 | 2026-09-02 | Importazione realizzata: lettore di .xlsx e .csv scritto nel progetto, ADR-0012. Anteprima obbligatoria prima di scrivere. |
 | 1.2 | 2026-09-02 | Ponte automatico tramite servizio pubblico di ricerca, ADR-0011. |
 | 1.1 | 2026-09-02 | Facepack ispezionato con numeri reali, ponte deciso. Formato di esportazione fissato. |
 | 1.0 | 2026-09-02 | Prima stesura. |
