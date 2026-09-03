@@ -39,6 +39,12 @@ const ref = URL_BASE.replace('https://', '').split('.')[0]
 // Dominio tutto suo: `--elimina` porta via ogni account del dominio, e non
 // deve nemmeno sfiorare @amici.fantasta, dove stanno i compagni veri.
 const DOMINIO_PROVA = 'prova.amici.fantasta'
+
+// La password degli amici non e' piu' scritta nel codice: sta in .env.local,
+// perche' il codice puo' finire in un repository pubblico. La prova la legge
+// da li' come fa lo script, invece di darla per scontata: cosi' verifica
+// quella vera e non una copia che potrebbe divergere.
+const PASSWORD_AMICI = envRad.FANTASTA_PASSWORD_AMICI
 // Una stagione tutta sua, diversa da quella di ogni altra suite.
 // `importa_listone` ritira i calciatori della stagione che sta caricando e
 // che non trova nel file: con una stagione condivisa, ogni suite spegneva il
@@ -215,7 +221,7 @@ esito(
 const provaAccesso = await fetch(`${URL_BASE}/auth/v1/token?grant_type=password`, {
   method: 'POST',
   headers: { apikey: CHIAVE, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: entrati[0].email, password: 'provaprova' }),
+  body: JSON.stringify({ email: entrati[0].email, password: PASSWORD_AMICI }),
 })
 const datiAccesso = await provaAccesso.json()
 esito(
@@ -229,7 +235,9 @@ esito(
 const elenco = amici('--lega', codice, '--elenco')
 esito(
   'L elenco dice chi c e e con che password si entra',
-  elenco.codice === 0 && elenco.testo.includes('provaprova') && elenco.testo.includes(entrati[0].email),
+  elenco.codice === 0 &&
+    elenco.testo.includes(PASSWORD_AMICI) &&
+    elenco.testo.includes(entrati[0].email),
   elenco.testo.trim().split('\n').filter(Boolean).slice(-2).join(' | '),
 )
 
@@ -389,6 +397,22 @@ esito(
   'Gli amici veri non sono stati toccati',
   true,
   `su @amici.fantasta ci sono ${veriIntatti} account, e questa prova non ne ha cancellato nessuno`,
+)
+
+// ─── La password non sta nel codice ─────────────────────────────────────────
+//
+// E' una prova sul repository, non sul comportamento, ed e' qui perche' e' qui
+// che qualcuno rimetterebbe la scorciatoia. Un repository pubblico con dentro
+// la password degli account di una lega vera e' un problema che non si vede
+// finche' non e' troppo tardi.
+
+const codiceDelloScript = readFileSync(join(radice, 'scripts', 'amici-di-prova.mjs'), 'utf8')
+esito(
+  'La password degli amici non e scritta nel codice',
+  Boolean(PASSWORD_AMICI) && !codiceDelloScript.includes(PASSWORD_AMICI),
+  PASSWORD_AMICI
+    ? 'la password viene da .env.local e non compare nel sorgente'
+    : 'FANTASTA_PASSWORD_AMICI non è in .env.local: lo script la genera al primo uso',
 )
 
 // ─── Riepilogo ──────────────────────────────────────────────────────────────
