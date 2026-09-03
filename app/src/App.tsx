@@ -34,6 +34,9 @@ const PaginaImportazione = lazy(() =>
 const PaginaVolti = lazy(() =>
   import('@/pages/PaginaVolti').then((m) => ({ default: m.PaginaVolti })),
 )
+const PaginaSchermoTv = lazy(() =>
+  import('@/pages/PaginaSchermoTv').then((m) => ({ default: m.PaginaSchermoTv })),
+)
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -215,6 +218,13 @@ function Rotte() {
           </SoloAutenticati>
         }
       />
+
+      {/* Lo schermo per il televisore: e' l'unica rotta senza accesso, e ci
+          sta perche' il codice di sei caratteri e' la chiave, e perche'
+          digitare una password col telecomando e' una serata rovinata. Non
+          mostra dati privati di nessuno: quello che si vede da qui lo decide
+          una funzione sola, `schermo_tv`. */}
+      <Route path="/tv/:codice" element={<PaginaSchermoTv />} />
 
       <Route path="*" element={<Navigate to="/leghe" replace />} />
     </Routes>

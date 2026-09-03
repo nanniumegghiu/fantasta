@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { MarchioFantasta } from '@/components/MarchioFantasta'
@@ -14,6 +14,7 @@ import {
   useRose,
   useScartoOrologio,
   type AcquistoInRosa,
+  type Asta,
   type BudgetSquadra,
   type Lotto,
 } from '@/features/asta/api'
@@ -47,17 +48,52 @@ import type { Ruolo } from '@/domain/listone'
  * Si guarda da tre metri: la scala tipografica è sua, non quella del telefono
  * ingrandita.
  */
-export function PaginaSchermoAsta() {
-  const { id: idLega } = useParams()
-  const { data: lega } = useLega(idLega)
-  const { data: asta } = useAsta(idLega)
-  const { data: lotto } = useLottoCorrente(asta?.id)
-  const { data: budget } = useBudgetSquadre(idLega)
-  const { data: rose } = useRose(idLega)
-  const { connesso } = useCanaleAsta(idLega)
-  const scarto = useScartoOrologio()
+/**
+ * Lo schermo, separato da dove arrivano i dati.
+ *
+ * Esistono due modi di riempirlo: la sessione di un partecipante, che ascolta
+ * il canale in tempo reale, e il **codice della TV**, che interroga a
+ * intervalli senza nessun accesso. Il disegno però è lo stesso, e deve
+ * restare uno: due copie della stessa schermata divergono al primo ritocco, e
+ * si scopre la sera dell'asta guardando due televisori diversi.
+ */
+export function SchermoAsta({
+  lega,
+  asta,
+  lotto,
+  budget,
+  rose,
+  connesso,
+  scarto,
+  onChiudiScaduto,
+}: {
+  lega:
+    | {
+        name?: string
+        slots_p: number
+        slots_d: number
+        slots_c: number
+        slots_a: number
+        /** Serve al suono del rilancio: piu' l'offerta si avvicina al budget, piu' sale. */
+        credits_initial?: number
+      }
+    | null
+    | undefined
+  asta: Asta | null | undefined
+  lotto: Lotto | null | undefined
+  budget: BudgetSquadra[] | undefined
+  rose: AcquistoInRosa[] | undefined
+  connesso: boolean
+  scarto: number
+  /**
+   * Chi guarda da una sessione vera chiede al server di chiudere il lotto
+   * scaduto: è la prima gamba del meccanismo di ADR-0005. Dalla TV no — quel
+   * visitatore non ha il permesso e non deve averlo — e il compito pianificato
+   * chiude comunque entro dieci secondi.
+   */
+  onChiudiScaduto?: (idLotto: string) => void
+}) {
   const timer = useTimerAsta(lotto, asta, scarto)
-  const chiudi = useChiudiLottoScaduto(idLega)
 
   const [audioPronto, setAudioPronto] = useState(false)
   const [suoni, setSuoni] = useState(true)
@@ -117,11 +153,11 @@ export function PaginaSchermoAsta() {
   // Allo scadere si chiede al server di chiudere. Decide lui: se non è
   // davvero scaduto rifiuta, e non succede niente.
   useEffect(() => {
-    if (timer.fase !== 'scaduto' || !lotto) return
+    if (timer.fase !== 'scaduto' || !lotto || !onChiudiScaduto) return
     if (chiusuraChiesta.current === lotto.id) return
     chiusuraChiesta.current = lotto.id
-    chiudi.mutate(lotto.id)
-  }, [timer.fase, lotto, chiudi])
+    onChiudiScaduto(lotto.id)
+  }, [timer.fase, lotto, onChiudiScaduto])
 
   if (!audioPronto) {
     return <SchermataAttivazione lega={lega?.name} onAttiva={() => setAudioPronto(true)} />
@@ -172,6 +208,37 @@ export function PaginaSchermoAsta() {
         idSquadraInTesta={lotto?.current_bidder_team_id}
       />
     </div>
+  )
+}
+
+/**
+ * Lo schermo condiviso aperto da chi ha una sessione: ascolta il canale in
+ * tempo reale, e segnala al server i lotti scaduti.
+ */
+export function PaginaSchermoAsta() {
+  const { id: idLega } = useParams()
+  const { data: lega } = useLega(idLega)
+  const { data: asta } = useAsta(idLega)
+  const { data: lotto } = useLottoCorrente(asta?.id)
+  const { data: budget } = useBudgetSquadre(idLega)
+  const { data: rose } = useRose(idLega)
+  const { connesso } = useCanaleAsta(idLega)
+  const scarto = useScartoOrologio()
+  const chiudi = useChiudiLottoScaduto(idLega)
+
+  const chiudiScaduto = useCallback((id: string) => chiudi.mutate(id), [chiudi])
+
+  return (
+    <SchermoAsta
+      lega={lega}
+      asta={asta}
+      lotto={lotto}
+      budget={budget}
+      rose={rose}
+      connesso={connesso}
+      scarto={scarto}
+      onChiudiScaduto={chiudiScaduto}
+    />
   )
 }
 

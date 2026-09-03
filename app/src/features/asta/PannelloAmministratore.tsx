@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { CampoNumero } from '@/components/CampoNumero'
 import { SelettoreCalciatore } from '@/features/obiettivi/SelettoreCalciatore'
+import { CodiceTv } from './CodiceTv'
 import { CorreggiRose } from './CorreggiRose'
 import {
   useAggiudicaOra,
@@ -180,6 +181,8 @@ export function PannelloAmministratore({
                 quello che ferma la catena, se ti serve un momento.
               </p>
             )}
+
+            <CodiceTv idLega={idLega} />
 
             {/* Riempimento per nome. */}
             <div className="mt-4 rounded-xl border border-verde-campo bg-verde-notte p-3">
