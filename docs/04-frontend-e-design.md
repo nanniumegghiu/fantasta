@@ -3,7 +3,7 @@
 **Scopo** · Definire l'aspetto e il comportamento dell'interfaccia: colori, tipografia, animazioni,
 suoni, e l'elenco completo delle schermate.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 token e componenti costruiti · quindici schermate fatte, **mai viste in un browser**
+**Stato** · 🟡 token e componenti costruiti · quindici schermate fatte, **tutte provate tranne l asta in corso**
 **Data** · 2026-09-02
 
 ---
@@ -123,11 +123,24 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
 8. La mia squadra: nome, rosa divisa per ruolo, crediti, spesa per reparto.
 9. Rose degli avversari: tutte le squadre con crediti residui aggiornati.
 10. Listone: tabella filtrabile per ruolo e squadra, ordinabile per ogni statistica, con foto.
+
+    La prima colonna è il **ruolo**, come pastiglia colorata. Si ordina per reparto, P D C A, che è
+    l'ordine in cui si gioca l'asta: l'ordine alfabetico dei codici non vuol dire niente. A parità
+    di colonna le righe si dispongono per nome, altrimenti dentro un reparto l'ordine sarebbe
+    quello in cui il listone è arrivato, cioè nessuno.
 11. **Lista obiettivi**, la schermata più ricca. Si apre sulla **scelta del metodo**, fasce oppure
     slot, spiegata con due schede invece che con degli interruttori. Scelto il metodo, si lavora
     dentro quello: i calciatori si aggiungono **dal posto in cui devono finire**, toccando la fascia
     o lo slot, e si riordinano trascinando. Il tetto di spesa e l'incrocio portieri si accendono
     quando servono; la nota c'è sempre.
+
+    **Gli slot sono i posti del regolamento.** Tanti quanti la lega ne prevede, tre portieri, otto
+    difensori, otto centrocampisti, sei attaccanti. Non se ne aggiungono e non se ne tolgono: si
+    cambia il nome, perché è quello che ti ricorda che ruolo ha quel posto nella tua idea di squadra.
+    Il tetto di spesa, in questo metodo, sta **sul posto e non sul nome**: dentro uno slot i
+    candidati valgono la stessa cosa, ed è il motivo per cui li hai messi insieme. Nel riepilogo la
+    somma dei massimali è quindi il piano di spesa vero, non una stima per eccesso: se sfora i
+    crediti, il piano non regge, e la schermata lo dice con parole diverse da quelle delle fasce.
 
     Fasce e slot sono **divisi per reparto**, e in cima c'è un filtro che ne lascia vedere uno solo.
     Scegliendo i nomi per una fascia di difensori non compaiono gli attaccanti: non è un aiuto alla
@@ -232,6 +245,8 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.5 | 2026-09-03 | Colonna del ruolo nel listone. Gli slot sono i posti del regolamento, con un massimale a testa. Tutte le schermate provate tranne l asta in corso. |
+| 1.4 | 2026-09-03 | Obiettivi divisi per reparto, con il filtro del reparto in corso. |
 | 1.3 | 2026-09-02 | Vista personale dell asta e schermo condiviso. Suoni sintetizzati invece che da file. |
 | 1.2 | 2026-09-02 | Schermate di listone, importazione e lista obiettivi. |
 | 1.1 | 2026-09-02 | Carattere scelto, marchio diviso in due colori, primi componenti e schermate. |

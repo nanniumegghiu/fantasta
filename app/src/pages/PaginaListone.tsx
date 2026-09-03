@@ -23,13 +23,20 @@ type Colonna = {
   larghezza: number
   valore: (c: CalciatoreInListone) => number | string | null
   mostra: (c: CalciatoreInListone) => string
+  /** La colonna del ruolo si legge come pastiglia colorata, non come numero. */
+  pastiglia?: boolean
 }
 
 const decimale = (v: number | null) =>
   v == null ? '–' : v.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const conta = (v: number | null) => (v == null ? '–' : String(v))
 
+const ORDINE_RUOLI: Ruolo[] = ['P', 'D', 'C', 'A']
+
 const COLONNE: Colonna[] = [
+  // Il ruolo si ordina per reparto, P D C A, non in ordine alfabetico: è
+  // l'ordine in cui si gioca l'asta, ed è l'unico che voglia dire qualcosa.
+  { chiave: 'role', etichetta: 'R', titolo: 'Ruolo', larghezza: 44, valore: (c) => ORDINE_RUOLI.indexOf(c.role), mostra: (c) => c.role, pastiglia: true },
   { chiave: 'quotation', etichetta: 'Qt', titolo: 'Quotazione', larghezza: 56, valore: (c) => c.quotation, mostra: (c) => String(c.quotation) },
   { chiave: 'games_played', etichetta: 'PG', titolo: 'Partite giocate', larghezza: 52, valore: (c) => c.games_played, mostra: (c) => conta(c.games_played) },
   { chiave: 'minutes', etichetta: 'Min', titolo: 'Minuti giocati', larghezza: 62, valore: (c) => c.minutes, mostra: (c) => conta(c.minutes) },
@@ -82,6 +89,10 @@ export function PaginaListone() {
       const c = typeof va === 'number' && typeof vb === 'number'
         ? va - vb
         : String(va).localeCompare(String(vb), 'it')
+      // A parità si va per nome. Serve soprattutto alla colonna del ruolo, che
+      // ha quattro valori soli: senza questo, dentro ogni reparto l'ordine
+      // sarebbe quello in cui il listone è arrivato, cioè nessun ordine.
+      if (c === 0) return a.name.localeCompare(b.name, 'it')
       return ordine.crescente ? c : -c
     })
   }, [righe, ruolo, squadra, cerca, ordine])
@@ -275,7 +286,8 @@ function Tabella({
                   title={`${c.titolo}: ordina`}
                   aria-label={`Ordina per ${c.titolo}`}
                   className={[
-                    'flex shrink-0 items-center justify-end gap-0.5 px-2 py-2 text-xs font-semibold',
+                    'flex shrink-0 items-center gap-0.5 px-2 py-2 text-xs font-semibold',
+                    c.pastiglia ? 'justify-center' : 'justify-end',
                     attiva ? 'text-oro' : 'text-fumo hover:text-nebbia',
                   ].join(' ')}
                   style={{ width: c.larghezza }}
@@ -310,18 +322,33 @@ function Tabella({
                     </div>
                   </div>
 
-                  {COLONNE.map((col) => (
-                    <div
-                      key={col.chiave}
-                      className={[
-                        'cifre-fisse shrink-0 px-2 text-right text-sm',
-                        col.chiave === ordine.chiave ? 'font-semibold text-oro' : 'text-nebbia',
-                      ].join(' ')}
-                      style={{ width: col.larghezza }}
-                    >
-                      {col.mostra(c)}
-                    </div>
-                  ))}
+                  {COLONNE.map((col) =>
+                    col.pastiglia ? (
+                      <div
+                        key={col.chiave}
+                        className="flex shrink-0 justify-center px-2"
+                        style={{ width: col.larghezza }}
+                      >
+                        <span
+                          className={`flex size-6 items-center justify-center rounded-full text-[11px] font-bold ${ruolo.classe}`}
+                          title={ruolo.lungo}
+                        >
+                          {col.mostra(c)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div
+                        key={col.chiave}
+                        className={[
+                          'cifre-fisse shrink-0 px-2 text-right text-sm',
+                          col.chiave === ordine.chiave ? 'font-semibold text-oro' : 'text-nebbia',
+                        ].join(' ')}
+                        style={{ width: col.larghezza }}
+                      >
+                        {col.mostra(c)}
+                      </div>
+                    ),
+                  )}
                 </div>
               )
             })}

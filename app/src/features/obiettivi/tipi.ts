@@ -49,8 +49,15 @@ export type SlotRosa = {
   id: string
   list_id: string
   role: Ruolo
+  /** Il nome lo cambi tu. Ruolo, posizione e quantità vengono dal regolamento. */
   label: string
   position: number
+  /**
+   * Quanto sei disposto a spendere per riempire **questo posto**, con
+   * chiunque dei suoi candidati. Non è il prezzo di un nome: dentro lo slot i
+   * nomi valgono la stessa cosa, ed è per questo che stanno insieme.
+   */
+  max_price: number | null
   slot_candidates: Candidato[]
 }
 
@@ -108,6 +115,20 @@ export const CLASSE_RUOLO: Record<Ruolo, string> = {
 /** Quanto spenderei al massimo se prendessi tutti gli obiettivi al loro tetto. */
 export function spesaMassima(obiettivi: Obiettivo[]): number {
   return obiettivi.reduce((s, o) => s + (o.max_price ?? 0), 0)
+}
+
+/**
+ * Con gli slot la somma dei massimali è **il budget della rosa intera**, non
+ * una stima per eccesso: gli slot sono esattamente i posti da riempire, uno a
+ * testa. Se questa cifra sfora i crediti, il piano non sta in piedi.
+ */
+export function spesaPianificata(slot: SlotRosa[]): number {
+  return slot.reduce((s, x) => s + (x.max_price ?? 0), 0)
+}
+
+/** Quanti posti hai coperto con almeno un candidato. */
+export function slotCoperti(slot: SlotRosa[]): number {
+  return slot.filter((s) => s.slot_candidates.length > 0).length
 }
 
 export function contaPerRuolo(obiettivi: Obiettivo[]): Record<Ruolo, number> {

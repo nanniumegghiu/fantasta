@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
@@ -17,16 +17,14 @@ import {
   useAggiungiASlot,
   useAggiungiFascia,
   useAggiungiIncrocio,
-  useAggiungiSlot,
-  useCreaSlotStandard,
   useImpostaOpzione,
   useListaObiettivi,
   useRiordinaCandidati,
   useRiordinaObiettivi,
+  useTogliDaSlot,
   useTogliFascia,
   useTogliIncrocio,
   useTogliObiettivo,
-  useTogliSlot,
 } from '@/features/obiettivi/api'
 import { SceltaMetodo } from '@/features/obiettivi/SceltaMetodo'
 import { SchedaObiettivo } from '@/features/obiettivi/SchedaObiettivo'
@@ -37,11 +35,14 @@ import {
   NOME_RUOLO,
   ORDINE_RUOLI,
   contaPerRuolo,
+  slotCoperti,
   spesaMassima,
+  spesaPianificata,
   type ColoreFascia,
   type Fascia as FasciaTipo,
   type ListaObiettivi,
   type Obiettivo,
+  type SlotRosa,
 } from '@/features/obiettivi/tipi'
 import type { Ruolo } from '@/domain/listone'
 
@@ -161,14 +162,33 @@ function Riepilogo({
   rosa: number | undefined
 }) {
   const per = contaPerRuolo(lista.targets)
-  const spesa = spesaMassima(lista.targets)
+  const conSlot = lista.metodo === 'slot'
+
+  // Le due somme dicono cose diverse e non vanno confuse.
+  //
+  // Con le fasce gli obiettivi sono **più** di quelli che comprerai: sforare
+  // è normale, ed è la ragione per cui hai delle alternative.
+  //
+  // Con gli slot i posti sono esattamente quelli della rosa, uno a testa: la
+  // somma dei massimali è il piano di spesa vero, e se sfora non regge.
+  const spesa = conSlot ? spesaPianificata(lista.roster_slots) : spesaMassima(lista.targets)
   const sfora = creditiLega != null && spesa > creditiLega
+  const coperti = slotCoperti(lista.roster_slots)
 
   return (
     <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-base font-bold text-nebbia">
-          <span className="cifre-fisse text-2xl text-oro">{lista.targets.length}</span> obiettivi
+          {conSlot ? (
+            <>
+              <span className="cifre-fisse text-2xl text-oro">{coperti}</span> posti coperti su{' '}
+              <span className="cifre-fisse">{lista.roster_slots.length}</span>
+            </>
+          ) : (
+            <>
+              <span className="cifre-fisse text-2xl text-oro">{lista.targets.length}</span> obiettivi
+            </>
+          )}
         </h2>
         {rosa != null && <p className="text-xs text-fumo">La rosa da riempire è di {rosa}</p>}
       </div>
@@ -190,18 +210,26 @@ function Riepilogo({
       {lista.usa_tetti && (
         <div className="mt-3 rounded-xl bg-verde-notte px-4 py-3">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-sm text-fumo">Somma dei tetti</span>
+            <span className="text-sm text-fumo">
+              {conSlot ? 'Somma dei massimali' : 'Somma dei tetti'}
+            </span>
             <span className={`cifre-fisse text-lg font-bold ${sfora ? 'text-oro' : 'text-nebbia'}`}>
               {spesa}
               {creditiLega != null && <span className="text-sm text-fumo"> / {creditiLega}</span>}
             </span>
           </div>
-          {sfora && (
-            <p className="mt-2 text-xs text-oro">
-              Se li prendessi tutti al tetto che ti sei dato, sforeresti il budget. Non è un errore:
-              gli obiettivi sono più di quelli che comprerai.
-            </p>
-          )}
+          {sfora &&
+            (conSlot ? (
+              <p className="mt-2 text-xs text-oro">
+                Il piano non sta in piedi: i posti sono esattamente quelli della rosa, quindi questa
+                somma è quello che spenderesti davvero. Abbassa qualche massimale.
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-oro">
+                Se li prendessi tutti al tetto che ti sei dato, sforeresti il budget. Non è un
+                errore: gli obiettivi sono più di quelli che comprerai.
+              </p>
+            ))}
         </div>
       )}
     </section>
@@ -641,7 +669,21 @@ function ElencoObiettivi({
 // ═══════════════════════════════════════════════════════════════════════════
 // Metodo degli slot
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+// Metodo degli slot
+// ═══════════════════════════════════════════════════════════════════════════
 
+/**
+ * Gli slot sono i posti della rosa, e sono **quelli del regolamento**: tanti
+ * portieri quanti ne prevede la lega, tanti difensori, e così via. Non se ne
+ * aggiungono e non se ne tolgono, perché una rosa non funziona così.
+ *
+ * Di ogni posto decidi due cose: **come si chiama**, per ricordarti che ruolo
+ * ha nella tua idea di squadra, e **quanto sei disposto a spendere per
+ * riempirlo**. Il massimale è uno per posto, non uno per nome: i candidati
+ * dentro uno slot valgono la stessa cosa, ed è esattamente il motivo per cui
+ * li hai messi insieme.
+ */
 function SezioneSlot({
   lista,
   idLega,
@@ -651,15 +693,7 @@ function SezioneSlot({
   idLega: string | undefined
   ruoloScelto: Ruolo | null
 }) {
-  const aggiungiSlot = useAggiungiSlot(idLega)
-  const aggiornaSlot = useAggiornaSlot(idLega)
-  const togliSlot = useTogliSlot(idLega)
-  const creaStandard = useCreaSlotStandard(idLega)
   const aggiungiA = useAggiungiASlot(idLega)
-  const riordina = useRiordinaCandidati(idLega)
-  const aggiorna = useAggiornaObiettivo(idLega)
-  const togli = useTogliObiettivo(idLega)
-
   const [selettore, setSelettore] = useState<{ slot: string; ruolo: Ruolo; nome: string } | null>(null)
 
   const perObiettivo = new Map(lista.targets.map((t) => [t.id, t]))
@@ -680,25 +714,16 @@ function SezioneSlot({
     )
   }
 
+  // Gli slot li allinea il server a ogni apertura della lista. Se qui non ce
+  // ne sono, non è una schermata da riempire: è qualcosa che non ha
+  // funzionato, e si dice invece di far finta di niente.
   if (lista.roster_slots.length === 0) {
     return (
-      <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-6 text-center">
-        <p className="text-base font-bold text-nebbia">Non hai ancora nessuno slot</p>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-fumo">
-          Uno slot è un posto della rosa da riempire: «Attaccante 1», «il portiere titolare», «la
-          scommessa». Dentro ogni slot metti i candidati in ordine di preferenza.
-        </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <Bottone
-            misura="grande"
-            inCorso={creaStandard.isPending}
-            onClick={() => creaStandard.mutate(lista.id)}
-          >
-            Creali dalla rosa della lega
-          </Bottone>
-        </div>
-        <p className="mt-3 text-xs text-fumo">
-          Li crea seguendo la composizione decisa dalla lega, e poi li rinomini come vuoi.
+      <section className="rounded-2xl border border-oro/40 bg-oro/10 p-5">
+        <p className="text-base font-bold text-nebbia">Non trovo i posti della tua rosa</p>
+        <p className="mt-2 text-sm text-fumo">
+          Dovrebbero esserci tanti slot quanti ne prevede il regolamento della lega, e li crea il
+          server da solo. Ricarica la pagina: se restano zero, è un problema da segnalare.
         </p>
       </section>
     )
@@ -712,127 +737,46 @@ function SezioneSlot({
           .sort((a, b) => a.position - b.position)
         if (slot.length === 0) return null
 
+        const coperti = slotCoperti(slot)
+
         return (
           <section key={ruolo} className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
-            <div className="mb-3 flex items-center gap-2">
+            <div className="mb-1 flex items-center gap-2">
               <span
                 className={`flex size-7 items-center justify-center rounded-full text-xs font-bold ${CLASSE_RUOLO[ruolo]}`}
               >
                 {ruolo}
               </span>
               <h2 className="text-base font-bold text-nebbia">{NOME_RUOLO[ruolo]}</h2>
-              <button
-                type="button"
-                onClick={() =>
-                  aggiungiSlot.mutate({
-                    idLista: lista.id,
-                    ruolo,
-                    etichetta: `${NOME_RUOLO[ruolo].slice(0, -1)} ${slot.length + 1}`,
-                    posizione: slot.length,
-                  })
-                }
-                className="ml-auto text-xs font-semibold text-oro underline underline-offset-4"
-              >
-                aggiungi slot
-              </button>
+              <span className="cifre-fisse ml-auto text-xs text-fumo">
+                {coperti} posti coperti su {slot.length}
+              </span>
             </div>
+            <p className="mb-3 text-xs text-fumo">
+              Sono i {slot.length} posti previsti dal regolamento della lega. Il nome lo cambi tu, la
+              quantità no.
+            </p>
 
             <div className="flex flex-col gap-3">
-              {slot.map((s) => {
-                const candidati = [...s.slot_candidates]
-                  .sort((a, b) => a.position - b.position)
-                  .map((c) => perObiettivo.get(c.target_id))
-                  .filter((o): o is Obiettivo => Boolean(o))
-
-                return (
-                  <div key={s.id} className="rounded-xl border border-verde-campo bg-verde-notte p-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        defaultValue={s.label}
-                        onBlur={(e) => {
-                          const v = e.target.value.trim()
-                          if (v && v !== s.label) aggiornaSlot.mutate({ id: s.id, campi: { label: v } })
-                        }}
-                        aria-label="Nome dello slot"
-                        className="h-11 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm font-bold text-nebbia outline-none hover:border-verde-acceso/30 focus:border-verde-acceso"
-                      />
-                      <span className="cifre-fisse shrink-0 text-xs text-fumo">{candidati.length}</span>
-                      <button
-                        type="button"
-                        onClick={() => togliSlot.mutate(s.id)}
-                        aria-label={`Elimina lo slot ${s.label}`}
-                        className="flex size-10 shrink-0 items-center justify-center rounded-lg text-fumo hover:bg-errore/15 hover:text-errore"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    {candidati.length > 0 ? (
-                      <div className="mt-3">
-                        <ListaRiordinabile
-                          elementi={candidati}
-                          chiave={(o) => o.id}
-                          descrizione={(o) => o.players.name}
-                          onRiordina={(nuovo) =>
-                            riordina.mutate({ idSlot: s.id, ordine: nuovo.map((o) => o.id) })
-                          }
-                          rendi={(o) => (
-                            <SchedaObiettivo
-                              obiettivo={o}
-                              fasce={[]}
-                              mostraFascia={false}
-                              mostraTetto={lista.usa_tetti}
-                              onAggiorna={(campi) => aggiorna.mutate({ id: o.id, campi })}
-                              onTogli={() => togli.mutate(o.id)}
-                            />
-                          )}
-                        />
-                      </div>
-                    ) : (
-                      <p className="mt-2 rounded-lg border border-dashed border-verde-campo px-3 py-2 text-xs text-fumo">
-                        Nessun candidato per questo posto.
-                      </p>
-                    )}
-
-                    <div className="mt-3">
-                      <Bottone
-                        aspetto="secondario"
-                        onClick={() => setSelettore({ slot: s.id, ruolo, nome: s.label })}
-                      >
-                        Aggiungi calciatori
-                      </Bottone>
-                    </div>
-                  </div>
-                )
-              })}
+              {slot.map((s) => (
+                <Slot
+                  key={s.id}
+                  slot={s}
+                  lista={lista}
+                  idLega={idLega}
+                  candidati={[...s.slot_candidates]
+                    .sort((a, b) => a.position - b.position)
+                    .map((c) => perObiettivo.get(c.target_id))
+                    .filter((o): o is Obiettivo => Boolean(o))}
+                  onAggiungi={() => setSelettore({ slot: s.id, ruolo, nome: s.label })}
+                />
+              ))}
             </div>
           </section>
         )
       })}
 
-      {orfani.length > 0 && (
-        <section className="rounded-2xl border border-dashed border-fumo/40 bg-verde-campo/20 p-4">
-          <h3 className="text-base font-bold text-fumo">Fuori dagli slot</h3>
-          <p className="mt-0.5 mb-3 text-xs text-fumo">
-            Sono nella tua lista ma non dentro nessuno slot. Aggiungili a uno slot dal pulsante qui
-            sopra, oppure toglili.
-          </p>
-          <ul className="flex flex-col gap-2">
-            {orfani.map((o) => (
-              <li key={o.id}>
-                <SchedaObiettivo
-                  obiettivo={o}
-                  fasce={[]}
-                  mostraFascia={false}
-                  mostraTetto={lista.usa_tetti}
-                  onAggiorna={(campi) => aggiorna.mutate({ id: o.id, campi })}
-                  onTogli={() => togli.mutate(o.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {orfani.length > 0 && <FuoriDagliSlot lista={lista} idLega={idLega} orfani={orfani} />}
 
       {selettore && (
         <SelettoreCalciatore
@@ -850,6 +794,180 @@ function SezioneSlot({
         />
       )}
     </>
+  )
+}
+
+/** Un posto della rosa: il suo nome, il suo massimale, i suoi candidati. */
+function Slot({
+  slot,
+  lista,
+  idLega,
+  candidati,
+  onAggiungi,
+}: {
+  slot: SlotRosa
+  lista: ListaObiettivi
+  idLega: string | undefined
+  candidati: Obiettivo[]
+  onAggiungi: () => void
+}) {
+  const aggiornaSlot = useAggiornaSlot(idLega)
+  const aggiorna = useAggiornaObiettivo(idLega)
+  const togliDaSlot = useTogliDaSlot(idLega)
+  const riordina = useRiordinaCandidati(idLega)
+
+  const [tetto, setTetto] = useState(slot.max_price?.toString() ?? '')
+  useEffect(() => setTetto(slot.max_price?.toString() ?? ''), [slot.max_price])
+
+  function salvaTetto() {
+    const pulito = tetto.trim()
+    if (pulito === '') {
+      if (slot.max_price != null) aggiornaSlot.mutate({ id: slot.id, campi: { max_price: null } })
+      return
+    }
+    const n = Math.round(Number(pulito.replace(',', '.')))
+    if (!Number.isFinite(n) || n < 1) {
+      // Un numero che non si capisce non si salva a caso: si torna a quello
+      // che c'era, così si vede subito che non è stato preso.
+      setTetto(slot.max_price?.toString() ?? '')
+      return
+    }
+    if (n !== slot.max_price) aggiornaSlot.mutate({ id: slot.id, campi: { max_price: n } })
+  }
+
+  const vuoto = candidati.length === 0
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
+      className={[
+        'rounded-xl border bg-verde-notte p-3',
+        vuoto ? 'border-dashed border-fumo/40' : 'border-verde-campo',
+      ].join(' ')}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className="cifre-fisse flex size-7 shrink-0 items-center justify-center rounded-lg bg-verde-campo text-xs font-bold text-fumo"
+        >
+          {slot.position + 1}
+        </span>
+        <input
+          defaultValue={slot.label}
+          onBlur={(e) => {
+            const v = e.target.value.trim()
+            if (v && v !== slot.label) aggiornaSlot.mutate({ id: slot.id, campi: { label: v } })
+            else e.target.value = slot.label
+          }}
+          aria-label={`Nome del posto numero ${slot.position + 1}`}
+          className="h-11 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm font-bold text-nebbia outline-none hover:border-verde-acceso/30 focus:border-verde-acceso"
+        />
+        <span className="cifre-fisse shrink-0 text-xs text-fumo">
+          {candidati.length === 0 ? 'vuoto' : `${candidati.length} candidati`}
+        </span>
+      </div>
+
+      {/* Il massimale del posto. Uno solo, valido per chiunque lo riempia. */}
+      {lista.usa_tetti && (
+        <div className="mt-2 flex items-center gap-2 rounded-lg bg-verde-campo/50 px-3 py-2">
+          <label htmlFor={`tetto-${slot.id}`} className="text-xs text-fumo">
+            Fino a
+          </label>
+          <input
+            id={`tetto-${slot.id}`}
+            value={tetto}
+            onChange={(e) => setTetto(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+            onBlur={salvaTetto}
+            inputMode="numeric"
+            placeholder="—"
+            className="cifre-fisse h-9 w-20 rounded-lg border border-verde-acceso/30 bg-verde-notte px-2 text-center text-sm font-bold text-oro outline-none placeholder:text-fumo/50 focus:border-verde-acceso"
+          />
+          <span className="text-xs text-fumo">crediti, per chiunque di loro</span>
+        </div>
+      )}
+
+      {candidati.length > 0 ? (
+        <div className="mt-3">
+          <ListaRiordinabile
+            elementi={candidati}
+            chiave={(o) => o.id}
+            descrizione={(o) => o.players.name}
+            onRiordina={(nuovo) =>
+              riordina.mutate({ idSlot: slot.id, ordine: nuovo.map((o) => o.id) })
+            }
+            rendi={(o) => (
+              <SchedaObiettivo
+                obiettivo={o}
+                fasce={[]}
+                mostraFascia={false}
+                // Il tetto di questo metodo sta sullo slot, non sul nome:
+                // ripeterlo qui sarebbe la stessa cifra scritta cinque volte.
+                mostraTetto={false}
+                onAggiorna={(campi) => aggiorna.mutate({ id: o.id, campi })}
+                onTogli={() => togliDaSlot.mutate({ idSlot: slot.id, idObiettivo: o.id })}
+              />
+            )}
+          />
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-fumo">
+          Nessun candidato per questo posto: all&apos;asta non sapresti chi chiamare.
+        </p>
+      )}
+
+      <div className="mt-3">
+        <Bottone aspetto="secondario" onClick={onAggiungi}>
+          Aggiungi candidati
+        </Bottone>
+      </div>
+    </motion.div>
+  )
+}
+
+/**
+ * I calciatori che stanno nella lista ma in nessuno slot.
+ *
+ * Con il metodo degli slot non se ne creano di nuovi: restano da quando si
+ * usavano le fasce. Si mostrano lo stesso, altrimenti sparirebbero senza che
+ * nessuno l'abbia deciso.
+ */
+function FuoriDagliSlot({
+  lista,
+  idLega,
+  orfani,
+}: {
+  lista: ListaObiettivi
+  idLega: string | undefined
+  orfani: Obiettivo[]
+}) {
+  const aggiorna = useAggiornaObiettivo(idLega)
+  const togli = useTogliObiettivo(idLega)
+
+  return (
+    <section className="rounded-2xl border border-dashed border-fumo/40 bg-verde-campo/20 p-4">
+      <h3 className="text-base font-bold text-fumo">Fuori dagli slot</h3>
+      <p className="mt-0.5 mb-3 text-xs text-fumo">
+        Sono nella tua lista ma non occupano nessun posto: ti restano dal metodo delle fasce.
+        Mettili fra i candidati di uno slot, oppure toglili.
+      </p>
+      <ul className="flex flex-col gap-2">
+        {orfani.map((o) => (
+          <li key={o.id}>
+            <SchedaObiettivo
+              obiettivo={o}
+              fasce={[]}
+              mostraFascia={false}
+              mostraTetto={lista.usa_tetti}
+              onAggiorna={(campi) => aggiorna.mutate({ id: o.id, campi })}
+              onTogli={() => togli.mutate(o.id)}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

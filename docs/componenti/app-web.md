@@ -2,7 +2,7 @@
 
 **Scopo** · Descrivere com'è organizzato il codice del client e come si esegue.
 **Proprietario** · frontend-engineer
-**Stato** · 🟡 Fette da 0 a 4 costruite, backend collegato · schermate mai aperte in un browser
+**Stato** · 🟡 Fette da 0 a 4 costruite, backend collegato · schermate provate, tranne l asta in corso
 **Data** · 2026-09-02
 
 ---
@@ -126,6 +126,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.7 | 2026-09-03 | Colonna del ruolo nel listone. Slot fissati dal regolamento, con un massimale per posto. Schermate provate tranne l asta in corso. |
 | 1.6 | 2026-09-03 | Obiettivi divisi per reparto con il filtro in cima; il reparto sta nell indirizzo, e l asta ci porta su quello in corso. |
 | 1.5 | 2026-09-03 | Corretti due difetti segnalati all uso: il campo password si riempiva da solo e mancava la conferma in registrazione. |
 | 1.4 | 2026-09-03 | Fetta 4: vista personale dell asta, schermo condiviso, impostazioni pre-asta e pannello di conduzione. |

@@ -208,8 +208,32 @@ Alla creazione della lista nascono tre fasce per ognuno dei quattro reparti, dod
 | `note` | text | Testo libero, mostrato durante l'asta |
 | `status` | enum | `open`, `taken`, `won`, `dropped`, aggiornato dagli eventi d'asta |
 
-**`roster_slots`** e **`slot_candidates`** — la strategia degli slot: uno slot è una casella della
-rosa ideale con etichetta e ruolo, e ha una lista ordinata di candidati.
+**`roster_slots`** e **`slot_candidates`** — la strategia degli slot.
+
+Uno slot è **un posto della rosa**, e i posti li decide il regolamento della lega: la quantità per
+ruolo viene da `leagues.slots_p/d/c/a` e non si sceglie. `sincronizza_slot` li allinea a ogni
+apertura della lista, creando quelli che mancano e togliendo quelli che avanzano; quando ne avanzano,
+va via il meno pieno, a parità l'ultimo della fila, perché si perda il minimo lavoro possibile.
+
+| Campo | Note |
+|---|---|
+| `role` | Dal regolamento. Non modificabile dal client |
+| `position` | Contigua dentro il reparto, rinumerata dalla sincronizzazione |
+| `label` | **Modificabile**: «Attaccante 1» diventa «il bomber» |
+| `max_price` | **Modificabile**: quanto sei disposto a spendere per riempire questo posto, con chiunque dei suoi candidati |
+
+Il massimale sta sullo slot e non sul calciatore perché la domanda a cui gli slot rispondono non è
+«quanto vale questo nome» ma «quanto spendo per questo posto». Il tetto per calciatore
+(`targets.max_price`) resta dov'era: serve al metodo delle fasce. Vedi
+`docs/decisioni/2026-09-03-lo-slot-e-un-posto-non-una-casella.md`.
+
+La regola è difesa dai permessi, non solo dalla schermata: sulla tabella l'utente ha `select` e
+`update` di due sole colonne, `label` e `max_price`. Creare o cancellare uno slot dal client
+risponde 403.
+
+`slot_candidates` tiene i candidati in ordine di preferenza. `togli_da_slot` stacca il candidato
+e, se non è rimasto in nessun altro posto, toglie anche l'obiettivo: con questo metodo un obiettivo
+esiste perché è candidato a un posto.
 
 **`goalkeeper_pairings`** e **`pairing_members`** — l'incrocio portieri: un gruppo di due o tre
 portieri con una nota sull'alternanza dei calendari.
@@ -243,6 +267,7 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903020000_elimina_lega.sql` | `elimina_lega`: cancellazione a cascata, con il nome della lega da riscrivere |
 | `20260903140000_fasce_per_ruolo.sql` | `tiers.role` obbligatorio, fasce di partenza per reparto, `aggiungi_a_fascia`, riordino che non mescola i reparti |
 | `20260903150000_asta_rispetta_la_stagione.sql` | L asta pesca solo dal listone della stagione della lega |
+| `20260903170000_slot_come_il_regolamento.sql` | `roster_slots.max_price`, `sincronizza_slot`, `togli_da_slot`, permessi ridotti a `label` e `max_price` |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

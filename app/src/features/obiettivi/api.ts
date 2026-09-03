@@ -8,7 +8,7 @@ const CAMPI =
   '*,' +
   'tiers(id,list_id,role,name,color,position),' +
   'targets(id,list_id,player_id,tier_id,max_price,priority,note,status,players(id,name,role,serie_a_team,quotation,photo_path)),' +
-  'roster_slots(id,list_id,role,label,position,slot_candidates(slot_id,target_id,position)),' +
+  'roster_slots(id,list_id,role,label,position,max_price,slot_candidates(slot_id,target_id,position)),' +
   'goalkeeper_pairings(id,list_id,name,note,position,pairing_members(pairing_id,target_id,position))'
 
 /**
@@ -133,32 +133,22 @@ export function useAggiungiAIncrocio(idLega: string | undefined) {
   })
 }
 
-export function useCreaSlotStandard(idLega: string | undefined) {
-  return useAzione<string>(idLega, async (idLista) => {
-    const { error } = await richiediSupabase().rpc('crea_slot_standard', { p_lista: idLista })
+/**
+ * Toglie il candidato dallo slot, e dalla lista se non è rimasto altrove.
+ * Il ragionamento sta nella migrazione 0016: nel metodo degli slot un
+ * obiettivo esiste perché è candidato a un posto.
+ */
+export function useTogliDaSlot(idLega: string | undefined) {
+  return useAzione<{ idSlot: string; idObiettivo: string }>(idLega, async (v) => {
+    const { error } = await richiediSupabase().rpc('togli_da_slot', {
+      p_slot: v.idSlot,
+      p_obiettivo: v.idObiettivo,
+    })
     if (error) throw new Error(messaggioErrore(error))
   })
 }
 
 // ─── Obiettivi ──────────────────────────────────────────────────────────────
-
-export function useAggiungiObiettivi(idLega: string | undefined) {
-  return useAzione<{ idLista: string; idCalciatori: number[]; idFascia?: string | null }>(
-    idLega,
-    async (v) =>
-      esegui(
-        richiediSupabase()
-          .from('targets')
-          .insert(
-            v.idCalciatori.map((id) => ({
-              list_id: v.idLista,
-              player_id: id,
-              tier_id: v.idFascia ?? null,
-            })),
-          ),
-      ),
-  )
-}
 
 export function useAggiornaObiettivo(idLega: string | undefined) {
   return useAzione<{
@@ -227,49 +217,15 @@ export function useTogliFascia(idLega: string | undefined) {
 
 // ─── Slot della rosa ideale ─────────────────────────────────────────────────
 
-export function useAggiungiSlot(idLega: string | undefined) {
-  return useAzione<{ idLista: string; ruolo: Ruolo; etichetta: string; posizione: number }>(
-    idLega,
-    async (v) =>
-      esegui(
-        richiediSupabase()
-          .from('roster_slots')
-          .insert({ list_id: v.idLista, role: v.ruolo, label: v.etichetta, position: v.posizione }),
-      ),
-  )
-}
-
+/**
+ * Le uniche due cose modificabili di uno slot: il nome, che è tuo, e il
+ * massimale, che è la tua strategia. La quantità e il ruolo vengono dal
+ * regolamento della lega, e il database non concede altro (migrazione 0016).
+ */
 export function useAggiornaSlot(idLega: string | undefined) {
-  return useAzione<{ id: string; campi: { label?: string; position?: number } }>(idLega, async (v) =>
-    esegui(richiediSupabase().from('roster_slots').update(v.campi).eq('id', v.id)),
-  )
-}
-
-export function useTogliSlot(idLega: string | undefined) {
-  return useAzione<string>(idLega, async (id) =>
-    esegui(richiediSupabase().from('roster_slots').delete().eq('id', id)),
-  )
-}
-
-export function useAggiungiCandidato(idLega: string | undefined) {
-  return useAzione<{ idSlot: string; idObiettivo: string; posizione: number }>(idLega, async (v) =>
-    esegui(
-      richiediSupabase()
-        .from('slot_candidates')
-        .insert({ slot_id: v.idSlot, target_id: v.idObiettivo, position: v.posizione }),
-    ),
-  )
-}
-
-export function useTogliCandidato(idLega: string | undefined) {
-  return useAzione<{ idSlot: string; idObiettivo: string }>(idLega, async (v) =>
-    esegui(
-      richiediSupabase()
-        .from('slot_candidates')
-        .delete()
-        .eq('slot_id', v.idSlot)
-        .eq('target_id', v.idObiettivo),
-    ),
+  return useAzione<{ id: string; campi: { label?: string; max_price?: number | null } }>(
+    idLega,
+    async (v) => esegui(richiediSupabase().from('roster_slots').update(v.campi).eq('id', v.id)),
   )
 }
 
@@ -294,27 +250,5 @@ export function useAggiornaIncrocio(idLega: string | undefined) {
 export function useTogliIncrocio(idLega: string | undefined) {
   return useAzione<string>(idLega, async (id) =>
     esegui(richiediSupabase().from('goalkeeper_pairings').delete().eq('id', id)),
-  )
-}
-
-export function useAggiungiMembroIncrocio(idLega: string | undefined) {
-  return useAzione<{ idIncrocio: string; idObiettivo: string; posizione: number }>(idLega, async (v) =>
-    esegui(
-      richiediSupabase()
-        .from('pairing_members')
-        .insert({ pairing_id: v.idIncrocio, target_id: v.idObiettivo, position: v.posizione }),
-    ),
-  )
-}
-
-export function useTogliMembroIncrocio(idLega: string | undefined) {
-  return useAzione<{ idIncrocio: string; idObiettivo: string }>(idLega, async (v) =>
-    esegui(
-      richiediSupabase()
-        .from('pairing_members')
-        .delete()
-        .eq('pairing_id', v.idIncrocio)
-        .eq('target_id', v.idObiettivo),
-    ),
   )
 }

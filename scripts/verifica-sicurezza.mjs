@@ -79,6 +79,13 @@ async function sql(query) {
 // ─── Pulizia ────────────────────────────────────────────────────────────────
 
 if (process.argv.includes('--pulisci')) {
+  // Prima le leghe, poi le persone. Un utente che amministra una lega e'
+  // referenziato da `leagues.admin_user_id`: cancellarlo per primo fallisce
+  // con una violazione di chiave esterna. Non capitava finche' questa prova
+  // girava da sola; capita appena un'altra suite lascia una lega dietro di se',
+  // e una pulizia che dipende dall'ordine in cui la lanci non e' una pulizia.
+  await sql(`delete from public.leagues
+    where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
   const via = await sql(
     "delete from auth.users where email like 'prova.%@fantasta.test' returning email;",
   )

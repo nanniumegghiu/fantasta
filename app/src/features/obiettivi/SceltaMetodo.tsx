@@ -74,9 +74,9 @@ export function SceltaMetodo({
         sottotitolo="La rosa ideale, casella per casella"
         icona="🎯"
       >
-        Immagini la rosa già divisa in posti: il primo attaccante, il secondo, la scommessa. Per
-        ogni casella metti i candidati in ordine di preferenza, e durante l&apos;asta sai sempre
-        quale posto stai riempiendo.
+        I posti sono quelli del regolamento della lega: tanti portieri, difensori, centrocampisti e
+        attaccanti quanti ne prevede. In ognuno metti i candidati che per te valgono la stessa cosa,
+        e dichiari <em>un massimale solo</em> per quel posto, valido per chiunque lo riempia.
       </Scheda>
 
       {/* Onestà: cambiare metodo non cancella niente, e va detto prima. */}
@@ -97,7 +97,11 @@ export function SceltaMetodo({
         <div className="flex flex-col gap-4">
           <Interruttore
             etichetta="Tetto di spesa"
-            descrizione="Il prezzo massimo che ti imponi su ogni calciatore, per non farti prendere dai rilanci."
+            descrizione={
+              metodo === 'slot'
+                ? 'Un massimale per ogni posto della rosa, valido per chiunque lo riempia.'
+                : 'Il prezzo massimo che ti imponi su ogni calciatore, per non farti prendere dai rilanci.'
+            }
             acceso={lista.usa_tetti}
             onChange={(acceso) =>
               opzione.mutate({ idLista: lista.id, campo: 'usa_tetti', acceso })

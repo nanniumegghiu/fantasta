@@ -3,7 +3,7 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🟡 Fette da 0 a 4 costruite e verificate lato server, mai viste in un browser
+**Stato** · 🟡 Fette da 0 a 4 costruite e verificate. Tutte le schermate aperte e provate, tranne l asta in corso
 **Data** · 2026-09-02
 
 ---
@@ -37,11 +37,11 @@ vuota col mio nome, esco e rientro.
 | Migrazione dei profili applicata, con policy attive | ✅ verificato interrogando lo schema |
 | Regole di accesso provate violandole | ✅ 7 prove su 7 superate |
 | Registrazione e accesso con email | ✅ verificati via richieste reali |
-| Schermate viste in un browser | 🔴 mai aperte |
+| Schermate viste in un browser | ✅ aperte e provate dall utente il 3 settembre 2026 |
 | Accesso con Google | 🔴 provider non ancora configurato |
 | Pubblicazione online | 🔴 |
 
-### Fetta 1 · Leghe, inviti e squadre — 🟡 costruita, mai vista in un browser
+### Fetta 1 · Leghe, inviti e squadre — ✅ costruita e provata
 
 Creazione lega con tutte le regole, caricamento del PDF del regolamento, codice di invito
 condivisibile su WhatsApp, ingresso in lega, creazione della propria squadra con nome.
@@ -54,10 +54,10 @@ dispositivo, che entra e crea la sua squadra. Entrambi vediamo l'elenco dei part
 | Tabelle, policy, funzioni di creazione e ingresso | ✅ 30 prove su 30, `node scripts/verifica-leghe.mjs` |
 | Codice di invito, rigenerazione, limite ai tentativi | ✅ verificato |
 | Regolamento in PDF, archivio privato con indirizzi firmati | ✅ verificato |
-| Schermate: elenco leghe, creazione, ingresso, riepilogo | 🟡 scritte e compilate, **mai aperte in un browser** |
+| Schermate: elenco leghe, creazione, ingresso, riepilogo | ✅ aperte e provate dall utente |
 | Prova vera su due dispositivi | 🔴 |
 
-### Fetta 2 · Listone e statistiche — 🟡 costruita, mai vista in un browser
+### Fetta 2 · Listone e statistiche — ✅ costruita e provata
 
 Importazione del listone, importazione delle statistiche, tabella con filtri per ruolo e squadra e
 ordinamento su ogni colonna.
@@ -70,7 +70,8 @@ lo scorrimento è fluido con tutte le righe caricate.
 | Lettore di file .xlsx e .csv, senza dipendenze | ✅ 17 prove, `node --experimental-strip-types scripts/verifica-listone.mjs` |
 | Riconoscimento delle colonne, righe scartate con il motivo | ✅ verificato |
 | Importazione ripetibile, chi sparisce viene ritirato e non cancellato | ✅ verificato |
-| Tabella con filtri per ruolo e squadra e ordinamento su ogni colonna | 🟡 scritta, **mai aperta in un browser** |
+| Tabella con filtri per ruolo e squadra e ordinamento su ogni colonna | ✅ aperta e provata dall utente |
+| Colonna del ruolo, ordinabile per reparto | ✅ P D C A, non in ordine alfabetico |
 | Prova sul file ufficiale vero | 🔴 serve il file |
 
 ### Fetta 3 · Lista obiettivi — 🟡 costruita, poi rifatta dopo la prova d uso
@@ -86,18 +87,19 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 |---|---|
 | Tabelle e policy dei quattro metodi | ✅ 24 prove su 24, `node scripts/verifica-obiettivi.mjs` |
 | Invisibilità agli altri, **amministratore compreso** | ✅ sette prove distinte, tutte a zero righe |
-| Schermata con fasce, tetti, note, slot e incroci | 🟡 scritta, **mai aperta in un browser** |
+| Schermata con fasce, tetti, note, slot e incroci | ✅ aperta e provata dall utente |
 | Contatore degli obiettivi ancora liberi durante l'asta | 🔴 arriva con la Fetta 4f |
 | Rifatta dopo la prova d uso: un metodo solo, aggiunte dal posto giusto, riordino trascinando | ✅ 34 prove |
-| Fasce e slot **divisi per reparto**, con il filtro che nasconde gli altri tre | ✅ 36 prove, `node scripts/verifica-obiettivi.mjs` |
+| Fasce e slot **divisi per reparto**, con il filtro che nasconde gli altri tre | ✅ 44 prove, `node scripts/verifica-obiettivi.mjs` |
+| Slot: quantità dal regolamento, nome modificabile, **un massimale per posto** | ✅ 8 prove dedicate, comprese quelle che provano a violare la regola |
 
-### Fetta 4 · L'asta — ✅ costruita, 🔴 mai vista in un browser
+### Fetta 4 · L'asta — ✅ costruita, 🟡 mai vista con un'asta viva
 
 È il cuore dell'app e il pezzo più difficile. Va spezzata.
 | Sotto-fetta | Stato |
 |---|---|
 | **4a · Motore** | ✅ 26 prove, `node scripts/verifica-asta.mjs` |
-| **4b · Schermo condiviso** | 🟡 scritto con i suoni, **mai aperto in un browser** |
+| **4b · Schermo condiviso** | 🟡 scritto con i suoni, **mai visto con un asta in corso** |
 | **4c · Varianti** | ✅ tutte e sette, più la modalità live |
 | **4d · Poteri amministratore** | ✅ passa, assegna, aggiudica, annulla, pausa |
 | **4e · Chiamata con passo** | ✅ irreversibile, chiude in anticipo quando resta uno solo |
@@ -162,6 +164,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.7 | 2026-09-03 | Slot come il regolamento, con un massimale a testa. Colonna del ruolo nel listone. Tutte le schermate provate tranne l asta in corso. |
 | 1.6 | 2026-09-03 | Fasce per reparto e filtro del reparto in corso. L asta pesca solo dal listone della stagione della lega. |
 | 1.5 | 2026-09-03 | Fetta 4 completata: sette varianti, modalità live, passo, poteri dell amministratore, rete di sicurezza. |
 | 1.4 | 2026-09-02 | Fetta 4a costruita: motore d asta, timer del server, schermo condiviso con i suoni. |

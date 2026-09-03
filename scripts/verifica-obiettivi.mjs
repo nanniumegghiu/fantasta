@@ -233,14 +233,9 @@ esito(
   `HTTP ${inesistente.stato}: ${inesistente.corpo?.message?.slice(0, 70) ?? ''}`,
 )
 
-// Slot
-const slot = await scrivi(amico, 'roster_slots', 'POST', {
-  list_id: listaAmico,
-  role: 'A',
-  label: 'Attaccante 1 — top',
-  position: 0,
-})
-const idSlot = slot.corpo?.[0]?.id
+// Slot: ci sono gia', li ha allineati il server sul regolamento della lega.
+const idSlot = (await sql(`select id from public.roster_slots
+  where list_id = '${listaAmico}' and role = 'A' order by position limit 1;`))[0].id
 const idObiettivoLautaro = obiettivo.corpo?.[0]?.id
 const candidato = await scrivi(amico, 'slot_candidates', 'POST', {
   slot_id: idSlot,
@@ -248,9 +243,9 @@ const candidato = await scrivi(amico, 'slot_candidates', 'POST', {
   position: 0,
 })
 esito(
-  'Strategia degli slot: uno slot con il suo candidato',
-  slot.stato === 201 && candidato.stato === 201,
-  `slot "${slot.corpo?.[0]?.label}" con 1 candidato`,
+  'Strategia degli slot: un posto della rosa con il suo candidato',
+  candidato.stato === 201,
+  `candidato agganciato al primo posto d'attacco`,
 )
 
 // Incrocio portieri
@@ -377,13 +372,10 @@ esito(
 
 // La lista dell'amministratore, per provare l'incrocio fra due liste diverse.
 const listaAdmin = (await rpc(admin, 'assicura_lista_obiettivi', { p_lega: lega })).corpo
-const suoSlot = await scrivi(admin, 'roster_slots', 'POST', {
-  list_id: listaAdmin,
-  role: 'A',
-  label: 'Attaccante 1',
-})
+const suoSlot = (await sql(`select id from public.roster_slots
+  where list_id = '${listaAdmin}' and role = 'A' order by position limit 1;`))[0].id
 const candidatoIncrociato = await scrivi(admin, 'slot_candidates', 'POST', {
-  slot_id: suoSlot.corpo?.[0]?.id,
+  slot_id: suoSlot,
   target_id: idObiettivoLautaro, // obiettivo dell'amico
 })
 esito(
@@ -455,13 +447,93 @@ esito(
   `righe toccate ${spostoDoveNonSiPuo.corpo}; l attaccante è ancora in una fascia di reparto ${dovEFinito?.role}`,
 )
 
-const standard = await rpc(amico, 'crea_slot_standard', { p_lista: listaAmico })
+// ─── Gli slot sono quelli del regolamento ───────────────────────────────────
+// La regola nuova: la quantita' non la sceglie l'utente, la decide la lega.
+// Vale in tutti e due i versi, e va provata violandola.
+
+const regolamento = (await sql(`select slots_p, slots_d, slots_c, slots_a
+  from public.leagues where id = '${lega}';`))[0]
 const slotCreati = await sql(`select role, label, position from public.roster_slots
   where list_id = '${listaAmico}' order by role, position;`)
+const perReparto = { P: 0, D: 0, C: 0, A: 0 }
+for (const x of slotCreati) perReparto[x.role]++
+const combaciano =
+  perReparto.P === regolamento.slots_p && perReparto.D === regolamento.slots_d &&
+  perReparto.C === regolamento.slots_c && perReparto.A === regolamento.slots_a
 esito(
-  'Gli slot si creano in blocco dalla rosa della lega',
-  slotCreati.length === 25 && slotCreati.some((s) => s.label === 'Portiere 1'),
-  `in tutto ${slotCreati.length} slot per una rosa da 25 (${standard.corpo} creati adesso, gli altri c'erano già); il primo dei portieri si chiama "${slotCreati.find((s) => s.role === 'P')?.label}"`,
+  'Gli slot ci sono gia alla prima apertura, quanti ne vuole il regolamento',
+  combaciano && slotCreati.some((x) => x.label === 'Portiere 1'),
+  `regolamento ${regolamento.slots_p}/${regolamento.slots_d}/${regolamento.slots_c}/${regolamento.slots_a}, slot ${perReparto.P}/${perReparto.D}/${perReparto.C}/${perReparto.A}; il primo portiere si chiama "${slotCreati.find((x) => x.role === 'P')?.label}"`,
+)
+
+const slotInPiu = await scrivi(amico, 'roster_slots', 'POST', {
+  list_id: listaAmico,
+  role: 'A',
+  label: 'Attaccante di troppo',
+  position: 99,
+})
+const dopoTentativo = (await sql(`select count(*)::int n from public.roster_slots
+  where list_id = '${listaAmico}';`))[0].n
+esito(
+  'Non si puo aggiungere uno slot che il regolamento non prevede',
+  slotInPiu.stato >= 400 && dopoTentativo === slotCreati.length,
+  `HTTP ${slotInPiu.stato}; slot ancora ${dopoTentativo}`,
+)
+
+const unSlot = slotCreati.length > 0
+  ? (await sql(`select id, label, position, role from public.roster_slots
+      where list_id = '${listaAmico}' and role = 'D' order by position limit 1;`))[0]
+  : null
+const cancellaSlot = await scrivi(amico, `roster_slots?id=eq.${unSlot.id}`, 'DELETE', {})
+const esisteAncoraSlot = (await sql(`select count(*)::int n from public.roster_slots
+  where id = '${unSlot.id}';`))[0].n
+esito(
+  'Non si puo cancellare un posto della rosa',
+  esisteAncoraSlot === 1,
+  `HTTP ${cancellaSlot.stato}, lo slot "${unSlot.label}" c'è ancora`,
+)
+
+const rinomina = await scrivi(amico, `roster_slots?id=eq.${unSlot.id}`, 'PATCH', {
+  label: 'Il terzino che salta l uomo',
+  max_price: 42,
+})
+const dopoRinomina = (await sql(`select label, max_price from public.roster_slots
+  where id = '${unSlot.id}';`))[0]
+esito(
+  'Il nome e il massimale dello slot si cambiano',
+  dopoRinomina.label === 'Il terzino che salta l uomo' && dopoRinomina.max_price === 42,
+  `ora si chiama "${dopoRinomina.label}" con massimale ${dopoRinomina.max_price}`,
+)
+
+// Il massimale sta sullo slot **e basta**: il ruolo e la posizione sono del
+// regolamento, e il permesso di scrittura non li comprende.
+const cambiaRuolo = await scrivi(amico, `roster_slots?id=eq.${unSlot.id}`, 'PATCH', { role: 'A' })
+const ruoloDopo = (await sql(`select role from public.roster_slots
+  where id = '${unSlot.id}';`))[0].role
+esito(
+  'Il ruolo di uno slot non si cambia: e un posto della rosa, non una casella libera',
+  ruoloDopo === 'D',
+  `HTTP ${cambiaRuolo.stato}, il ruolo è ancora ${ruoloDopo}`,
+)
+
+// La lega cambia le sue regole: gli slot devono seguirla da soli.
+await sql(`update public.leagues set slots_a = slots_a - 1 where id = '${lega}';`)
+await rpc(amico, 'assicura_lista_obiettivi', { p_lega: lega })
+const attaccantiDopo = (await sql(`select count(*)::int n from public.roster_slots
+  where list_id = '${listaAmico}' and role = 'A';`))[0].n
+const posizioniContigue = (await sql(`select array_agg(position order by position) p
+  from public.roster_slots where list_id = '${listaAmico}' and role = 'A';`))[0].p
+await sql(`update public.leagues set slots_a = slots_a + 1 where id = '${lega}';`)
+await rpc(amico, 'assicura_lista_obiettivi', { p_lega: lega })
+const attaccantiRipristinati = (await sql(`select count(*)::int n from public.roster_slots
+  where list_id = '${listaAmico}' and role = 'A';`))[0].n
+esito(
+  'Se la lega cambia i suoi numeri, gli slot la seguono',
+  attaccantiDopo === regolamento.slots_a - 1 &&
+    attaccantiRipristinati === regolamento.slots_a &&
+    JSON.stringify(posizioniContigue.map(Number)) ===
+      JSON.stringify([...Array(regolamento.slots_a - 1).keys()]),
+  `da ${regolamento.slots_a} a ${attaccantiDopo} e ritorno a ${attaccantiRipristinati}; posizioni ${JSON.stringify(posizioniContigue)}`,
 )
 
 const slotAttacco = (await sql(`select id from public.roster_slots
@@ -526,6 +598,49 @@ esito(
   'Nessuno riordina gli slot di un altro',
   riordinoAltrui.corpo === 0,
   `righe toccate dall amministratore: ${riordinoAltrui.corpo}`,
+)
+
+// ─── Togliere un candidato da un posto ──────────────────────────────────────
+// Nel metodo degli slot un obiettivo esiste perche' e' candidato a un posto:
+// staccarlo e lasciarlo nella lista produrrebbe un avanzo da togliere due
+// volte. Ma se sta anche altrove, deve restare.
+
+const secondoSlotA = (await sql(`select id from public.roster_slots
+  where list_id = '${listaAmico}' and role = 'A' order by position offset 1 limit 1;`))[0].id
+await rpc(amico, 'aggiungi_a_slot', { p_slot: secondoSlotA, p_calciatori: [909001] })
+
+const kean = (await sql(`select id from public.targets
+  where list_id = '${listaAmico}' and player_id = 909002;`))[0].id
+await rpc(amico, 'togli_da_slot', { p_slot: slotAttacco, p_obiettivo: kean })
+const keanRimasto = (await sql(`select count(*)::int n from public.targets where id = '${kean}';`))[0].n
+esito(
+  'Togliere da un posto un calciatore che non sta altrove lo toglie dalla lista',
+  keanRimasto === 0,
+  `Kean era candidato a un posto solo: righe rimaste ${keanRimasto}`,
+)
+
+const lautaro = (await sql(`select id from public.targets
+  where list_id = '${listaAmico}' and player_id = 909001;`))[0].id
+await rpc(amico, 'togli_da_slot', { p_slot: slotAttacco, p_obiettivo: lautaro })
+const lautaroRimasto = (await sql(`select count(*)::int n from public.targets where id = '${lautaro}';`))[0].n
+const lautaroAltrove = (await sql(`select count(*)::int n from public.slot_candidates
+  where target_id = '${lautaro}';`))[0].n
+esito(
+  'Chi e candidato anche a un altro posto resta nella lista',
+  lautaroRimasto === 1 && lautaroAltrove === 1,
+  `Lautaro è ancora in lista (${lautaroRimasto}) e candidato a ${lautaroAltrove} posto`,
+)
+
+const scollegaAltrui = await rpc(admin, 'togli_da_slot', {
+  p_slot: secondoSlotA,
+  p_obiettivo: lautaro,
+})
+const dopoTentativoAltrui = (await sql(`select count(*)::int n from public.slot_candidates
+  where target_id = '${lautaro}';`))[0].n
+esito(
+  'Nessuno stacca i candidati dagli slot di un altro',
+  scollegaAltrui.corpo === false && dopoTentativoAltrui === 1,
+  `risposta ${JSON.stringify(scollegaAltrui.corpo)}, candidature ancora ${dopoTentativoAltrui}`,
 )
 
 // Riordino degli obiettivi per priorità.

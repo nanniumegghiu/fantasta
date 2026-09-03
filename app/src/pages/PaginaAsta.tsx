@@ -214,6 +214,28 @@ function InAstaOra({
   const obiettivo = lista?.targets.find((t) => t.player_id === lotto.player_id)
   const fascia = obiettivo ? lista?.tiers.find((f) => f.id === obiettivo.tier_id) : undefined
 
+  // I posti della rosa per cui questo nome è candidato. Con il metodo degli
+  // slot il tetto non sta sul calciatore: sta sul posto, e uno stesso nome può
+  // essere candidato a più posti con massimali diversi.
+  const postiSuoi =
+    obiettivo && lista?.metodo === 'slot'
+      ? lista.roster_slots
+          .filter((s) => s.slot_candidates.some((c) => c.target_id === obiettivo.id))
+          .sort((a, b) => a.position - b.position)
+      : []
+
+  // Quando i posti sono più d'uno vale il più generoso: è la cifra oltre la
+  // quale questo nome non ti serve più in nessun caso.
+  const tetto =
+    lista?.metodo === 'slot'
+      ? postiSuoi.reduce<number | null>(
+          (m, s) => (s.max_price == null ? m : Math.max(m ?? 0, s.max_price)),
+          null,
+        )
+      : (obiettivo?.max_price ?? null)
+
+  const postoDelTetto = postiSuoi.find((s) => s.max_price === tetto)
+
   function offri(importo: number) {
     setErrore(null)
     rilancia.mutate(
@@ -284,12 +306,15 @@ function InAstaOra({
       {obiettivo && (
         <div className="mt-3 rounded-xl border border-verde-acceso/40 bg-verde-acceso/10 p-3">
           <p className="text-sm font-bold text-verde-acceso">
-            È un tuo obiettivo{fascia ? ` · ${fascia.name}` : ''}
+            È un tuo obiettivo
+            {fascia ? ` · ${fascia.name}` : ''}
+            {postiSuoi.length > 0 && ` · ${postiSuoi.map((s) => s.label).join(', ')}`}
           </p>
-          {obiettivo.max_price != null && (
+          {tetto != null && (
             <p className="cifre-fisse mt-1 text-sm text-nebbia">
-              Il tetto che ti eri dato: <strong>{obiettivo.max_price}</strong>
-              {lotto.current_bid >= obiettivo.max_price && (
+              {postoDelTetto ? `Il massimale di «${postoDelTetto.label}»` : 'Il tetto che ti eri dato'}
+              : <strong>{tetto}</strong>
+              {lotto.current_bid >= tetto && (
                 <span className="text-oro"> · sei già arrivato al tuo limite</span>
               )}
             </p>
