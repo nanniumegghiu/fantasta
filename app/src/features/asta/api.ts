@@ -174,9 +174,14 @@ export function useCanaleAsta(idLega: string | undefined) {
       qc.invalidateQueries({ queryKey: ['lotto'] })
       qc.invalidateQueries({ queryKey: ['budget', idLega] })
       qc.invalidateQueries({ queryKey: ['rose', idLega] })
+      // Anche il registro: se una correzione arrivasse senza comparire, la
+      // garanzia che tutti la vedano varrebbe solo per chi ricarica la pagina.
+      qc.invalidateQueries({ queryKey: ['registro', idLega] })
     }
 
-    for (const tabella of ['auctions', 'auction_lots', 'bids', 'roster_players', 'teams']) {
+    for (const tabella of [
+      'auctions', 'auction_lots', 'bids', 'roster_players', 'teams', 'auction_events',
+    ]) {
       canale.on('postgres_changes', { event: '*', schema: 'public', table: tabella }, ricarica)
     }
 
@@ -402,6 +407,7 @@ function useAzioneAdmin<T>(idLega: string | undefined, nome: string, argomenti: 
       qc.invalidateQueries({ queryKey: ['budget', idLega] })
       qc.invalidateQueries({ queryKey: ['rose', idLega] })
       qc.invalidateQueries({ queryKey: ['lega', idLega] })
+      qc.invalidateQueries({ queryKey: ['registro', idLega] })
     },
   })
 }
@@ -450,4 +456,72 @@ export function useApriLottoScelto(idLega: string | undefined) {
  */
 export function useChiudiAsta(idLega: string | undefined) {
   return useAzioneAdmin<void>(idLega, 'chiudi_asta', () => ({ p_lega: idLega }))
+}
+
+// ─── Correzioni, e il registro che le mostra ────────────────────────────────
+
+/**
+ * Toglie un calciatore da una rosa qualsiasi: crediti indietro, slot libero,
+ * calciatore di nuovo disponibile.
+ *
+ * Il motivo non è facoltativo perché finisce nel registro che leggono tutti,
+ * e un registro di righe senza motivo non protegge nessuno.
+ */
+export function useRimuoviDallaRosa(idLega: string | undefined) {
+  return useAzioneAdmin<{ idCalciatore: number; motivo: string }>(
+    idLega,
+    'rimuovi_dalla_rosa',
+    (v) => ({ p_lega: idLega, p_player_id: v.idCalciatore, p_motivo: v.motivo }),
+  )
+}
+
+/** Corregge il prezzo di un acquisto già fatto. Anche qui il motivo è obbligatorio. */
+export function useCorreggiPrezzo(idLega: string | undefined) {
+  return useAzioneAdmin<{ idCalciatore: number; prezzo: number; motivo: string }>(
+    idLega,
+    'correggi_prezzo',
+    (v) => ({
+      p_lega: idLega,
+      p_player_id: v.idCalciatore,
+      p_prezzo: v.prezzo,
+      p_motivo: v.motivo,
+    }),
+  )
+}
+
+export type VoceRegistro = {
+  seq: number
+  type: string
+  payload: Record<string, unknown>
+  created_at: string
+  attore: string | null
+  manuale: boolean
+  motivo: string | null
+  calciatore: string | null
+  ruolo: string | null
+  squadra: string | null
+}
+
+/**
+ * Il registro dell'asta, **leggibile da tutti i partecipanti**.
+ *
+ * Non è una schermata da amministratore: è la ragione per cui l'amministratore
+ * può correggere senza che nessuno debba fidarsi sulla parola. Un controllo che
+ * vede solo il controllato non è un controllo.
+ */
+export function useRegistroAsta(idLega: string | undefined, soloManuali = false) {
+  return useQuery({
+    queryKey: ['registro', idLega, soloManuali],
+    enabled: Boolean(idLega),
+    queryFn: async (): Promise<VoceRegistro[]> => {
+      let q = richiediSupabase()
+        .from('registro_asta')
+        .select('seq,type,payload,created_at,attore,manuale,motivo,calciatore,ruolo,squadra')
+        .eq('league_id', idLega!)
+      if (soloManuali) q = q.eq('manuale', true)
+      const { data, error } = await q.order('seq', { ascending: false }).limit(200)
+      if (error) throw new Error(messaggioErrore(error))
+      return (data ?? []) as unknown as VoceRegistro[]
+    },
+  })
 }

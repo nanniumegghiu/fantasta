@@ -106,6 +106,25 @@ L'app è per amici e non ha pagine legali, come richiesto. Questo non toglie che
 email reali: se un domani dovesse uscire da quella cerchia, servirebbero. Sta scritto qui per non
 doverlo riscoprire dopo.
 
+## 2bis. I poteri dell'amministratore, e il loro contrappeso
+
+L'amministratore di lega può correggere le rose di tutti: togliere un calciatore, cambiare il prezzo
+pagato. Serve, perché un'asta senza modo di rimediare a un errore si blocca al primo errore. Ma è
+anche uno che gioca, quindi il potere va bilanciato.
+
+Il contrappeso non è un limite tecnico, è la **visibilità**:
+
+| Difesa | Come è fatta |
+|---|---|
+| Motivo obbligatorio | Il server rifiuta una correzione senza motivo di almeno tre caratteri |
+| Registro leggibile da tutti | `registro_asta`, con la policy di `auction_events`: la vede ogni partecipante della lega |
+| Interventi distinti dal gioco | La colonna `manuale`, definita una volta in `evento_manuale` |
+| Registro non riscrivibile | Il trigger della migrazione 0008: nessuno modifica o cancella, nemmeno chi amministra |
+| Nome di chi ha corretto | `actor_user_id`, risolto nel nome visibile |
+
+Il criterio: **non si toglie il potere a chi serve che ce l'abbia, si toglie la possibilità di
+usarlo di nascosto.**
+
 ## 3. File coinvolti
 
 - `app/supabase/migrations/20260902120000_profili.sql` — profili e loro policy

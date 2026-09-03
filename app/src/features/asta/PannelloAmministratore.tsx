@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { CampoNumero } from '@/components/CampoNumero'
 import { SelettoreCalciatore } from '@/features/obiettivi/SelettoreCalciatore'
+import { CorreggiRose } from './CorreggiRose'
 import {
   useAggiudicaOra,
   useAnnullaUltima,
@@ -12,6 +13,7 @@ import {
   useChiudiAsta,
   usePassaLotto,
   usePausaAsta,
+  type AcquistoInRosa,
   type Asta,
   type BudgetSquadra,
   type Lotto,
@@ -45,12 +47,14 @@ export function PannelloAmministratore({
   lotto,
   squadre,
   acquistati,
+  rose,
 }: {
   idLega: string | undefined
   asta: Asta
   lotto: Lotto | null | undefined
   squadre: BudgetSquadra[]
   acquistati: Set<number>
+  rose: AcquistoInRosa[]
 }) {
   const apriProssimo = useApriProssimoLotto(idLega)
   const apriScelto = useApriLottoScelto(idLega)
@@ -278,6 +282,9 @@ export function PannelloAmministratore({
                 </div>
               )}
             </div>
+
+            {/* Correzioni sulle rose già fatte: il motivo è obbligatorio. */}
+            <CorreggiRose idLega={idLega} squadre={squadre} rose={rose} />
 
             {/* Annullamento: conferma esplicita, perché tocca crediti e rose. */}
             <div className="mt-3">

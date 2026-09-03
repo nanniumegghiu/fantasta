@@ -30,6 +30,7 @@ import {
 import { useTimerAsta } from '@/features/asta/useTimer'
 import { ImpostazioniPreAsta } from '@/features/asta/ImpostazioniPreAsta'
 import { PannelloAmministratore } from '@/features/asta/PannelloAmministratore'
+import { RegistroAsta } from '@/features/asta/RegistroAsta'
 import type { Ruolo } from '@/domain/listone'
 
 export function PaginaAsta() {
@@ -114,6 +115,7 @@ export function PaginaAsta() {
                 lotto={lotto}
                 squadre={budget ?? []}
                 acquistati={acquistati}
+                rose={rose ?? []}
               />
             )}
             {lotto ? (
@@ -172,6 +174,10 @@ export function PaginaAsta() {
             <p className="mt-1 text-sm text-fumo">Tutte le rose sono complete.</p>
           </div>
         )}
+
+        {/* Il registro lo vedono tutti, non solo chi conduce: è la ragione
+            per cui chi conduce può correggere senza doversi far credere. */}
+        {asta && <RegistroAsta idLega={idLega} />}
 
         <Scorciatoie
           idLega={idLega}

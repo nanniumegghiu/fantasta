@@ -140,6 +140,22 @@ async function rpc(u, funzione, corpo) {
   return { stato: r.status, riga: Array.isArray(c) ? c[0] : c }
 }
 
+/** Lettura diretta di una tabella o di una vista, con i permessi di chi chiede. */
+async function leggi(u, percorso) {
+  const r = await fetch(`${URL_BASE}/rest/v1/${percorso}`, { headers: testa(u) })
+  return { stato: r.status, corpo: await r.json().catch(() => null) }
+}
+
+/** Scrittura diretta: serve a provare che certe cose il client non le puo' fare. */
+async function scrivi(u, percorso, metodo, corpo) {
+  const r = await fetch(`${URL_BASE}/rest/v1/${percorso}`, {
+    method: metodo,
+    headers: { ...testa(u), Prefer: 'return=representation' },
+    body: JSON.stringify(corpo),
+  })
+  return { stato: r.status, corpo: await r.json().catch(() => null) }
+}
+
 // ─── Listone di prova, con nomi che si ordinano in modo prevedibile ─────────
 
 const admin = await registra('admin')
@@ -725,6 +741,168 @@ console.log("\n── il riempimento finale ────────────
     'A asta chiusa non si apre piu niente',
     dopoChiusa.riga?.esito === 'asta_non_aperta',
     `${dopoChiusa.riga?.messaggio}`,
+  )
+}
+
+console.log("\n── le correzioni, e il registro che le mostra ─────────────────\n")
+
+// Un asta di tre ore ha sempre qualcosa da sistemare. Il punto non e che
+// l'amministratore possa correggere: e che ogni correzione si veda, con il
+// motivo, e la vedano tutti. Qui si prova esattamente quello.
+{
+  const s = await scenario('Correzioni', { metodo: 'alfabetico', variante: 'totale' })
+  const squadraAmico = s.squadre.find((q) => q.user_id === amico.id).id
+
+  // Si compra un calciatore, per avere qualcosa da correggere.
+  await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
+  const lotto = await inAsta(s.lega)
+  await rpc(amico, 'rilancia', { p_lotto: lotto.id, p_importo: 6 })
+  await rpc(admin, 'aggiudica_ora', { p_lotto: lotto.id })
+
+  const comprato = (await sql(`select p.id, p.name from public.roster_players r
+    join public.players p on p.id = r.player_id
+    where r.league_id = '${s.lega}' and r.team_id = '${squadraAmico}';`))[0]
+  esito(
+    'Preparazione: un calciatore in rosa da correggere',
+    Boolean(comprato),
+    `${comprato?.name} comprato a 6`,
+  )
+
+  // ─── Il motivo non e facoltativo ─────────────────────────────────────────
+
+  const senzaMotivo = await rpc(admin, 'rimuovi_dalla_rosa', {
+    p_lega: s.lega, p_player_id: comprato.id, p_motivo: '',
+  })
+  esito(
+    'Senza motivo non si corregge niente',
+    senzaMotivo.riga?.esito === 'non_autorizzato',
+    `${senzaMotivo.riga?.messaggio}`,
+  )
+
+  const daPartecipante = await rpc(amico, 'rimuovi_dalla_rosa', {
+    p_lega: s.lega, p_player_id: comprato.id, p_motivo: 'me lo tolgo da solo',
+  })
+  esito(
+    'Un partecipante non tocca le rose, nemmeno la sua',
+    daPartecipante.riga?.esito === 'non_autorizzato',
+    `${daPartecipante.riga?.messaggio}`,
+  )
+
+  // ─── La correzione del prezzo ────────────────────────────────────────────
+
+  const primaDelPrezzo = (await sql(`select credits_remaining from public.teams
+    where id = '${squadraAmico}';`))[0].credits_remaining
+  const correzione = await rpc(admin, 'correggi_prezzo', {
+    p_lega: s.lega, p_player_id: comprato.id, p_prezzo: 9,
+    p_motivo: 'avevo battuto 6 invece di 9',
+  })
+  const dopoIlPrezzo = (await sql(`select t.credits_remaining,
+    (select price from public.roster_players r
+     where r.team_id = t.id and r.player_id = ${comprato.id}) prezzo
+    from public.teams t where t.id = '${squadraAmico}';`))[0]
+  esito(
+    'Il prezzo si corregge, e i crediti seguono la differenza',
+    correzione.riga?.esito === 'ok' &&
+      dopoIlPrezzo.prezzo === 9 &&
+      dopoIlPrezzo.credits_remaining === primaDelPrezzo - 3,
+    `${correzione.riga?.messaggio} · crediti da ${primaDelPrezzo} a ${dopoIlPrezzo.credits_remaining}`,
+  )
+
+  const troppo = await rpc(admin, 'correggi_prezzo', {
+    p_lega: s.lega, p_player_id: comprato.id, p_prezzo: 100000,
+    p_motivo: 'proviamo a sfondare il budget',
+  })
+  const restato = (await sql(`select price from public.roster_players
+    where league_id = '${s.lega}' and player_id = ${comprato.id};`))[0].price
+  esito(
+    'Nemmeno correggendo si porta una squadra sotto quello che le serve',
+    troppo.riga?.esito === 'oltre_il_massimo' && restato === 9,
+    `${troppo.riga?.messaggio} · prezzo ancora ${restato}`,
+  )
+
+  // ─── La rimozione ────────────────────────────────────────────────────────
+
+  const primaDellaRimozione = (await sql(`select credits_remaining from public.teams
+    where id = '${squadraAmico}';`))[0].credits_remaining
+  const rimozione = await rpc(admin, 'rimuovi_dalla_rosa', {
+    p_lega: s.lega, p_player_id: comprato.id,
+    p_motivo: 'aggiudicato a chi non aveva rilanciato',
+  })
+  const dopoLaRimozione = (await sql(`select t.credits_remaining,
+    (select count(*)::int from public.roster_players r where r.team_id = t.id) rosa
+    from public.teams t where t.id = '${squadraAmico}';`))[0]
+  esito(
+    'Il calciatore esce dalla rosa e i crediti tornano indietro',
+    rimozione.riga?.esito === 'ok' &&
+      dopoLaRimozione.rosa === 0 &&
+      dopoLaRimozione.credits_remaining === primaDellaRimozione + 9,
+    `${rimozione.riga?.messaggio} · crediti da ${primaDellaRimozione} a ${dopoLaRimozione.credits_remaining}`,
+  )
+
+  // La parte che si dimentica: il lotto va annullato, altrimenti quel
+  // calciatore non tornerebbe mai piu fra gli estraibili.
+  const statoLotto = (await sql(`select status from public.auction_lots
+    where id = '${lotto.id}';`))[0].status
+  esito(
+    'Il calciatore tolto torna disponibile per l asta',
+    statoLotto === 'cancelled',
+    `il lotto che lo aveva assegnato ora è ${statoLotto}`,
+  )
+
+  // ─── Il registro ─────────────────────────────────────────────────────────
+
+  const registro = await leggi(
+    amico,
+    `registro_asta?select=type,manuale,motivo,attore,calciatore,squadra,payload&league_id=eq.${s.lega}&order=seq`,
+  )
+  const manuali = (registro.corpo ?? []).filter((r) => r.manuale)
+  const laRimozione = manuali.find((r) => r.type === 'rimozione')
+  const laCorrezione = manuali.find((r) => r.type === 'correzione_prezzo')
+  esito(
+    'Il registro lo legge un partecipante, non solo chi lo ha scritto',
+    registro.stato === 200 && manuali.length >= 2,
+    `${registro.corpo?.length ?? 0} eventi, di cui ${manuali.length} interventi manuali`,
+  )
+
+  esito(
+    'Ogni intervento porta con se il motivo, il nome e chi lo ha fatto',
+    laRimozione?.motivo === 'aggiudicato a chi non aveva rilanciato' &&
+      laCorrezione?.motivo === 'avevo battuto 6 invece di 9' &&
+      Boolean(laRimozione?.calciatore) && Boolean(laRimozione?.squadra) &&
+      Boolean(laRimozione?.attore),
+    `rimozione: "${laRimozione?.motivo}" su ${laRimozione?.calciatore} (${laRimozione?.squadra}), da ${laRimozione?.attore}`,
+  )
+
+  esito(
+    'La correzione conserva il prezzo di prima e quello di dopo',
+    laCorrezione?.payload?.prezzo_prima === 6 && laCorrezione?.payload?.prezzo === 9,
+    `da ${laCorrezione?.payload?.prezzo_prima} a ${laCorrezione?.payload?.prezzo}`,
+  )
+
+  // Il gioco normale non deve finire fra gli interventi: se ci finisse, il
+  // registro annegherebbe le correzioni nel rumore e non servirebbe piu'.
+  const rilanci = (registro.corpo ?? []).filter((r) => r.type === 'rilancio')
+  esito(
+    'Il gioco normale non e un intervento manuale',
+    rilanci.length > 0 && rilanci.every((r) => r.manuale === false),
+    `${rilanci.length} rilanci nel registro, nessuno segnato come manuale`,
+  )
+
+  // ─── Il registro non si riscrive ─────────────────────────────────────────
+
+  const seq = (await sql(`select e.seq from public.auction_events e
+    join public.auctions a on a.id = e.auction_id
+    where a.league_id = '${s.lega}' and e.type = 'rimozione';`))[0].seq
+  const riscrittura = await scrivi(admin, `auction_events?seq=eq.${seq}`, 'PATCH', {
+    payload: { motivo_admin: 'in realtà avevo ragione io' },
+  })
+  const cancellazione = await scrivi(admin, `auction_events?seq=eq.${seq}`, 'DELETE', {})
+  const ancoraLi = (await sql(`select payload ->> 'motivo_admin' m
+    from public.auction_events where seq = ${seq};`))[0]
+  esito(
+    'Nemmeno l amministratore riscrive o cancella il registro',
+    ancoraLi?.m === 'aggiudicato a chi non aveva rilanciato',
+    `PATCH ${riscrittura.stato}, DELETE ${cancellazione.stato}, il motivo è ancora "${ancoraLi?.m}"`,
   )
 }
 

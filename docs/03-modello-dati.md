@@ -245,6 +245,7 @@ portieri con una nota sull'alternanza dei calendari.
 | `available_players` | Il listone svincolati: calciatori meno quelli già acquistati in quella lega. Con statistiche già unite, così la tabella si ordina e si filtra senza query aggiuntive. |
 | `team_budget` | Per ogni squadra: crediti residui, slot mancanti per ruolo, **massimo offribile**. È il numero che lo schermo condiviso mostra accanto a ogni nome. |
 | `target_progress` | Per la lista di un utente: quanti obiettivi restano liberi, quanti presi da altri, quanti vinti. |
+| `registro_asta` | Il registro con i nomi al posto degli identificativi, e la colonna `manuale` che distingue gli interventi dell amministratore dal gioco normale. La leggono tutti i partecipanti. |
 
 ## 3. File coinvolti
 
@@ -271,6 +272,8 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903190000_chi_se_ne_va_esce_dal_registro.sql` | Correzione: un account che avesse fatto un'offerta non si poteva più cancellare |
 | `20260903200000_esito_listone_finito.sql` | Nuovo esito `listone_finito`, in una migrazione sua perché un valore d'enum non si usa nella transazione che lo aggiunge |
 | `20260903210000_lasta_scorre_da_sola.sql` | `apri_lotto_automatico`, `apri_lotto_scelto`, `chiudi_asta`, e la chiusura di un lotto che apre il successivo |
+| `20260903230000_correzioni_a_registro_aperto.sql` | `rimuovi_dalla_rosa`, `correggi_prezzo`, `evento_manuale`, vista `registro_asta` |
+| `20260903234500_anche_la_ripresa_e_un_intervento.sql` | Correzione: `ripresa` mancava fra gli interventi manuali |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

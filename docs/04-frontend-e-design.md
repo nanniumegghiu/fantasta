@@ -179,6 +179,10 @@ arrivando da un collegamento esterno o riaprendo l'app su quella schermata.
     cambiare schermata proprio nel momento in cui servono.
 14. Vista amministratore dell'asta: la precedente più i poteri di conduzione, su **due piani**.
 
+    Fra i comandi del secondo piano c'è **Correggi le rose**: si sceglie un calciatore già comprato,
+    da qualunque squadra, e lo si toglie o gli si cambia il prezzo. Il campo del motivo è
+    obbligatorio e la schermata dice **prima**, non dopo, che finirà nel registro che vedono tutti.
+
     Sopra, sempre visibile, **solo l'azione del momento**: aggiudicare quando c'è un'offerta,
     passare quando non c'è nessuno, estrarre quando non c'è nessuno in asta. Una alla volta, ed è
     quella che serve adesso.
@@ -214,6 +218,11 @@ arrivando da un collegamento esterno o riaprendo l'app su quella schermata.
 
     Il senso della divisione: chi guarda da tre metri deve capire in un colpo d'occhio *cosa sta
     succedendo adesso* e *come sta andando la serata*, senza che nessuno debba cambiare schermata.
+15bis. **Registro dell'asta**, in fondo alla vista personale e visibile a **tutti**, non solo a chi
+    conduce. Si apre sui soli interventi manuali, perché il gioco normale — chiamate, rilanci,
+    aggiudicazioni — è la maggioranza e annegherebbe le poche righe che contano; «tutta la serata» è
+    a un tocco. Ogni intervento porta il motivo scritto da chi l'ha fatto e il suo nome.
+
 16. Fine asta: riepilogo ed esportazione in CSV.
 
 ### 2.7 Struttura mobile
@@ -287,6 +296,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.8 | 2026-09-03 | Correzione delle rose con motivo obbligatorio, e registro dell asta visibile a tutti. |
 | 1.7 | 2026-09-03 | Rose nella vista personale, obiettivi vivi senza i calciatori gia comprati, freccia indietro che torna da dove si veniva. |
 | 1.6 | 2026-09-03 | Schermo condiviso con le rose intere e i prezzi. Comandi di conduzione a due piani, con il secondo a scomparsa. |
 | 1.5 | 2026-09-03 | Colonna del ruolo nel listone. Gli slot sono i posti del regolamento, con un massimale a testa. Tutte le schermate provate tranne l asta in corso. |

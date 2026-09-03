@@ -150,7 +150,39 @@ L'importazione, dal canto suo, ritira i calciatori mancanti della sola stagione 
 il listone nuovo non cancella la storia del vecchio. Vedi
 `docs/decisioni/2026-09-03-il-listone-ha-una-stagione.md`.
 
-### 2.9 Riconnessione
+### 2.9 Le correzioni, e il registro che le mostra
+
+In tre ore d'asta qualcosa va storto per forza: un prezzo battuto male, un calciatore aggiudicato a
+chi non aveva rilanciato. L'amministratore può **togliere un calciatore da qualunque rosa** e
+**correggere il prezzo** di un acquisto già fatto.
+
+Sono poteri che, in mano a chi conduce **e gioca**, potrebbero decidere la serata. La risposta non è
+limitarli — senza, l'asta si blocca al primo errore — ma renderli visibili. Tre scelte, e nessuna è
+un dettaglio:
+
+1. **Il motivo è obbligatorio.** Lo rifiuta il server, non solo la schermata. Venti righe che dicono
+   «prezzo cambiato» non proteggono nessuno; venti righe che dicono perché sono una spiegazione che
+   chi l'ha scritta deve poter difendere a voce.
+2. **Il registro lo leggono tutti i partecipanti.** Un controllo che vede solo il controllato non è
+   un controllo. La vista `registro_asta` mostra gli eventi con i nomi al posto degli
+   identificativi, e segna quali sono interventi manuali.
+3. **Non si riscrive e non si cancella**, nemmeno dall'amministratore. Vale la migrazione 0008.
+
+Cosa conta come intervento manuale sta scritto **in un posto solo**, la funzione
+`evento_manuale`, che vale anche sugli eventi già registrati. L'alternativa era una colonna da
+riempire a ogni inserimento, con il rischio che un giorno qualcuno se ne dimenticasse e l'intervento
+sparisse dal registro proprio nel caso in cui conta.
+
+Togliere un calciatore da una rosa non è cancellare una riga: si restituiscono i crediti, si libera
+lo slot **e si annulla il lotto che lo aveva assegnato**. Quest'ultima è la parte che si dimentica:
+il motore salta chi è già stato aggiudicato, quindi senza annullare il lotto quel calciatore non
+tornerebbe mai più fra gli estraibili.
+
+Sul prezzo il vincolo è diverso da quello di un'offerta: la rosa non cambia, quindi i crediti che
+restano devono bastare per **tutti** gli slot ancora vuoti, non per tutti meno quello che si sta
+comprando.
+
+### 2.10 Riconnessione
 
 Chi torna online non ricostruisce niente a mano: richiede lo stato corrente dell'asta e gli eventi
 successivi all'ultimo che aveva ricevuto. Il registro eventi ha un numero progressivo proprio per
@@ -159,7 +191,7 @@ questo. In due richieste è di nuovo allineato.
 Sulla vista personale compare un indicatore di connessione. Se il canale cade, l'utente lo **vede**:
 non gli si lascia credere di essere in asta mentre sta guardando una schermata congelata.
 
-### 2.10 Modalità live
+### 2.11 Modalità live
 
 Quando l'asta è condotta a voce, il timer è spento e nessuno rilancia dal telefono. Il canale resta
 attivo perché lo schermo condiviso e le viste personali mostrino comunque rose, crediti e listone
@@ -203,6 +235,7 @@ lotto si chiude e l'offerta viene rifiutata. Mai entrambe.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.5 | 2026-09-03 | Correzioni sulle rose e sui prezzi, con motivo obbligatorio e registro visibile a tutti. |
 | 1.4 | 2026-09-03 | La catena dei lotti si apre da sola. A listone finito l asta resta aperta e si riempie per nome. Chiusura a mano. |
 | 1.3 | 2026-09-03 | L asta pesca solo dal listone della stagione della lega. |
 | 1.2 | 2026-09-03 | Varianti, passo, poteri dell amministratore e rete di sicurezza pianificata. |
