@@ -182,7 +182,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Vista personale e schermo condiviso con un asta viva | 🟡 provati una prima volta, e rifatti su quello che è emerso |
 | Compagni di lega finti per provare l asta da soli | ✅ 18 prove, `node scripts/verifica-amici-di-prova.mjs` |
 | **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
-| Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
+| Accesso con Google | 🟡 tutto pronto, mancano le due chiavi da Google Cloud: `node scripts/accendi-google.mjs --istruzioni` |
 | Fetta 5: facepack | ✅ 403 volti caricati, 98% dei calciatori abbinabili |
 | Fetta 5b: schermata di abbinamento manuale | 🔴 serve per i casi che l algoritmo lascia fuori |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
@@ -215,6 +215,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciannove prove sulla lettura dei file e sull importazione del listone. Due sono la sentinella: un calciatore vero che deve sopravvivere alle prove e alla pulizia. Costruisce da zero un vero `.xlsx` per provarci sopra. |
 | `node scripts/verifica-obiettivi.mjs` | Quarantaquattro prove sulla lista obiettivi: fra le altre, che un attaccante non entri in una fascia di difensori e che il numero degli slot non si possa toccare dal client. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 | `node --experimental-strip-types scripts/verifica-esportazione.mjs` | Quattordici prove sul file delle rose. Le piu importanti provano nomi di squadra con punto e virgola, virgolette e ritorni a capo: un CSV rotto non da errore, sposta le colonne di uno. |
+| `node scripts/accendi-google.mjs` | Accende l accesso con Google quando le due chiavi sono in `.env.local`. Con `--istruzioni` stampa i cinque minuti da fare su Google Cloud, con dentro l indirizzo di ritorno gia pronto. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
 | `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |

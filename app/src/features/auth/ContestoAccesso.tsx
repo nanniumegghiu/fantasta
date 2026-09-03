@@ -58,7 +58,16 @@ export function FornitoreAccesso({ children }: { children: ReactNode }) {
     if (!supabase) throw new Error('Backend non configurato')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/leghe` },
+      // Il ritorno da Google deve tenere conto del percorso base: online
+      // l'app sta sotto /fantasta/, e l'origine da sola porterebbe alla radice
+      // del dominio, che non è l'applicazione e non è fra gli indirizzi
+      // consentiti da Supabase.
+      options: {
+        redirectTo: new URL(
+          `${import.meta.env.BASE_URL}leghe`,
+          window.location.origin,
+        ).toString(),
+      },
     })
     if (error) throw new Error(messaggioErrore(error))
   }, [])
