@@ -213,12 +213,54 @@ Sul listone caricato dall'utente, 531 calciatori:
 | Ambigui, lasciati stare | 4 |
 | Non trovati | 90 |
 
-**Degli 81 non trovati su 90, il motivo è uno solo**: Venezia, Monza e Frosinone. In Football
-Manager quelle squadre non sono in Serie A, perché il listone caricato è di un'annata diversa da
-quella del gioco. Non è un difetto dell'abbinamento e non si corregge con regole migliori: lo
-script lo dice a parte, distinguendolo dai nomi sparsi, perché la decisione — caricare il listone
-giusto o abbinare a mano — è dell'utente. Sui calciatori realmente abbinabili la copertura è del
-98%, in linea con quanto ADR-0011 aveva misurato.
+**Degli 81 non trovati su 90 il motivo era uno solo**: Venezia, Monza e Frosinone. In Football
+Manager quelle squadre non sono in Serie A, perché il listone e il database del gioco sono
+fotografie di momenti diversi.
+
+### Le squadre che nel gioco non sono in Serie A
+
+All'inizio quelle tre erano date per perse: «non è un difetto dell'abbinamento, è un dato da dire
+all'utente». Era vero a metà. **Le squadre ci sono, semplicemente in un'altra divisione**, e si
+possono andare a prendere per nome: due richieste per squadra, in blocco, dentro i vincoli di
+ADR-0011.
+
+Il primo tentativo era fallito per due filtri sbagliati in fila:
+
+| Filtro | Perché non funzionava |
+|---|---|
+| `classification_id:=club` | Non è un valore esistente: le squadre hanno `type_id:=team` |
+| Divisione «Italian Serie B» | Il nome vero è **«Serie BKT»**, col nome dello sponsor |
+
+Due filtri sbagliati danno zero risultati, e zero risultati somigliano molto a «questa squadra non
+c'è». È il motivo per cui la prima conclusione era sbagliata pur essendo ragionevole.
+
+Adesso la squadra si cerca senza filtrare per divisione: si ordina per reputazione e si prende la
+prima il cui nome, ridotto con la stessa chiave usata ovunque, coincide. Due condizioni si leggono
+dai documenti invece che interpretare la divisione: **nazione Italia** — senza, «Inter» restituisce
+l'Inter Miami — e **genere maschile**, perché le squadre femminili hanno lo stesso identico nome e
+una reputazione alta.
+
+| | Prima | Dopo |
+|---|---|---|
+| Abbinati | 444 su 531 | **521** |
+| Con la foto caricata | 426 | **487 (92%)** |
+| Dedotti dal solo cognome | 8 | **0** |
+| Non trovati | 83 | **5** |
+| Stemmi | 17 su 20 | **20 su 20** |
+
+Lo zero della terza riga è il numero che conta più degli altri: ogni abbinamento rimasto nasce
+dall'incrocio di cognome **e** squadra, che è il criterio affidabile. Nessuno resta appeso alla
+fortuna di avere un cognome unico in tutta la Serie A.
+
+Verificati venti abbinamenti a campione sulle tre squadre: venti su venti la persona giusta, casi
+difficili compresi — «Adams A.» → Akor Adams, «Basic» → Toma Bašić, «Carboni A.» → Andrea Carboni.
+
+### Due cache, non una
+
+Le squadre recuperate stanno in `.cache/squadre-fuori-serie-a.json`, separate dall'elenco della
+Serie A. Prima venivano aggiunte in coda a quello, e il primo script che riscaricava la Serie A
+buttava via il lavoro dell'altro senza dire niente: se ne accorge solo chi va a rileggere la cache
+e non ci trova più quello che ci aveva messo.
 
 ### Perché l'archivio è privato e gli indirizzi si firmano
 

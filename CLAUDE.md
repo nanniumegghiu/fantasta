@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.8 · **Data** · 2026-09-04
+**Versione documento** · 2.9 · **Data** · 2026-09-04
 
 ---
 
@@ -183,7 +183,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Compagni di lega finti per provare l asta da soli | ✅ 18 prove, `node scripts/verifica-amici-di-prova.mjs` |
 | **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
 | Accesso con Google | 🟡 tutto pronto, mancano le due chiavi da Google Cloud: `node scripts/accendi-google.mjs --istruzioni` |
-| Fetta 5: facepack | ✅ 408 volti e 17 stemmi su 20 squadre |
+| Fetta 5: facepack | ✅ 487 volti su 531 (92%) e 20 stemmi su 20 |
 | Fetta 5b: revisione dei volti a mano | ✅ 15 prove, schermata `/volti` più `--proponi` e `--manuale` |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
@@ -249,6 +249,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.9 | 2026-09-04 | Le squadre che nel gioco non sono in Serie A si cercano per nome: 487 volti invece di 408, e tutti e venti gli stemmi. |
 | 2.8 | 2026-09-04 | Gli stemmi delle squadre. La chiave dei nomi di squadra era asimmetrica: corretta, e l Atalanta ha ritrovato stemma e facce. |
 | 2.7 | 2026-09-04 | Revisione dei volti a mano: schermata per chi amministra, proposte dal terminale, e cinque abbinamenti recuperati sistemando le lettere nordiche. |
 | 2.6 | 2026-09-04 | Pubblicata online su GitHub Pages, con compilazione automatica a ogni push. Repository pubblico. |

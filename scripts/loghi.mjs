@@ -34,7 +34,10 @@ import {
   accessoDiServizio,
   chiaveSquadra,
   chiudiAccessoDiServizio,
+  elencoCompleto,
+  salvaExtra,
   scaricaSerieA,
+  scaricaSquadraPerNome,
   sql,
 } from './lib/fm.mjs'
 
@@ -70,12 +73,12 @@ let elencoFm
 const soloAbbinamento = process.argv.includes('--abbina')
 
 if (soloAbbinamento && existsSync(ELENCO_FM)) {
-  elencoFm = JSON.parse(readFileSync(ELENCO_FM, 'utf8'))
+  elencoFm = elencoCompleto(JSON.parse(readFileSync(ELENCO_FM, 'utf8')))
   console.log(`Riuso l'elenco già scaricato: ${elencoFm.length} calciatori.\n`)
 } else {
   console.log("Scarico l'elenco dei calciatori di Serie A (serve per gli identificativi dei club).\n")
   const esito = await scaricaSerieA()
-  elencoFm = esito.calciatori
+  elencoFm = elencoCompleto(esito.calciatori)
   console.log(`${elencoFm.length} calciatori in ${esito.richieste} richieste.\n`)
 }
 
@@ -84,7 +87,7 @@ if (soloAbbinamento && existsSync(ELENCO_FM)) {
 if (!elencoFm.some((g) => g.squadra_fm_id)) {
   console.log("L'elenco salvato non ha gli identificativi delle squadre: lo riscarico.\n")
   const esito = await scaricaSerieA()
-  elencoFm = esito.calciatori
+  elencoFm = elencoCompleto(esito.calciatori)
 }
 
 // ─── Le squadre del listone ─────────────────────────────────────────────────
@@ -119,17 +122,42 @@ function clubDi(nomeListone) {
   return { fmId, quanti, nomeFm: nomi.get(fmId) }
 }
 
-const esiti = squadreListone.map((s) => {
-  const club = clubDi(s.serie_a_team)
+function conFile(squadra, calciatori, club) {
   const file = club ? join(LOGHI, `${club.fmId}.png`) : null
-  return {
-    squadra: s.serie_a_team,
-    calciatori: s.n,
-    club,
-    haFile: Boolean(file && existsSync(file)),
-    file,
+  return { squadra, calciatori, club, haFile: Boolean(file && existsSync(file)), file }
+}
+
+const esiti = squadreListone.map((s) => conFile(s.serie_a_team, s.n, clubDi(s.serie_a_team)))
+
+// ─── Il ripiego per chi in Serie A non c'è ──────────────────────────────────
+//
+// Il listone e il database del gioco sono fotografie di momenti diversi: una
+// squadra appena promossa sta da una parte in Serie A e dall'altra in Serie B,
+// e lo scaricamento filtrato sulla Serie A non la vede. Si va a prenderla per
+// nome, una alla volta e comunque in blocco: due richieste per squadra, e sono
+// poche squadre.
+
+const senzaClub = esiti.filter((e) => !e.club)
+if (senzaClub.length) {
+  console.log(`\n${senzaClub.length} squadre non sono in Serie A nel gioco: le cerco per nome.`)
+  for (const e of senzaClub) {
+    const trovata = await scaricaSquadraPerNome(e.squadra)
+    if (!trovata.squadra) {
+      console.log(`  ✗ ${e.squadra}: non trovata nemmeno per nome`)
+      continue
+    }
+    console.log(`  → ${e.squadra}: ${trovata.squadra.nome} (${trovata.squadra.divisione})`)
+    // Si tiene da parte anche per gli altri script: e' lo stesso lavoro.
+    if (trovata.calciatori.length) salvaExtra(trovata.calciatori)
+    const aggiornato = conFile(e.squadra, e.calciatori, {
+      fmId: trovata.squadra.fm_id,
+      nomeFm: trovata.squadra.nome,
+      quanti: trovata.calciatori.length,
+    })
+    esiti[esiti.indexOf(e)] = aggiornato
   }
-})
+  console.log('')
+}
 
 for (const e of esiti) {
   if (!e.club) {

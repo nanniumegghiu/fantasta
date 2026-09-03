@@ -35,7 +35,13 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { chiaveSquadra, normalizza } from './lib/fm.mjs'
+import {
+  chiaveSquadra,
+  elencoCompleto,
+  normalizza,
+  salvaExtra,
+  scaricaSquadraPerNome,
+} from './lib/fm.mjs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -638,7 +644,7 @@ const riusaElenco =
   process.argv.includes('--manuale')
 
 if (riusaElenco && existsSync(ELENCO_FM)) {
-  elencoFm = JSON.parse(readFileSync(ELENCO_FM, 'utf8'))
+  elencoFm = elencoCompleto(JSON.parse(readFileSync(ELENCO_FM, 'utf8')))
   console.log(`Riuso l'elenco già scaricato: ${elencoFm.length} calciatori.\n`)
 } else {
   elencoFm = await scarica()
@@ -667,6 +673,59 @@ let esiti = abbina(listone, elencoFm)
 // database del gioco. Non e' un difetto da correggere qui: e' un dato da
 // dire a chi guarda, perche' la decisione — caricare il listone giusto, o
 // abbinare a mano — e' sua.
+
+// ─── Le squadre che in Serie A non ci sono ──────────────────────────────────
+//
+// Una squadra appena promossa e' in Serie A nel listone e in Serie B nel
+// database del gioco: lo scaricamento filtrato sulla Serie A non la vede, e i
+// suoi calciatori restano tutti senza faccia. Erano tre squadre e ottantuno
+// calciatori, la meta' esatta di quello che restava scoperto.
+//
+// La soglia e' il tasso e non lo zero: una squadra fuori Serie A qualche
+// abbinamento lo ottiene lo stesso, per i cognomi unici in tutto il
+// campionato. Sotto un terzo, pero', il motivo non e' che mancano dei nomi:
+// e' che manca la squadra.
+
+{
+  const conteggio = new Map()
+  for (const e of esiti) {
+    const sq = e.calciatore.serie_a_team
+    if (!conteggio.has(sq)) conteggio.set(sq, { trovati: 0, totale: 0 })
+    const c = conteggio.get(sq)
+    c.totale++
+    if (e.esito === 'ok') c.trovati++
+  }
+
+  const daCercare = [...conteggio.entries()]
+    .filter(([, c]) => c.totale >= 5 && c.trovati / c.totale < 0.34)
+    .map(([sq]) => sq)
+
+  if (daCercare.length) {
+    console.log(`\nSquadre quasi tutte scoperte: ${daCercare.join(', ')}.`)
+    console.log('Le cerco per nome: in Football Manager non sono in Serie A.\n')
+
+    let aggiunti = 0
+    for (const sq of daCercare) {
+      const trovata = await scaricaSquadraPerNome(sq)
+      if (!trovata.squadra) {
+        console.log(`  ✗ ${sq}: non trovata`)
+        continue
+      }
+      console.log(
+        `  → ${sq}: ${trovata.squadra.nome} (${trovata.squadra.divisione}), ` +
+          `${trovata.calciatori.length} calciatori`,
+      )
+      elencoFm = elencoFm.concat(trovata.calciatori)
+      salvaExtra(trovata.calciatori)
+      aggiunti += trovata.calciatori.length
+    }
+
+    if (aggiunti) {
+      esiti = abbina(listone, elencoFm)
+      console.log('')
+    }
+  }
+}
 
 const perSquadra = new Map()
 for (const e of esiti) {

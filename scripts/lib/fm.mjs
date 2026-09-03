@@ -67,7 +67,27 @@ export const VOLTI = join(GRAFICA, 'faces')
 export const LOGHI = join(GRAFICA, 'logos', 'clubs', 'normal')
 
 export const CACHE = join(radice, '.cache')
+
+/**
+ * L'elenco della Serie A, riscritto per intero a ogni scaricamento.
+ */
 export const ELENCO_FM = join(CACHE, 'serie-a-fm.json')
+
+/**
+ * Le squadre che in Football Manager non sono in Serie A, tenute a parte.
+ *
+ * PERCHE' UN SECONDO FILE E NON LO STESSO
+ *
+ * Prima le squadre recuperate per nome venivano aggiunte in coda all'elenco
+ * della Serie A. Funzionava finche' girava un solo script: il successivo
+ * riscaricava la Serie A, sovrascriveva il file e buttava via il lavoro
+ * dell'altro senza dire niente. Se ne accorge solo chi va a rileggere la
+ * cache e non ci trova piu' quello che ci aveva messo.
+ *
+ * Due file separati non si pestano i piedi: uno lo riscrive lo scaricamento,
+ * l'altro si accumula.
+ */
+export const ELENCO_EXTRA = join(CACHE, 'squadre-fuori-serie-a.json')
 
 // ─── Il servizio di ricerca ─────────────────────────────────────────────────
 // Parametri estratti dal codice del sito, come racconta ADR-0011.
@@ -253,6 +273,141 @@ export async function scaricaSerieA() {
   mkdirSync(CACHE, { recursive: true })
   writeFileSync(ELENCO_FM, JSON.stringify(tutti, null, 1))
   return { calciatori: tutti, richieste: pagine }
+}
+
+/**
+ * Una squadra cercata per nome, con la sua rosa.
+ *
+ * PERCHE' SERVE, VISTO CHE LA SERIE A SI SCARICA GIA' TUTTA
+ *
+ * Il listone del fantacalcio e il database di Football Manager sono fotografie
+ * di momenti diversi. Le squadre appena promosse — o appena retrocesse, a
+ * seconda di quale delle due fotografie e' piu' vecchia — stanno da una parte
+ * in Serie A e dall'altra in Serie B, e lo scaricamento filtrato sulla Serie A
+ * non le vede.
+ *
+ * Nel caso reale erano tre squadre, ottantuno calciatori e tre stemmi: la
+ * meta' esatta di tutto quello che restava scoperto.
+ *
+ * PERCHE' IL PRIMO TENTATIVO ERA FALLITO
+ *
+ * Cercavo le squadre con `classification_id:=club`, che non e' un valore
+ * esistente — le squadre hanno `type_id:=team` — e poi filtravo le divisioni
+ * italiane con un'espressione che riconosceva «Italian Serie B» e non «Serie
+ * BKT», che e' il nome vero con lo sponsor. Due filtri sbagliati in fila
+ * davano zero risultati, e zero risultati sembrano «questa squadra non c'e'».
+ *
+ * Adesso non si filtra per divisione affatto: si ordina per reputazione e si
+ * prende la prima squadra il cui nome, ridotto con la stessa chiave usata
+ * ovunque, coincide. La reputazione mette davanti il club vero e lascia in
+ * fondo gli omonimi dilettanti.
+ *
+ * Due condizioni si controllano sui documenti, non sulla divisione, perche' i
+ * documenti le dichiarano e la divisione va interpretata:
+ *
+ *   · **la nazione dev'essere l'Italia.** Senza, cercando «Inter» si ottiene
+ *     l'Inter Miami: la chiave riduce anche quello a «inter», e in Major
+ *     League Soccer la reputazione e' alta. La funzione e' un ripiego per le
+ *     squadre che in Serie A non si sono trovate, quindi quel caso non
+ *     capiterebbe, ma una funzione che puo' restituire il club sbagliato
+ *     prima o poi lo restituisce.
+ *   · **il genere dev'essere maschile.** Le squadre femminili hanno lo stesso
+ *     identico nome e una reputazione alta.
+ *
+ * Resta dentro ADR-0011: due richieste per squadra, e sono poche squadre. Mai
+ * un calciatore alla volta.
+ */
+export async function scaricaSquadraPerNome(nome) {
+  async function cerca(parametri) {
+    const r = await fetch(
+      `${RICERCA.host}/collections/${RICERCA.raccolta}/documents/search?` +
+        new URLSearchParams(parametri),
+      { headers: { 'X-TYPESENSE-API-KEY': RICERCA.chiave } },
+    )
+    if (!r.ok) return null
+    return await r.json()
+  }
+
+  const chiave = chiaveSquadra(nome)
+
+  const squadre = await cerca({
+    q: nome,
+    query_by: 'name',
+    filter_by: 'type_id:=team',
+    sort_by: 'reputation:desc',
+    per_page: '15',
+  })
+
+  const trovata = (squadre?.hits ?? []).find((h) => {
+    const d = h.document
+    if (d.gender && d.gender !== 'mens') return false
+    if ((d.nation?.name ?? '') !== 'Italy') return false
+    return chiaveSquadra(d.name) === chiave
+  })
+
+  if (!trovata) return { squadra: null, calciatori: [] }
+
+  const rosa = await cerca({
+    q: '*',
+    query_by: 'name',
+    filter_by: `classification_id:=player && team.id:=${trovata.document.id}`,
+    sort_by: 'reputation:desc',
+    per_page: '250',
+  })
+
+  const calciatori = (rosa?.hits ?? [])
+    .filter((h) => h.document.fm_id)
+    .map((h) => ({
+      fm_id: Number(h.document.fm_id),
+      nome: h.document.name,
+      squadra: h.document.team?.name ?? trovata.document.name,
+      squadra_fm_id: h.document.team?.fm_id ?? null,
+      reputazione: h.document.reputation ?? 0,
+      alternative: h.document.search_terms ?? [],
+    }))
+
+  return {
+    squadra: {
+      id: trovata.document.id,
+      nome: trovata.document.name,
+      divisione: trovata.document.division?.name ?? null,
+      // L'identificativo di gioco del club sta sul documento della squadra.
+      // I calciatori lo riportano uguale, ma prenderlo da lì significherebbe
+      // non avere lo stemma di una squadra con la rosa vuota.
+      fm_id: Number(trovata.document.fm_id) || calciatori[0]?.squadra_fm_id || null,
+    },
+    calciatori,
+  }
+}
+
+/** Le squadre fuori Serie A gia' scaricate in passato. */
+export function leggiExtra() {
+  try {
+    return JSON.parse(readFileSync(ELENCO_EXTRA, 'utf8'))
+  } catch {
+    return []
+  }
+}
+
+/** Aggiunge una rosa a quelle tenute da parte, senza doppioni. */
+export function salvaExtra(calciatori) {
+  const perFm = new Map(leggiExtra().map((g) => [g.fm_id, g]))
+  for (const g of calciatori) perFm.set(g.fm_id, g)
+  mkdirSync(CACHE, { recursive: true })
+  writeFileSync(ELENCO_EXTRA, JSON.stringify([...perFm.values()], null, 1))
+  return perFm.size
+}
+
+/**
+ * L'elenco completo: la Serie A piu' le squadre tenute da parte.
+ *
+ * E' quello che serve a chi abbina, e nasconde a chi chiama il fatto che
+ * arrivi da due file.
+ */
+export function elencoCompleto(serieA) {
+  const perFm = new Map(serieA.map((g) => [g.fm_id, g]))
+  for (const g of leggiExtra()) if (!perFm.has(g.fm_id)) perFm.set(g.fm_id, g)
+  return [...perFm.values()]
 }
 
 // ─── L'accesso con cui si carica nell'archivio ──────────────────────────────
