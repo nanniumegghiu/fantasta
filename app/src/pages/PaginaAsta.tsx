@@ -31,7 +31,9 @@ import { useTimerAsta } from '@/features/asta/useTimer'
 import { ImpostazioniPreAsta } from '@/features/asta/ImpostazioniPreAsta'
 import { PannelloAmministratore } from '@/features/asta/PannelloAmministratore'
 import { RegistroAsta } from '@/features/asta/RegistroAsta'
+import { Stemma } from '@/components/Stemma'
 import { Volto } from '@/components/Volto'
+import { useLoghi } from '@/features/listone/loghi'
 import { useVolti } from '@/features/listone/volti'
 import type { Ruolo } from '@/domain/listone'
 
@@ -229,6 +231,7 @@ function InAstaOra({
   }, [lotto.current_bid, lotto.current_bidder_team_id, offertaMinima])
 
   const volto = useVolti()
+  const stemma = useLoghi()
   const offerente = squadre.find((s) => s.team_id === lotto.current_bidder_team_id)
   const sonoInTesta = mioBudget?.team_id === lotto.current_bidder_team_id
   const massimo = mioBudget?.massimo_offribile ?? 0
@@ -289,6 +292,11 @@ function InAstaOra({
         <div className="min-w-0 flex-1">
           <p className="truncate text-xl font-extrabold text-nebbia">{lotto.players.name}</p>
           <p className="cifre-fisse truncate text-sm text-fumo">
+            <Stemma
+              squadra={lotto.players.serie_a_team}
+              indirizzo={stemma(lotto.players.serie_a_team)}
+              misura={16}
+            />
             {lotto.players.serie_a_team} · quotazione {lotto.players.quotation}
           </p>
         </div>

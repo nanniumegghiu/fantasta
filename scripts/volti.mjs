@@ -35,6 +35,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { chiaveSquadra, normalizza } from './lib/fm.mjs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -108,79 +109,9 @@ function argomento(nome, ripiego) {
  * Ulien». Senza questo passaggio l'abbinamento fallirebbe su un nome su dieci
  * per motivi tipografici, non di identita'.
  */
-/**
- * Le lettere che la decomposizione degli accenti non scompone.
- *
- * «Guðmundsson» e «Gudmundsson» sono la stessa persona, ma la ð non è una d
- * con un segno sopra: è una lettera a sé, e `normalize('NFD')` non la tocca.
- * Senza questa tabella quel calciatore resta senza faccia, e con lui le Ø
- * scandinave, le Ł polacche e le Đ balcaniche, che nel calcio non sono rare.
- *
- * Trovate guardando i candidati che `--proponi` metteva al primo posto: il
- * nome giusto c'era, e l'abbinamento automatico non ci arrivava per una
- * lettera.
- */
-const LETTERE_INTERE = {
-  'ð': 'd', 'þ': 'th', 'ø': 'o', 'œ': 'oe', 'æ': 'ae',
-  'ł': 'l', 'đ': 'd', 'ħ': 'h', 'ı': 'i', 'ß': 'ss',
-}
-
-function normalizza(s) {
-  return (s ?? '')
-    .toLowerCase()
-    .replace(/[\u00f0\u00fe\u00f8\u0153\u00e6\u0142\u0111\u0127\u0131\u00df]/g,
-      (c) => LETTERE_INTERE[c] ?? c)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
-/**
- * I nomi delle squadre nei due elenchi non coincidono quasi mai: il listone
- * dice «Inter», Football Manager «F.C. Internazionale Milano».
- *
- * Invece di una tabella di traduzione da tenere aggiornata a mano ogni volta
- * che una squadra cambia denominazione sociale, si riduce il nome alla parola
- * piu' lunga che non sia una sigla societaria. «F.C. Internazionale Milano»
- * diventa «internazionale», «Hellas Verona F.C.» diventa «hellas verona».
- * Le poche eccezioni che restano stanno qui sotto, e sono poche apposta.
- */
-const RUMORE = new Set([
-  'fc', 'f', 'c', 'ac', 'a', 'as', 'ss', 'ssc', 'us', 'usc', 'acf', 'cfc',
-  'calcio', 'football', 'club', 'spa', '1909', '1913', '1907', 'de',
-])
-
-const ECCEZIONI_SQUADRA = new Map([
-  ['inter', 'internazionale'],
-  ['milan', 'milan'],
-  ['verona', 'hellas verona'],
-  ['atalanta', 'atalanta bergamasca'],
-  ['roma', 'roma'],
-  ['lazio', 'lazio'],
-  ['napoli', 'napoli'],
-  ['juventus', 'juventus'],
-  ['fiorentina', 'fiorentina'],
-  ['torino', 'torino'],
-  ['bologna', 'bologna'],
-  ['genoa', 'genoa'],
-  ['udinese', 'udinese'],
-  ['cagliari', 'cagliari'],
-  ['lecce', 'lecce'],
-  ['parma', 'parma'],
-  ['como', 'como'],
-  ['sassuolo', 'sassuolo'],
-  ['cremonese', 'cremonese'],
-  ['pisa', 'pisa'],
-])
-
-function chiaveSquadra(nome) {
-  const pulito = normalizza(nome)
-  if (ECCEZIONI_SQUADRA.has(pulito)) return ECCEZIONI_SQUADRA.get(pulito)
-  const parole = pulito.split(' ').filter((p) => p && !RUMORE.has(p))
-  // La parola piu' lunga e' quasi sempre quella che identifica la squadra.
-  return parole.sort((a, b) => b.length - a.length)[0] ?? pulito
-}
+// La normalizzazione dei nomi e la chiave delle squadre stanno in
+// `lib/fm.mjs`: le usa anche `loghi.mjs`, e due copie che divergono
+// vorrebbero dire le facce di una squadra e lo stemma di un'altra.
 
 /**
  * Le forme sotto cui un calciatore puo' comparire.
@@ -623,6 +554,23 @@ async function carica(esiti, stagione, limite) {
     if (!r.ok) {
       console.log(`  ✗ ${e.calciatore.name}: ${r.status} ${(await r.text()).slice(0, 120)}`)
       continue
+    }
+
+    // ─── La guardia ─────────────────────────────────────────────────────────
+    // «confermata» vuol dire che una persona ha guardato quella faccia e ha
+    // detto che e' quella giusta. Vale come promessa: nessun giro automatico
+    // la tocca piu'. Proprio per questo un automatismo non puo' metterla, o
+    // sarebbe una promessa fatta a nome di nessuno.
+    //
+    // E' successo davvero: venti righe si sono trovate marcate confermate
+    // senza che nessuno le avesse confermate, e sarebbero rimaste fuori da
+    // ogni correzione futura e da ogni revisione. Non ho ricostruito come, e
+    // per questo la difesa sta qui, dove il dato viene scritto.
+    if (e.origine === 'confermata' && !process.argv.includes('--manuale')) {
+      throw new Error(
+        `${e.calciatore.name}: il giro automatico stava per scrivere «confermata». ` +
+          "Solo --manuale, dove una persona sceglie, puo' farlo.",
+      )
     }
 
     righe.push({

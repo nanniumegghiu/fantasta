@@ -3,7 +3,9 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import { Intestazione } from '@/components/Intestazione'
 import { Bottone } from '@/components/Bottone'
 import { Link } from 'react-router-dom'
+import { Stemma } from '@/components/Stemma'
 import { Volto } from '@/components/Volto'
+import { useLoghi } from '@/features/listone/loghi'
 import { useVolti } from '@/features/listone/volti'
 import { useSonoAmministratoreApp } from '@/features/listone/api'
 import {
@@ -246,6 +248,7 @@ function Tabella({
   setOrdine: (o: { chiave: string; crescente: boolean }) => void
 }) {
   const volto = useVolti()
+  const stemma = useLoghi()
   const contenitore = useRef<HTMLDivElement>(null)
 
   // Con oltre cinquecento righe si disegnano solo quelle visibili: una tabella
@@ -328,7 +331,14 @@ function Tabella({
                     />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-nebbia">{c.name}</p>
-                      <p className="truncate text-[11px] text-fumo">{c.serie_a_team}</p>
+                      <p className="flex items-center gap-1 truncate text-[11px] text-fumo">
+                        <Stemma
+                          squadra={c.serie_a_team}
+                          indirizzo={stemma(c.serie_a_team)}
+                          misura={13}
+                        />
+                        {c.serie_a_team}
+                      </p>
                     </div>
                   </div>
 

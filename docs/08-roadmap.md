@@ -129,7 +129,7 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Immagini caricate nell archivio | ✅ 403, indirizzi firmati a blocchi |
 | Volti nel listone, nell asta e sullo schermo condiviso | ✅ con ricaduta sulle iniziali |
 | Schermata di abbinamento manuale | ✅ `/volti`, più `--proponi` e `--manuale` dal terminale |
-| Loghi delle squadre | 🔴 il logopack c è, non è ancora usato |
+| Loghi delle squadre | ✅ 17 su 20; le tre mancanti non sono in Serie A nel gioco |
 
 *Descrizione originale della fetta:*
 
@@ -179,6 +179,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.16 | 2026-09-04 | Stemmi delle squadre, e la chiave dei nomi resa simmetrica. |
 | 1.15 | 2026-09-04 | Revisione dei volti a mano, e cinque abbinamenti recuperati dalle lettere nordiche. |
 | 1.14 | 2026-09-04 | Pubblicata online. Il link gira davvero su WhatsApp. |
 | 1.13 | 2026-09-04 | Fetta 7 costruita: scambi fra squadre. |

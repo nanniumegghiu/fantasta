@@ -128,6 +128,11 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
     mescolava tutte le stagioni presenti nel database, comprese quelle finte delle prove
     automatiche, e chi apriva la pagina vedeva «P1 Prova» in mezzo ai calciatori veri.
 
+    Lo **stemma** della squadra sta accanto al nome della squadra. Quando manca non lascia un
+    segnaposto: il nome è scritto lì di fianco, e un quadrato grigio aggiungerebbe rumore senza
+    aggiungere niente. È il contrario della scelta fatta per i volti, e per un motivo preciso: lì
+    la mancanza lascerebbe un buco in una riga fatta di immagini, qui no.
+
     Il **volto** del calciatore, quando c'è, sta accanto al nome. Quando non c'è ci sono le
     iniziali sul colore del ruolo: un quarto dei calciatori non ha la foto e ce ne saranno sempre,
     quindi la ricaduta non è un caso limite ma metà del disegno. Vale anche quando l'immagine
@@ -323,6 +328,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.12 | 2026-09-04 | Stemmi delle squadre nel listone, nell asta e sullo schermo condiviso. |
 | 1.11 | 2026-09-04 | Schermata di revisione dei volti, con i due lavori tenuti separati. |
 | 1.10 | 2026-09-04 | Scambi fra squadre, con il conto dei reparti che si vede mentre si sceglie. |
 | 1.9 | 2026-09-04 | I volti dei calciatori nel listone, nell asta e sullo schermo condiviso. |

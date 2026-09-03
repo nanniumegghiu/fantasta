@@ -282,6 +282,45 @@ arrivava per una lettera.
 Aggiunta una tabella per ð, þ, ø, œ, æ, ł, đ, ħ, ı, ß: **da 437 a 442 abbinati**, da 420 a 424 con
 la foto. È il tipo di cosa che si vede solo guardando cosa il sistema propone quando sbaglia.
 
+## 2bis-ter. Gli stemmi delle squadre
+
+Lo stemma appartiene alla **squadra**, non ai suoi venticinque calciatori: sta in una tabella sua
+(`club_logos`, chiave stagione + nome della squadra) e non in una colonna su `players`, dove
+sarebbe ripetuto venticinque volte e andrebbe aggiornato in venticinque posti.
+
+**Gli identificativi dei club non costano una richiesta.** Ogni calciatore scaricato porta la sua
+squadra e l'identificativo di quella squadra: le venti squadre si ricavano contando. La squadra di
+una riga del listone è quella che i suoi calciatori hanno più spesso — un criterio che non dipende
+da come si chiama la società, ma da chi ci gioca, che è un dato più solido.
+
+### Il difetto che gli stemmi hanno fatto emergere
+
+Le prime venti squadre davano 16 stemmi su 20, e fra i mancanti c'era **l'Atalanta**, che in Serie A
+c'è eccome. La causa non era il logopack: era `chiaveSquadra`, che riduceva i nomi in modo **non
+simmetrico**.
+
+| Nome | Prima | Perché |
+|---|---|---|
+| «Atalanta» (listone) | `atalanta bergamasca` | Finiva in una tabella di eccezioni |
+| «Atalanta Bergamasca Calcio» (FM) | `bergamasca` | Non ci finiva, e si prendeva la parola più lunga |
+
+Due chiavi diverse per la stessa squadra. Adesso il criterio è uno solo per entrambe le parti: fra
+le parole significative si cerca un nome di squadra conosciuto, e quello è la chiave.
+
+**Ha rimesso a posto anche le facce**, perché la stessa funzione serviva all'abbinamento dei
+calciatori: da 442 a 444 abbinati, ma soprattutto i **dedotti dal solo cognome sono scesi da 34 a
+8**. I calciatori dell'Atalanta prima si abbinavano per fortuna — cognome unico in tutta la Serie A
+— e adesso si abbinano per squadra, che è il criterio affidabile.
+
+Per questo `chiaveSquadra` sta ora in `scripts/lib/fm.mjs`, insieme a `normalizza`: due copie
+che divergono vorrebbero dire le facce di una squadra e lo stemma di un'altra.
+
+### Tre squadre restano senza
+
+Venezia, Monza e Frosinone: in Football Manager non sono in Serie A, perché il listone caricato è di
+un'annata diversa. Lo stesso motivo degli 81 calciatori senza faccia, e la stessa risposta: non è un
+difetto da correggere, è un dato da dire.
+
 ## 2ter. L'esportazione, com'e' fatta
 
 Fetta 6, costruita il 4 settembre 2026. Il formato e' quello di ADR-0008 e non si discute; quello

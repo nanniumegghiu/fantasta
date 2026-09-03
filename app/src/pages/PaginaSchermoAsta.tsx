@@ -30,7 +30,9 @@ import {
   suonoTic,
 } from '@/features/asta/suoni'
 import { CLASSE_RUOLO, NOME_RUOLO, ORDINE_RUOLI } from '@/features/obiettivi/tipi'
+import { Stemma } from '@/components/Stemma'
 import { Volto } from '@/components/Volto'
+import { useLoghi } from '@/features/listone/loghi'
 import { useVolti } from '@/features/listone/volti'
 import type { Ruolo } from '@/domain/listone'
 
@@ -312,6 +314,7 @@ function InAsta({
   squadre: BudgetSquadra[]
 }) {
   const volto = useVolti()
+  const stemma = useLoghi()
   const offerente = squadre.find((s) => s.team_id === lotto.current_bidder_team_id)
   const stat = lotto.players.player_stats
   const inCountdown = timer.fase === 'countdown' || timer.fase === 'scaduto'
@@ -344,6 +347,11 @@ function InAsta({
               {lotto.players.name}
             </p>
             <p className="truncate text-3xl text-fumo">
+              <Stemma
+                squadra={lotto.players.serie_a_team}
+                indirizzo={stemma(lotto.players.serie_a_team)}
+                misura={40}
+              />
               {lotto.players.serie_a_team}
               <span className="cifre-fisse"> · quotazione {lotto.players.quotation}</span>
             </p>

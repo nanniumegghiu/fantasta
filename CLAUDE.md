@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.7 · **Data** · 2026-09-04
+**Versione documento** · 2.8 · **Data** · 2026-09-04
 
 ---
 
@@ -183,7 +183,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Compagni di lega finti per provare l asta da soli | ✅ 18 prove, `node scripts/verifica-amici-di-prova.mjs` |
 | **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
 | Accesso con Google | 🟡 tutto pronto, mancano le due chiavi da Google Cloud: `node scripts/accendi-google.mjs --istruzioni` |
-| Fetta 5: facepack | ✅ 403 volti caricati, 98% dei calciatori abbinabili |
+| Fetta 5: facepack | ✅ 408 volti e 17 stemmi su 20 squadre |
 | Fetta 5b: revisione dei volti a mano | ✅ 15 prove, schermata `/volti` più `--proponi` e `--manuale` |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
@@ -217,6 +217,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node --experimental-strip-types scripts/verifica-esportazione.mjs` | Quattordici prove sul file delle rose. Le piu importanti provano nomi di squadra con punto e virgola, virgolette e ritorni a capo: un CSV rotto non da errore, sposta le colonne di uno. |
 | `node scripts/verifica-volti.mjs` | Quindici prove sui volti. La piu importante: un abbinamento confermato a mano non lo sovrascrive nessun giro automatico. |
 | `node scripts/accendi-google.mjs` | Accende l accesso con Google quando le due chiavi sono in `.env.local`. Con `--istruzioni` stampa i cinque minuti da fare su Google Cloud, con dentro l indirizzo di ritorno gia pronto. |
+| `node scripts/loghi.mjs` | Gli stemmi delle squadre dal logopack. Gli identificativi dei club arrivano gratis dallo stesso scaricamento dei volti. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
 | `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
@@ -248,6 +249,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.8 | 2026-09-04 | Gli stemmi delle squadre. La chiave dei nomi di squadra era asimmetrica: corretta, e l Atalanta ha ritrovato stemma e facce. |
 | 2.7 | 2026-09-04 | Revisione dei volti a mano: schermata per chi amministra, proposte dal terminale, e cinque abbinamenti recuperati sistemando le lettere nordiche. |
 | 2.6 | 2026-09-04 | Pubblicata online su GitHub Pages, con compilazione automatica a ogni push. Repository pubblico. |
 | 2.5 | 2026-09-04 | Fetta 7: scambi fra squadre, con la regola dei reparti che pareggiano e la rivalidazione al momento dell accettazione. |

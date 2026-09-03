@@ -169,6 +169,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.15 | 2026-09-04 | Stemmi delle squadre, firmati a blocchi come i volti. |
 | 1.14 | 2026-09-04 | Schermata di revisione dei volti, raggiungibile dal listone. |
 | 1.13 | 2026-09-04 | Pubblicata online su GitHub Pages: percorso base, ricaduta per le rotte, compilazione automatica. |
 | 1.12 | 2026-09-04 | Esportazione delle rose e scambi fra squadre nella schermata della lega. |
