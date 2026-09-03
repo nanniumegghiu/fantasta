@@ -142,6 +142,13 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
     somma dei massimali è quindi il piano di spesa vero, non una stima per eccesso: se sfora i
     crediti, il piano non regge, e la schermata lo dice con parole diverse da quelle delle fasce.
 
+    **La pagina è viva durante l'asta**, sullo stesso canale dell'asta stessa, e **nasconde i
+    calciatori che qualcuno ha già comprato**: si vede solo quello che si può ancora prendere. Non
+    si cancella niente dal database, e una riga dice quanti sono spariti e da chi sono stati presi,
+    con un tocco per riguardarli. Sparire in silenzio lascerebbe il dubbio di aver perso una riga
+    per un difetto. Insieme agli obiettivi spariscono i legami che li nominano, altrimenti uno slot
+    risulterebbe «coperto» da un candidato appena finito nella rosa di un altro.
+
     Fasce e slot sono **divisi per reparto**, e in cima c'è un filtro che ne lascia vedere uno solo.
     Scegliendo i nomi per una fascia di difensori non compaiono gli attaccanti: non è un aiuto alla
     ricerca, è la regola del modello, e il server la fa rispettare comunque.
@@ -153,9 +160,23 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
 
 **Asta**
 
+**La freccia indietro torna da dove si veniva.** Non «un piano più su»: durante un'asta si esce di
+continuo per un secondo — guardo un obiettivo, controllo il listone, torno — e una destinazione fissa
+riportava alla schermata della lega, con tre tocchi per rientrare e magari una chiamata persa.
+`Intestazione` usa la cronologia quando c'è, e la destinazione fissa solo quando non c'è: cioè
+arrivando da un collegamento esterno o riaprendo l'app su quella schermata.
+
 13. Vista personale dell'asta: calciatore in asta, mie informazioni su di lui, rilanci +1, +5, +10
     e libero, crediti, obiettivi residui, accesso rapido a rose e listone. La scorciatoia agli
     obiettivi porta al **solo reparto in corso** e lo dice nel nome: «I miei difensori».
+
+    **La mia rosa è sempre aperta**, con i calciatori presi, il prezzo pagato e i posti vuoti
+    tratteggiati. I contatori da soli dicono quanto manca, non chi ho già preso, ed è il secondo
+    dato che serve mentre si rilancia.
+
+    **Le rose degli avversari si aprono toccandole**, una alla volta. Aperte tutte insieme sarebbero
+    duecento righe fra chi guarda e il pulsante per rilanciare; chiuse del tutto costringerebbero a
+    cambiare schermata proprio nel momento in cui servono.
 14. Vista amministratore dell'asta: la precedente più i poteri di conduzione, su **due piani**.
 
     Sopra, sempre visibile, **solo l'azione del momento**: aggiudicare quando c'è un'offerta,
@@ -266,6 +287,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.7 | 2026-09-03 | Rose nella vista personale, obiettivi vivi senza i calciatori gia comprati, freccia indietro che torna da dove si veniva. |
 | 1.6 | 2026-09-03 | Schermo condiviso con le rose intere e i prezzi. Comandi di conduzione a due piani, con il secondo a scomparsa. |
 | 1.5 | 2026-09-03 | Colonna del ruolo nel listone. Gli slot sono i posti del regolamento, con un massimale a testa. Tutte le schermate provate tranne l asta in corso. |
 | 1.4 | 2026-09-03 | Obiettivi divisi per reparto, con il filtro del reparto in corso. |

@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.0 · **Data** · 2026-09-03
+**Versione documento** · 2.1 · **Data** · 2026-09-03
 
 ---
 
@@ -175,7 +175,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Fetta 1: leghe, inviti, squadre, regolamento in PDF | ✅ 32 prove su 32 lato server |
 | Fetta 2: importazione listone e statistiche, tabella | ✅ 19 prove su 19 lato server |
 | Fetta 3: lista obiettivi, per reparto e con gli slot del regolamento | ✅ 44 prove su 44 lato server |
-| Fetta 4: asta completa, sette varianti, passo, poteri admin | ✅ 68 prove su 68 lato server |
+| Fetta 4: asta completa, sette varianti, passo, poteri admin | ✅ 70 prove su 70 lato server |
 | L asta scorre da sola, e a listone finito si riempie per nome | ✅ 11 prove, nate dalla prima asta provata davvero |
 | Tutte le schermate tranne l asta in corso | ✅ aperte e provate dall utente il 3 settembre 2026 |
 | Vista personale e schermo condiviso con un asta viva | 🟡 provati una prima volta, e rifatti su quello che è emerso |
@@ -209,7 +209,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-leghe.mjs` | Trentadue prove su leghe, inviti, squadre e regolamento. Con `--pulisci` rimuove gli utenti di prova. |
 | `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciannove prove sulla lettura dei file e sull importazione del listone. Due sono la sentinella: un calciatore vero che deve sopravvivere alle prove e alla pulizia. Costruisce da zero un vero `.xlsx` per provarci sopra. |
 | `node scripts/verifica-obiettivi.mjs` | Quarantaquattro prove sulla lista obiettivi: fra le altre, che un attaccante non entri in una fascia di difensori e che il numero degli slot non si possa toccare dal client. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
-| `node scripts/verifica-asta.mjs` | Ventisei prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete. |
+| `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
 | `node scripts/verifica-asta-completa.mjs` | Quarantadue prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore, la catena che si apre da sola, il riempimento per nome e la rete di sicurezza. |
 | `node scripts/amici-di-prova.mjs` | **Non è una verifica, è un attrezzo.** Mette in lega compagni finti con cui provare un asta da soli, e permette di rilanciare per conto loro dalla riga di comando. |
 | `node scripts/verifica-amici-di-prova.mjs` | Diciotto prove sull attrezzo qui sopra, lanciandolo davvero dentro una lega di prova. |
@@ -238,6 +238,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.1 | 2026-09-03 | Rose sempre in vista nella schermata personale, obiettivi vivi che nascondono chi e gia stato comprato, e la freccia indietro che torna da dove si veniva. |
 | 2.0 | 2026-09-03 | Prima asta provata davvero. La catena dei lotti si apre da sola, a listone finito si riempie per nome, lo schermo condiviso mostra le rose intere, i comandi di conduzione stanno a scomparsa. |
 | 1.9 | 2026-09-03 | Gli slot sono i posti del regolamento, con un massimale a testa. Colonna del ruolo nel listone. Tutte le schermate provate tranne l asta in corso. |
 | 1.8 | 2026-09-03 | Fasce e slot divisi per reparto, con il filtro che nasconde gli altri tre. L asta pesca solo dal listone della stagione della lega. |

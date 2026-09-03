@@ -5,6 +5,8 @@ import { Bottone } from '@/components/Bottone'
 import { Intestazione } from '@/components/Intestazione'
 import { Interruttore } from '@/components/Interruttore'
 import { ListaRiordinabile } from '@/components/ListaRiordinabile'
+import { useAccesso } from '@/features/auth/ContestoAccesso'
+import { useBudgetSquadre, useCanaleAsta, useRose } from '@/features/asta/api'
 import { useLega } from '@/features/leghe/api'
 import { totaleSlot } from '@/features/leghe/tipi'
 import {
@@ -49,8 +51,23 @@ import type { Ruolo } from '@/domain/listone'
 export function PaginaObiettivi() {
   const { id: idLega } = useParams()
   const { data: lega } = useLega(idLega)
-  const { data: lista, isPending, error } = useListaObiettivi(idLega)
+  const { data: listaGrezza, isPending, error } = useListaObiettivi(idLega)
   const [cambioMetodo, setCambioMetodo] = useState(false)
+  const [mostraPresi, setMostraPresi] = useState(false)
+
+  // ─── Viva durante l'asta ──────────────────────────────────────────────────
+  // Il canale è lo stesso dell'asta: quando qualcuno compra, le rose si
+  // ricaricano e questa pagina si aggiorna con loro. Senza, si guarderebbe un
+  // elenco fermo a com'era all'apertura, e si preparerebbe una chiamata su un
+  // calciatore già di un altro.
+  useCanaleAsta(idLega)
+  const { data: rose } = useRose(idLega)
+
+  // Chi è già stato comprato, da chiunque. Il dato viene dalle rose e non da
+  // `targets.status`: le rose sono la verità, lo stato è una copia che
+  // potrebbe restare indietro.
+  const { utente } = useAccesso()
+  const { data: budget } = useBudgetSquadre(idLega)
 
   // Il reparto scelto sta nell'indirizzo, non nello stato: così dall'asta si
   // arriva già filtrati sul ruolo che si sta chiamando, e il collegamento si
@@ -64,6 +81,17 @@ export function PaginaObiettivi() {
     setParametri(p, { replace: true })
   }
 
+  // Si distingue «l'hai preso tu» da «l'ha preso un altro»: a fine serata è
+  // una differenza che conta, e costa una riga.
+  const idMiaSquadra = budget?.find((b) => b.user_id === utente?.id)?.team_id ?? null
+  const compratiDaMe = new Set<number>()
+  const compratiDaAltri = new Set<number>()
+  for (const r of rose ?? []) {
+    if (idMiaSquadra && r.team_id === idMiaSquadra) compratiDaMe.add(r.player_id)
+    else compratiDaAltri.add(r.player_id)
+  }
+  const comprati = new Set<number>([...compratiDaMe, ...compratiDaAltri])
+
   if (isPending) {
     return (
       <Guscio idLega={idLega}>
@@ -72,7 +100,7 @@ export function PaginaObiettivi() {
     )
   }
 
-  if (error || !lista) {
+  if (error || !listaGrezza) {
     return (
       <Guscio idLega={idLega}>
         <p role="alert" className="rounded-2xl border border-errore/40 bg-errore/10 p-5 text-sm text-errore">
@@ -81,6 +109,39 @@ export function PaginaObiettivi() {
       </Guscio>
     )
   }
+
+  /**
+   * La lista senza i calciatori che non si possono più comprare.
+   *
+   * Si tolgono gli obiettivi **e i legami che li nominano**: slot e incroci
+   * puntano agli obiettivi per identificativo, e lasciare i legami orfani
+   * farebbe contare come «coperto» uno slot il cui unico candidato è appena
+   * finito nella rosa di un altro. Sarebbe un conto che dice il contrario di
+   * quello che si vede.
+   *
+   * Nessuno viene cancellato dal database: qui si nasconde, e con un tocco si
+   * riguardano. A fine serata sapere chi ti è sfuggito, e a chi, è metà del
+   * divertimento.
+   */
+  const presi = listaGrezza.targets.filter((t) => comprati.has(t.player_id))
+  const lista = ((): typeof listaGrezza => {
+    if (mostraPresi || presi.length === 0) return listaGrezza
+    const restano = new Set(
+      listaGrezza.targets.filter((t) => !comprati.has(t.player_id)).map((t) => t.id),
+    )
+    return {
+      ...listaGrezza,
+      targets: listaGrezza.targets.filter((t) => restano.has(t.id)),
+      roster_slots: listaGrezza.roster_slots.map((slot) => ({
+        ...slot,
+        slot_candidates: slot.slot_candidates.filter((c) => restano.has(c.target_id)),
+      })),
+      goalkeeper_pairings: listaGrezza.goalkeeper_pairings.map((g) => ({
+        ...g,
+        pairing_members: g.pairing_members.filter((m) => restano.has(m.target_id)),
+      })),
+    }
+  })()
 
   // Finché non ha scelto, la schermata è la scelta. Non si apre un ambiente
   // già impostato per lui su un metodo che non ha deciso.
@@ -107,14 +168,25 @@ export function PaginaObiettivi() {
 
       <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
         <Riservatezza />
+        <GiaPresi
+          quantiTuoi={presi.filter((t) => compratiDaMe.has(t.player_id)).length}
+          quantiAltrui={presi.filter((t) => compratiDaAltri.has(t.player_id)).length}
+          mostrati={mostraPresi}
+          onMostra={() => setMostraPresi((v) => !v)}
+        />
         <Riepilogo lista={lista} creditiLega={lega?.credits_initial} rosa={lega ? totaleSlot(lega) : undefined} />
         <BarraMetodo lista={lista} idLega={idLega} onCambia={() => setCambioMetodo(true)} />
         <FiltroReparto scelto={ruoloScelto} onScegli={scegliRuolo} lista={lista} />
 
         {lista.metodo === 'fasce' ? (
-          <SezioneFasce lista={lista} idLega={idLega} ruoloScelto={ruoloScelto} />
+          <SezioneFasce
+            lista={lista}
+            idLega={idLega}
+            ruoloScelto={ruoloScelto}
+            comprati={comprati}
+          />
         ) : (
-          <SezioneSlot lista={lista} idLega={idLega} ruoloScelto={ruoloScelto} />
+          <SezioneSlot lista={lista} idLega={idLega} ruoloScelto={ruoloScelto} comprati={comprati} />
         )}
 
         {lista.usa_incroci && (ruoloScelto === null || ruoloScelto === 'P') && (
@@ -130,6 +202,53 @@ function Guscio({ idLega, children }: { idLega: string | undefined; children: Re
     <div className="min-h-dvh">
       <Intestazione titolo="I miei obiettivi" indietroA={`/lega/${idLega}`} />
       <div className="mx-auto max-w-3xl px-4 py-6">{children}</div>
+    </div>
+  )
+}
+
+// ─── Chi non si può più prendere ────────────────────────────────────────────
+
+/**
+ * Quanti obiettivi sono usciti di scena, e un modo per riguardarli.
+ *
+ * Toglierli e basta lascerebbe il dubbio di aver perso una riga per un difetto.
+ * Una frase che dice quanti sono, e un tocco per rivederli, costano poco e
+ * tolgono ogni ambiguità.
+ */
+function GiaPresi({
+  quantiTuoi,
+  quantiAltrui,
+  mostrati,
+  onMostra,
+}: {
+  quantiTuoi: number
+  quantiAltrui: number
+  mostrati: boolean
+  onMostra: () => void
+}) {
+  const totale = quantiTuoi + quantiAltrui
+  if (totale === 0) return null
+
+  const pezzi = [
+    quantiTuoi > 0 ? `${quantiTuoi} ${quantiTuoi === 1 ? 'preso' : 'presi'} da te` : null,
+    quantiAltrui > 0 ? `${quantiAltrui} dagli avversari` : null,
+  ].filter(Boolean)
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-verde-campo bg-verde-campo/20 px-4 py-3 text-sm">
+      <span aria-hidden>⚡</span>
+      <span className="text-fumo">
+        {mostrati
+          ? `Stai vedendo anche i ${totale} obiettivi non più disponibili.`
+          : `${pezzi.join(', ')}: ${totale === 1 ? 'nascosto' : 'nascosti'}.`}
+      </span>
+      <button
+        type="button"
+        onClick={onMostra}
+        className="ml-auto font-semibold text-oro underline underline-offset-4"
+      >
+        {mostrati ? 'nascondili' : 'mostrali'}
+      </button>
     </div>
   )
 }
@@ -383,10 +502,13 @@ function SezioneFasce({
   lista,
   idLega,
   ruoloScelto,
+  comprati,
 }: {
   lista: ListaObiettivi
   idLega: string | undefined
   ruoloScelto: Ruolo | null
+  /** Chi ha già una rosa: non si propone più a nessuno. */
+  comprati: Set<number>
 }) {
   const aggiungiFascia = useAggiungiFascia(idLega)
   const aggiungiA = useAggiungiAFascia(idLega)
@@ -398,9 +520,12 @@ function SezioneFasce({
     (x) => !x.tier_id && (!ruoloScelto || x.players.role === ruoloScelto),
   )
 
-  /** Chi è già fra i tuoi obiettivi di quel reparto: non si ripropone. */
+  /** Chi non va più proposto: i tuoi obiettivi di quel reparto, e i comprati. */
   function giaNelReparto(ruolo: Ruolo): Set<number> {
-    return new Set(lista.targets.filter((x) => x.players.role === ruolo).map((x) => x.player_id))
+    return new Set([
+      ...lista.targets.filter((x) => x.players.role === ruolo).map((x) => x.player_id),
+      ...comprati,
+    ])
   }
 
   return (
@@ -688,10 +813,13 @@ function SezioneSlot({
   lista,
   idLega,
   ruoloScelto,
+  comprati,
 }: {
   lista: ListaObiettivi
   idLega: string | undefined
   ruoloScelto: Ruolo | null
+  /** Chi ha già una rosa: non si propone più a nessuno. */
+  comprati: Set<number>
 }) {
   const aggiungiA = useAggiungiASlot(idLega)
   const [selettore, setSelettore] = useState<{ slot: string; ruolo: Ruolo; nome: string } | null>(null)
@@ -704,14 +832,15 @@ function SezioneSlot({
     (t) => !inQualcheSlot.has(t.id) && (!ruoloScelto || t.players.role === ruoloScelto),
   )
 
-  /** Chi è già candidato in quello slot: solo lui va escluso dalla scelta. */
+  /** Chi è già candidato in quello slot, più chiunque sia già stato comprato. */
   function giaInSlot(idSlot: string): Set<number> {
     const s = lista.roster_slots.find((x) => x.id === idSlot)
-    return new Set(
-      (s?.slot_candidates ?? [])
+    return new Set([
+      ...(s?.slot_candidates ?? [])
         .map((c) => perObiettivo.get(c.target_id)?.player_id)
         .filter((n): n is number => typeof n === 'number'),
-    )
+      ...comprati,
+    ])
   }
 
   // Gli slot li allinea il server a ogni apertura della lista. Se qui non ce

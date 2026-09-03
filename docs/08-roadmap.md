@@ -108,6 +108,8 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Prova su dispositivi veri | 🟡 prima asta provata con compagni finti, quattro difetti trovati e corretti |
 | La catena dei lotti si apre da sola | ✅ dopo aggiudicazioni e passaggi, nei metodi a estrazione |
 | Riempimento finale: si rimette all asta un nome cercato | ✅ 11 prove |
+| Rose proprie e altrui nella vista personale | ✅ 2 prove su chi puo vederle |
+| Obiettivi vivi: spariscono i calciatori gia comprati | ✅ sullo stesso canale dell asta |
 
 | Sotto-fetta | Contenuto | Come si dimostra |
 |---|---|---|
@@ -166,6 +168,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.9 | 2026-09-03 | Rose sempre in vista, obiettivi vivi, navigazione che torna in asta. |
 | 1.8 | 2026-09-03 | Prima asta provata davvero, con compagni di lega finti. Catena automatica, riempimento per nome, schermo condiviso con le rose. |
 | 1.7 | 2026-09-03 | Slot come il regolamento, con un massimale a testa. Colonna del ruolo nel listone. Tutte le schermate provate tranne l asta in corso. |
 | 1.6 | 2026-09-03 | Fasce per reparto e filtro del reparto in corso. L asta pesca solo dal listone della stagione della lega. |

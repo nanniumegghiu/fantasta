@@ -509,6 +509,34 @@ esito(
   `calciatori duplicati: ${duplicati.length}`,
 )
 
+// ─── Quello che ogni partecipante puo vedere degli altri ────────────────────
+//
+// Su questo poggiano due cose della vista personale: le rose avversarie che si
+// aprono toccandole, e la lista obiettivi che nasconde chi e' gia' stato
+// comprato. Se le rose altrui non fossero leggibili, tutte e due mostrerebbero
+// il vuoto senza dire perche'.
+
+const roseViste = await leggi(
+  amico,
+  `roster_players?select=team_id,player_id,price,players(name,role)&league_id=eq.${lega}`,
+)
+const squadreViste = new Set((roseViste.corpo ?? []).map((r) => r.team_id))
+const conPrezzo = (roseViste.corpo ?? []).every((r) => typeof r.price === 'number')
+esito(
+  'Un partecipante vede le rose di tutti, con i prezzi pagati',
+  roseViste.stato === 200 && squadreViste.size === 2 && conPrezzo,
+  `${roseViste.corpo?.length ?? 0} acquisti su ${squadreViste.size} squadre, prezzi presenti: ${conPrezzo}`,
+)
+
+// Serve qui e solo qui: uno che nella lega non c'entra niente.
+const estraneo = await registra('estraneo')
+const roseDaFuori = await leggi(estraneo, `roster_players?select=player_id&league_id=eq.${lega}`)
+esito(
+  'Chi non e della lega non vede nessuna rosa',
+  roseDaFuori.stato === 200 && (roseDaFuori.corpo?.length ?? 0) === 0,
+  `HTTP ${roseDaFuori.stato}, righe restituite: ${roseDaFuori.corpo?.length ?? 0}`,
+)
+
 // ─── Riepilogo ──────────────────────────────────────────────────────────────
 
 await reteAttiva(true)

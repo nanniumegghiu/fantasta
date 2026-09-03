@@ -23,6 +23,7 @@ import {
   useRilancia,
   useRose,
   useScartoOrologio,
+  type AcquistoInRosa,
   type BudgetSquadra,
   type Lotto,
 } from '@/features/asta/api'
@@ -149,8 +150,19 @@ export function PaginaAsta() {
               </section>
             )}
 
-            {mioBudget && lega && <IlMioBudget budget={mioBudget} lega={lega} rose={rose ?? []} />}
-            <Avversari squadre={budget ?? []} idMio={mioBudget?.team_id} />
+            {mioBudget && lega && (
+              <LaMiaRosa
+                budget={mioBudget}
+                lega={lega}
+                acquisti={(rose ?? []).filter((r) => r.team_id === mioBudget.team_id)}
+              />
+            )}
+            <Avversari
+              squadre={budget ?? []}
+              idMio={mioBudget?.team_id}
+              rose={rose ?? []}
+              lega={lega}
+            />
           </>
         )}
 
@@ -521,15 +533,90 @@ function TuoTurno({
 }
 
 // ─── Il mio budget ──────────────────────────────────────────────────────────
+// ─── Le rose, la mia e quelle degli altri ───────────────────────────────────
 
-function IlMioBudget({
+/**
+ * Una rosa compatta: i calciatori presi, per reparto, con il prezzo pagato, e
+ * i posti ancora vuoti tratteggiati.
+ *
+ * La usano sia la mia squadra sia gli avversari, con la stessa forma. Due
+ * disegni diversi per la stessa informazione costringerebbero a rileggere il
+ * secondo dopo aver imparato il primo, e durante un'asta non c'è tempo.
+ */
+function Rosa({
+  acquisti,
+  previsti,
+  compatta,
+}: {
+  acquisti: AcquistoInRosa[]
+  previsti: Record<Ruolo, number>
+  compatta?: boolean
+}) {
+  const perRuolo: Record<Ruolo, AcquistoInRosa[]> = { P: [], D: [], C: [], A: [] }
+  for (const a of acquisti) perRuolo[a.players.role].push(a)
+  for (const r of ORDINE_RUOLI) {
+    perRuolo[r].sort((a, b) => b.price - a.price || a.players.name.localeCompare(b.players.name, 'it'))
+  }
+
+  return (
+    <div className={compatta ? 'flex flex-col gap-2' : 'flex flex-col gap-3'}>
+      {ORDINE_RUOLI.map((r) => {
+        const presi = perRuolo[r]
+        const vuoti = Math.max(0, previsti[r] - presi.length)
+        return (
+          <div key={r}>
+            <div className="flex items-center gap-2">
+              <span
+                className={`flex size-5 shrink-0 items-center justify-center rounded text-[10px] font-bold ${CLASSE_RUOLO[r]}`}
+              >
+                {r}
+              </span>
+              <span className="cifre-fisse text-xs text-fumo">
+                {presi.length}/{previsti[r]}
+              </span>
+              <span className="h-px flex-1 bg-verde-campo" />
+            </div>
+
+            <ul className="mt-1">
+              {presi.map((a) => (
+                <li key={a.id} className="flex items-baseline gap-2 py-0.5">
+                  <span className="min-w-0 flex-1 truncate text-sm text-nebbia">
+                    {a.players.name}
+                    <span className="text-xs text-fumo"> · {a.players.serie_a_team}</span>
+                  </span>
+                  <span className="cifre-fisse shrink-0 text-sm font-bold text-oro">{a.price}</span>
+                </li>
+              ))}
+
+              {/* I posti vuoti si vedono: sono quello che resta da fare. */}
+              {Array.from({ length: vuoti }, (_, i) => (
+                <li key={`vuoto-${r}-${i}`} aria-hidden className="py-0.5">
+                  <span className="block border-b border-dashed border-fumo/25 text-sm">&nbsp;</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * La mia squadra, sempre aperta.
+ *
+ * Prima qui c'erano solo i contatori per reparto. Dicono quanto manca, non chi
+ * ho già preso: e chi ha già preso il portiere non offre sul secondo portiere
+ * allo stesso prezzo. Il dato serve mentre si rilancia, non dopo.
+ */
+function LaMiaRosa({
   budget,
   lega,
-  rose,
+  acquisti,
 }: {
   budget: BudgetSquadra
   lega: { slots_p: number; slots_d: number; slots_c: number; slots_a: number }
-  rose: Array<{ team_id: string; price: number }>
+  acquisti: AcquistoInRosa[]
 }) {
   const previsti: Record<Ruolo, number> = {
     P: lega.slots_p,
@@ -537,16 +624,10 @@ function IlMioBudget({
     C: lega.slots_c,
     A: lega.slots_a,
   }
-  const presi: Record<Ruolo, number> = {
-    P: budget.presi_p,
-    D: budget.presi_d,
-    C: budget.presi_c,
-    A: budget.presi_a,
-  }
-  const spesi = rose.filter((r) => r.team_id === budget.team_id).reduce((s, r) => s + r.price, 0)
+  const spesi = acquisti.reduce((s, a) => s + a.price, 0)
 
   return (
-    <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
+    <section className="rounded-2xl border border-verde-acceso/30 bg-verde-campo/30 p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="min-w-0 truncate text-base font-bold text-nebbia">{budget.name}</h2>
         <p className="cifre-fisse shrink-0 text-2xl font-extrabold text-oro">
@@ -558,47 +639,91 @@ function IlMioBudget({
         {budget.slot_rimanenti} slot su {totaleSlot(lega)}
       </p>
 
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {ORDINE_RUOLI.map((r) => (
-          <div key={r} className="rounded-xl bg-verde-notte px-2 py-2 text-center">
-            <span
-              className={`mx-auto mb-1 flex size-6 items-center justify-center rounded-full text-[10px] font-bold ${CLASSE_RUOLO[r]}`}
-              title={NOME_RUOLO[r]}
-            >
-              {r}
-            </span>
-            <p className="cifre-fisse text-base font-bold text-nebbia">
-              {presi[r]}
-              <span className="text-xs text-fumo">/{previsti[r]}</span>
-            </p>
-          </div>
-        ))}
+      <div className="mt-3">
+        <Rosa acquisti={acquisti} previsti={previsti} />
       </div>
     </section>
   )
 }
 
-// ─── Gli avversari ──────────────────────────────────────────────────────────
-
-function Avversari({ squadre, idMio }: { squadre: BudgetSquadra[]; idMio: string | undefined }) {
+/**
+ * Gli avversari: la riga con i crediti c'è sempre, la rosa si apre toccandola.
+ *
+ * Aperte tutte insieme sarebbero duecento righe fra me e il pulsante per
+ * rilanciare. Chiuse del tutto costringerebbero a cambiare schermata proprio
+ * mentre si decide quanto offrire, che è il momento in cui servono.
+ */
+function Avversari({
+  squadre,
+  idMio,
+  rose,
+  lega,
+}: {
+  squadre: BudgetSquadra[]
+  idMio: string | undefined
+  rose: AcquistoInRosa[]
+  lega: { slots_p: number; slots_d: number; slots_c: number; slots_a: number } | null | undefined
+}) {
+  const [aperta, setAperta] = useState<string | null>(null)
   const altri = squadre.filter((s) => s.team_id !== idMio)
   if (altri.length === 0) return null
 
+  const previsti: Record<Ruolo, number> = {
+    P: lega?.slots_p ?? 3,
+    D: lega?.slots_d ?? 8,
+    C: lega?.slots_c ?? 8,
+    A: lega?.slots_a ?? 6,
+  }
+
   return (
     <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
-      <h2 className="mb-2 text-base font-bold text-nebbia">Gli avversari</h2>
+      <h2 className="mb-1 text-base font-bold text-nebbia">Gli avversari</h2>
+      <p className="mb-2 text-xs text-fumo">Tocca una squadra per vedere la sua rosa.</p>
+
       <ul className="flex flex-col divide-y divide-verde-campo">
-        {altri.map((s) => (
-          <li key={s.team_id} className="flex items-baseline gap-3 py-2">
-            <span className="min-w-0 flex-1 truncate text-sm text-nebbia">{s.name}</span>
-            <span className="cifre-fisse shrink-0 text-xs text-fumo">
-              max {s.massimo_offribile} · {s.slot_rimanenti} slot
-            </span>
-            <span className="cifre-fisse shrink-0 text-base font-bold text-oro">
-              {s.credits_remaining}
-            </span>
-          </li>
-        ))}
+        {altri.map((s) => {
+          const suoi = rose.filter((r) => r.team_id === s.team_id)
+          const eAperta = aperta === s.team_id
+          return (
+            <li key={s.team_id}>
+              <button
+                type="button"
+                onClick={() => setAperta(eAperta ? null : s.team_id)}
+                aria-expanded={eAperta}
+                className="flex w-full items-baseline gap-3 py-2.5 text-left"
+              >
+                <span
+                  aria-hidden
+                  className={`shrink-0 text-xs text-fumo transition-transform ${eAperta ? 'rotate-90' : ''}`}
+                >
+                  ▶
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm text-nebbia">{s.name}</span>
+                <span className="cifre-fisse shrink-0 text-xs text-fumo">
+                  max {s.massimo_offribile} · {s.slot_rimanenti} slot
+                </span>
+                <span className="cifre-fisse shrink-0 text-base font-bold text-oro">
+                  {s.credits_remaining}
+                </span>
+              </button>
+
+              {eAperta && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden pb-3 pl-6"
+                >
+                  {suoi.length === 0 ? (
+                    <p className="text-xs text-fumo">Non ha ancora comprato nessuno.</p>
+                  ) : (
+                    <Rosa acquisti={suoi} previsti={previsti} compatta />
+                  )}
+                </motion.div>
+              )}
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
