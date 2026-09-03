@@ -60,7 +60,7 @@ export function Intestazione({ titolo, sottotitolo, indietroA, azione, conMarchi
         )}
 
         {conMarchio && (
-          <img src="/icona-512.png" alt="" width={36} height={36} className="size-9 rounded-lg" />
+          <img src={`${import.meta.env.BASE_URL}icona-512.png`} alt="" width={36} height={36} className="size-9 rounded-lg" />
         )}
 
         <div className="min-w-0 flex-1">

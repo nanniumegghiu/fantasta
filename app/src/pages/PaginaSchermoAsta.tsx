@@ -180,7 +180,7 @@ function SchermataAttivazione({ lega, onAttiva }: { lega?: string; onAttiva: () 
 
   return (
     <div className="flex h-dvh flex-col items-center justify-center gap-6 bg-verde-notte px-6 text-center">
-      <img src="/icona-512.png" alt="" width={160} height={160} className="size-40" />
+      <img src={`${import.meta.env.BASE_URL}icona-512.png`} alt="" width={160} height={160} className="size-40" />
       <MarchioFantasta className="text-6xl" />
       {lega && <p className="text-2xl text-fumo">{lega}</p>}
 

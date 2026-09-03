@@ -213,7 +213,10 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      {/* Il percorso base lo decide la compilazione: senza, aprendo
+          /fantasta/leghe il router cercherebbe la rotta «/fantasta/leghe»
+          e non la troverebbe. */}
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <FornitoreAccesso>
           <Suspense fallback={<Caricamento />}>
             <Rotte />

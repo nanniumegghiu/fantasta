@@ -1,0 +1,92 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# Pubblicazione di Fantasta su GitHub Pages.
+#
+# Si compila qui e non sul computer di casa: cosi' quello che finisce online e'
+# sempre quello che sta nel ramo principale, e non dipende da cosa aveva
+# installato chi ha premuto il pulsante.
+#
+# LE DUE CHIAVI
+# `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` finiscono dentro il pacchetto
+# compilato, che e' pubblico: sono fatte per stare in ogni browser che apre
+# l'app, e cio' che protegge i dati sono le regole di accesso del database, non
+# la loro segretezza. Stanno comunque nei segreti del repository invece che nel
+# codice, per due motivi pratici: si cambiano senza toccare un file, e chi
+# legge il repository non le scambia per qualcosa da copiare.
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Pubblica
+
+on:
+  push:
+    branches: [master]
+  # Serve a ripubblicare senza dover fare un commit finto.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Una pubblicazione alla volta. Se ne parte una mentre un'altra e' in corso,
+# quella vecchia si lascia finire invece di interromperla a meta': un
+# annullamento a caso lascerebbe online un sito composto per meta'.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  compila:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      # `npm ci` e non `npm install`: installa esattamente le versioni del
+      # file di blocco. L'elenco delle dipendenze e' chiuso per decisione
+      # (ADR-0006), e una versione diversa arrivata di nascosto la
+      # contraddirebbe.
+      - run: npm ci
+        working-directory: app
+
+      - run: npx tsc -b
+        working-directory: app
+
+      - run: npm run build
+        working-directory: app
+        env:
+          # Il repository si chiama fantasta, quindi l'app sta sotto /fantasta/.
+          VITE_BASE: /fantasta/
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_GOOGLE_ABILITATO: ${{ vars.VITE_GOOGLE_ABILITATO || 'false' }}
+
+      # Se le chiavi mancassero, l'app compilerebbe lo stesso e mostrerebbe la
+      # schermata «manca la configurazione» a tutti. Meglio accorgersene qui.
+      - name: Le chiavi ci sono davvero
+        run: |
+          if ! grep -rqs "supabase.co" app/dist/assets; then
+            echo "Il pacchetto compilato non contiene l'indirizzo di Supabase."
+            echo "Controlla i segreti VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY."
+            exit 1
+          fi
+          echo "Indirizzo di Supabase presente nel pacchetto."
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  pubblica:
+    needs: compila
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

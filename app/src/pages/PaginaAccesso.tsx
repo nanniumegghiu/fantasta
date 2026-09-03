@@ -81,7 +81,7 @@ export function PaginaAccesso() {
       >
         <div className="mb-8 flex flex-col items-center text-center">
           <img
-            src="/icona-512.png"
+            src={`${import.meta.env.BASE_URL}icona-512.png`}
             alt=""
             width={96}
             height={96}

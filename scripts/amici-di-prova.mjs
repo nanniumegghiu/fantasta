@@ -29,7 +29,7 @@
 //   node scripts/amici-di-prova.mjs --stato           chi e' in asta e a quanto
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -52,11 +52,44 @@ const URL_BASE = envApp.VITE_SUPABASE_URL
 const CHIAVE = envApp.VITE_SUPABASE_ANON_KEY
 const ref = URL_BASE.replace('https://', '').split('.')[0]
 
-// Una password sola per tutti, e scritta qui in chiaro apposta: sono account
-// finti su un dominio che non esiste, dentro il tuo progetto di prova. Una
-// password diversa per ognuno vorrebbe dire tenerne un elenco da qualche
-// parte, ed e' un elenco di password che non serve a nessuno.
-const PASSWORD = 'provaprova'
+/**
+ * La password degli amici finti.
+ *
+ * PERCHE' NON E' PIU' SCRITTA QUI
+ * Lo era, in chiaro, con la scusa che sono account finti su un dominio che non
+ * esiste. La scusa regge finche' l'app resta sul computer di casa: appena
+ * viene pubblicata online, quella riga in un repository pubblico diventa la
+ * password buona per entrare nella lega vera e vedere — o rovinare — un'asta.
+ *
+ * Adesso sta in `.env.local`, che non e' versionato. Se manca, se ne genera
+ * una e la si scrive li': non c'e' niente da ricordare e niente da decidere.
+ *
+ * Una sola per tutti resta la scelta giusta: dieci password diverse vorrebbero
+ * dire tenerne un elenco, e sarebbe un elenco di password che non serve a
+ * nessuno.
+ */
+function assicuraPassword() {
+  if (envRad.FANTASTA_PASSWORD_AMICI) return envRad.FANTASTA_PASSWORD_AMICI
+
+  const nuova =
+    'amici-' +
+    Math.random().toString(36).slice(2, 10) +
+    Math.random().toString(36).slice(2, 6)
+
+  const percorso = join(radice, '.env.local')
+  const testo = readFileSync(percorso, 'utf8')
+  writeFileSync(
+    percorso,
+    testo.replace(/\s*$/, '') +
+      '\n\n# Password degli amici di prova, generata da scripts/amici-di-prova.mjs.\n' +
+      '# Sta qui e non nel codice: il codice puo\' finire in un repository pubblico.\n' +
+      `FANTASTA_PASSWORD_AMICI=${nuova}\n`,
+  )
+  console.log(`Password degli amici generata e salvata in .env.local: ${nuova}\n`)
+  return nuova
+}
+
+const PASSWORD = assicuraPassword()
 
 // Il dominio si puo' spostare solo per provare questo script stesso: la
 // verifica ha bisogno di amici finti tutti suoi, perche' --elimina porta via
