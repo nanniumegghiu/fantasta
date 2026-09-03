@@ -3,7 +3,8 @@
 **Scopo** · Descrivere da dove arrivano i dati dei calciatori, come si associano le foto del
 facepack, e in che formato escono le rose a fine asta.
 **Proprietario** · backend-engineer
-**Stato** · 🟡 importazione di listone e statistiche realizzata e verificata su file costruiti · 🔴 mai provata sul file ufficiale vero · facepack ed esportazione 🔴
+**Stato** · ✅ listone vero caricato, 531 calciatori 2026/27 con statistiche · ✅ facepack al **95%** e
+20 stemmi su 20 · ✅ esportazione costruita e provata, 🔴 **mai caricata davvero nell'app Fantacalcio**
 **Data** · 2026-09-02
 
 ---
@@ -247,6 +248,58 @@ una reputazione alta.
 | Dedotti dal solo cognome | 8 | **0** |
 | Non trovati | 83 | **5** |
 | Stemmi | 17 su 20 | **20 su 20** |
+
+### Poi si è scoperto che il 92% era il 95%
+
+L'utente ha detto una cosa che sembrava un'impressione e invece era un'osservazione: «molti dei
+volti mancanti nel facepack ci sono». Aveva ragione, e dietro c'erano **tre difetti diversi**,
+tutti nascosti dalla stessa frase, «manca la foto».
+
+**Il limite di caricamento tagliava sempre la coda.** Il numero massimo di immagini valeva di
+default «quanti hanno il file nel facepack», ma la fetta veniva presa sull'elenco degli
+**abbinati**, che è più lungo: chi è abbinato e il file non ce l'ha occupava un posto senza
+caricare niente. Ogni giro perdeva in fondo esattamente tanti volti quanti erano i senza file —
+sempre gli ultimi, e a listone fermo sempre gli stessi. **Diciassette facce** sono rimaste fuori
+così per tutta la vita dello script, e nessun conteggio lo diceva perché i due numeri, 504
+disponibili e 487 caricati, comparivano in due righe diverse dell'output.
+
+**Le abbreviazioni di più di una lettera.** Il listone scrive «Martinez Jo.» e «Pessina Mas.». Il
+codice cercava un'iniziale di **una** lettera e tagliava le code fino a **due** caratteri: «Jo.»
+non veniva riconosciuta come abbreviazione, «Mas.» restava attaccata al cognome. Adesso
+l'abbreviazione si riconosce **dal punto**, non dalla lunghezza:
+
+> Tagliare per lunghezza vuol dire scegliere un numero, e ogni numero sbaglia da una parte: a due
+> lettere si perde «Pessina Mas.», a tre si perde il cognome di «Mario Rui». Il punto invece lo
+> mette il listone apposta, ed è lì solo quando l'abbreviazione c'è davvero.
+
+**I doppioni non sono ambiguità.** Piana e Ziółkowski risultavano ambigui perché nel gioco
+compaiono **due volte**, stesso identico nome e due identificativi: capita ai ragazzi delle
+giovanili appena saliti in prima squadra. Fra due copie della stessa persona si prende quella che
+nel facepack ha la faccia; l'altra è una riga e basta.
+
+| | Prima | Dopo |
+|---|---|---|
+| Abbinati | 521 su 531 | **525** |
+| Con la foto caricata | 487 (92%) | **507 (95%)** |
+| Ambigui | 5 | **2** |
+| Non trovati | 5 | **4** |
+
+### I ventiquattro che restano, divisi per motivo
+
+«Manca la foto» nasconde situazioni che si risolvono in modi diversi, e metterle insieme fa
+perdere tempo sul problema sbagliato. Per questo `scripts/volti-mancanti.mjs` le separa:
+
+| Quanti | Situazione | Cosa si può fare |
+|---|---|---|
+| 18 | **Identificati**, ma quel volto nel facepack non esiste | Niente: nessuna regola di abbinamento fa comparire un file che non c'è. Sono tutti giovani con identificativo `2000…` |
+| 2 | **Ambigui**: due persone plausibili, tutte e due col volto | Lo decide una persona |
+| 4 | **Non trovati** con nessuna grafia | Lo decide una persona |
+
+Per i sei che restano `scripts/volti-cerca.mjs` interroga fmref **una grafia alla volta**, solo su
+chi è rimasto fuori, e dice se quella faccia nel facepack c'è. Resta dentro ADR-0011: una manciata
+di richieste a tavolino, mai una durante l'asta. Non scrive niente — propone. La decisione si
+registra con `volti.mjs --conferma "Terracciano=43017977"`, che può scrivere «confermata» perché
+dietro c'è una persona che ha guardato, esattamente come in `--manuale`.
 
 Lo zero della terza riga è il numero che conta più degli altri: ogni abbinamento rimasto nasce
 dall'incrocio di cognome **e** squadra, che è il criterio affidabile. Nessuno resta appeso alla

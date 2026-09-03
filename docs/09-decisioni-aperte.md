@@ -251,13 +251,21 @@ quelli presenti in almeno una lista obiettivi.
 
 ---
 
-## D10 · Cosa succede se un partecipante va espulso
+## D10 · Cosa succede se un partecipante va espulso — ✅ CHIUSA dai fatti
 
 Se l'amministratore toglie qualcuno dalla lega ad asta iniziata, la sua rosa che fine fa: i
 calciatori tornano svincolati, oppure la squadra resta come è, orfana?
 
-**Raccomandazione** · Impedire l'espulsione ad asta aperta. È il caso più semplice e più difendibile.
-**Costo di inversione** · Basso.
+**Raccomandazione originale** · Impedire l'espulsione ad asta aperta.
+
+**Com'è andata a finire, ed è meglio della raccomandazione.** Il caso si è presentato davvero, e
+la risposta è più fine di «si può» / «non si può»: **la persona e la squadra sono due cose
+separate**. Si toglie il partecipante e la squadra resta, con la sua rosa e i suoi crediti
+intatti; più tardi la si affida a qualcun altro. Il turno d'asta salta le squadre senza
+proprietario, così l'asta va avanti anche nel mezzo.
+
+Migrazioni `20260904150000` e `20260904170000`, 20 prove in `verifica-partecipanti.mjs`.
+**Costo di inversione** · Non si applica più.
 
 ---
 

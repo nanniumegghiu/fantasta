@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.2 · **Data** · 2026-09-04
+**Versione documento** · 3.3 · **Data** · 2026-09-04
 
 ---
 
@@ -157,8 +157,10 @@ toglie o si scrive un ADR che supera il precedente.
 
 ## 7. Stato attuale e prossimo passo
 
-**Stato** · Prima sessione conclusa. Struttura, documentazione, decisioni e **Fetta 0 costruita**.
-L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: mancano le due chiavi.
+**Stato** · Le fette da 0 a 7 sono costruite, verificate una per una e **pubblicate online**.
+Resta la Fetta 8, la revisione iper-critica, e restano tre cose scritte come mancanti invece che
+taciute: il recupero della password, il CSV mai caricato nell'app Fantacalcio, e un'asta vera in
+movimento su più di un dispositivo.
 
 | Area | Stato |
 |---|---|
@@ -166,7 +168,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Documentazione di area, 10 documenti | ✅ scritta |
 | Agenti, 6 · Skill, 5 | ✅ scritti |
 | Palette estratta dal logo | ✅ fatto, valori reali dai pixel |
-| Decisioni | ✅ 5 chiuse con ADR, 7 aperte non bloccanti |
+| Decisioni | ✅ 9 chiuse, 3 minori aperte e nessuna bloccante |
 | ADR | ✅ 7 scritti |
 | Applicazione: struttura, compilazione, icone | ✅ fatto, compilazione verificata |
 | Backend Supabase creato e attivo | ✅ progetto `fantasta`, migrazione applicata |
@@ -182,15 +184,21 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Vista personale e schermo condiviso con un asta viva | 🟡 provati una prima volta, e rifatti su quello che è emerso |
 | Compagni di lega finti per provare l asta da soli | ✅ 18 prove, `node scripts/verifica-amici-di-prova.mjs` |
 | **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
-| Accesso con Google | 🟡 tutto pronto, mancano le due chiavi da Google Cloud: `node scripts/accendi-google.mjs --istruzioni` |
+| Accesso con Google | ✅ acceso e verificato sul sito pubblicato |
+| **Recupero della password** | 🔴 **non esiste**. Messo da parte per scelta il 4 settembre 2026, non per svista |
 | Fetta 5: facepack | ✅ 507 volti su 531 (95%) e 20 stemmi su 20 |
 | Fetta 5b: revisione dei volti a mano | ✅ 15 prove, schermata `/volti` più `--proponi` e `--manuale` |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
+| Il CSV caricato davvero nell app Fantacalcio | 🔴 mai provato sul sito vero |
+| Un asta vera, in movimento, su più dispositivi | 🔴 mai fatta |
+| Fetta 8: revisione iper-critica | 🟡 iniziata, grafica e animazioni comprese |
 
-**Prossimo passo** · Provare **un'asta vera su due dispositivi**, con lo schermo condiviso acceso:
-è l'unica parte che nessuno ha ancora visto viva. Le altre schermate l'utente le ha aperte e provate
-il 3 settembre 2026. Poi la Fetta 5, il facepack, e la Fetta 6, l'esportazione delle rose.
+**Prossimo passo** · **Un'asta vera dall'inizio alla fine**, condotta da chi amministra con avversari
+automatici che rilanciano da soli, per arrivare a rose complete e provare l'ultimo passo che nessuno
+ha mai provato: caricare il CSV nell'app Fantacalcio. In parallelo la **Fetta 8**, con la grafica e
+le animazioni fra gli oggetti dell'esame — l'utente le ha giudicate scarne, e «funziona» non è la
+stessa cosa di «è viva».
 
 ---
 
@@ -253,6 +261,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.3 | 2026-09-04 | Documentazione riallineata al codice, e tre buchi scritti come tali invece che taciuti: password, CSV, asta mai vissuta. |
 | 3.2 | 2026-09-04 | Venti volti recuperati: il limite di caricamento tagliava sempre la coda, le abbreviazioni di due lettere non erano riconosciute e i doppioni della stessa persona bloccavano l abbinamento. |
 | 3.1 | 2026-09-04 | Un codice di sei caratteri apre lo schermo condiviso sul televisore, senza accesso e senza indirizzi lunghi da digitare col telecomando. |
 | 3.0 | 2026-09-04 | Un asta chiusa per sbaglio si riapre, e una squadra puo cambiare proprietario conservando rosa e crediti. |

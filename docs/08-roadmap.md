@@ -3,8 +3,9 @@
 **Scopo** · Stabilire in che ordine si costruisce, con l'unica regola che conta: ogni fetta deve
 finire in qualcosa che si può **mostrare e usare**, non in uno strato invisibile.
 **Proprietario** · project-manager
-**Stato** · 🟡 Fette da 0 a 4 costruite e verificate. Tutte le schermate aperte e provate, tranne l asta in corso
-**Data** · 2026-09-02
+**Stato** · 🟡 Fette da 0 a 7 costruite e verificate una per una. Resta la Fetta 8, e resta la
+prova che nessuna verifica sostituisce: **un asta vera, in movimento, con piu di un dispositivo**.
+**Data** · 2026-09-04
 
 ---
 
@@ -23,7 +24,7 @@ compreso, e si chiude con la revisione iper-critica prima di usare l'app sul ser
 
 ---
 
-### Fetta 0 · Fondamenta — 🟡 in corso
+### Fetta 0 · Fondamenta — 🟡 costruita, con un buco dichiarato
 
 Progetto creato, backend attivo, accesso funzionante, pubblicazione online.
 
@@ -38,8 +39,19 @@ vuota col mio nome, esco e rientro.
 | Regole di accesso provate violandole | ✅ 7 prove su 7 superate |
 | Registrazione e accesso con email | ✅ verificati via richieste reali |
 | Schermate viste in un browser | ✅ aperte e provate dall utente il 3 settembre 2026 |
-| Accesso con Google | 🔴 provider non ancora configurato |
-| Pubblicazione online | 🔴 |
+| Accesso con Google | ✅ provider acceso, tasto verificato sul sito pubblicato |
+| Pubblicazione online | ✅ https://nanniumegghiu.github.io/fantasta |
+| **Recupero della password** | 🔴 **non esiste**: vedi qui sotto |
+
+**Il buco, scritto perche' non si dimentichi.** Non c'e' nessun «password dimenticata», nessun
+recupero, nessun cambio password. Chi si e' registrato con email e password e la perde **resta
+fuori per sempre**, e l'amministratore non puo' aiutarlo: nel database non c'e' niente da
+premere. Con l'accesso Google il caso e' piu' raro, non impossibile.
+
+E' la stessa regola che l'asta chiusa per sbaglio ha gia' insegnato — *ogni porta che si chiude
+deve avere la maniglia dall'altro lato, nel posto dove ti accorgi che e' chiusa* — e qui la
+maniglia non c'e'. **Messo da parte per scelta dell'utente il 4 settembre 2026**, non per
+dimenticanza: resta 🔴 finche' non esiste.
 
 ### Fetta 1 · Leghe, inviti e squadre — ✅ costruita e provata
 
@@ -121,12 +133,13 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | **4e · Chiamata con passo** | Esclusione dai rilanci, chiusura anticipata. | Tutti passano tranne uno e il lotto si chiude subito. |
 | **4f · Integrazione obiettivi** | Durante l'asta la lista mostra solo gli obiettivi liberi, col contatore; il calciatore in asta mostra le mie note e il mio tetto. | Chiamo un mio obiettivo e vedo il tetto che mi ero dato. |
 
-### Fetta 5 · Facepack — ✅ costruita, 🟡 manca l'abbinamento manuale
+### Fetta 5 · Facepack — ✅ costruita e completa
 
 | Pezzo | Stato |
 |---|---|
-| Ponte automatico verso gli identificativi di Football Manager | ✅ 437 abbinati su 531 |
-| Immagini caricate nell archivio | ✅ 403, indirizzi firmati a blocchi |
+| Ponte automatico verso gli identificativi di Football Manager | ✅ 525 abbinati su 531 |
+| Immagini caricate nell archivio | ✅ **507 su 531, il 95%**, indirizzi firmati a blocchi |
+| Chi resta fuori, e perche' | ✅ 18 identificati che nel facepack non ci sono, 6 da chiedere a una persona |
 | Volti nel listone, nell asta e sullo schermo condiviso | ✅ con ricaduta sulle iniziali |
 | Schermata di abbinamento manuale | ✅ `/volti`, più `--proponi` e `--manuale` dal terminale |
 | Loghi delle squadre | ✅ 20 su 20, comprese quelle che nel gioco giocano in Serie B |
@@ -136,18 +149,34 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 Caricamento in blocco, associazione automatica, schermata di abbinamento manuale per il resto, foto
 nel listone e nelle rose.
 
-### Fetta 6 · Fine asta ed esportazione
+### Fetta 6 · Fine asta ed esportazione — ✅ costruita, 🟡 mai passata dal sito vero
 
-Rilevamento rose complete, riepilogo finale, esportazione CSV della propria rosa o di tutte.
+| Pezzo | Stato |
+|---|---|
+| Rilevamento rose complete e chiusura automatica | ✅ provato dentro `verifica-asta.mjs` |
+| Esportazione CSV, propria rosa o tutte | ✅ 14 prove, `verifica-esportazione.mjs` |
+| Quattro colonne come le istruzioni ufficiali | ✅ ADR-0008 |
+| **Il file caricato davvero nell app Fantacalcio** | 🔴 **mai fatto** |
 
-### Fetta 7 · Scambi
+La differenza fra le prime tre righe e la quarta e' tutta la differenza che conta. Le prove
+verificano che il file sia **come abbiamo deciso che dev'essere**; solo il caricamento vero
+verifica che sia **come lo vuole chi lo legge**. E' l'ultimissimo passo dell'intera applicazione:
+un formato sbagliato si scopre la sera in cui serve.
 
-Proposta, accettazione, conguaglio in crediti se le regole lo permettono. Solo se la lega li attiva.
+### Fetta 7 · Scambi — ✅ costruita e provata
 
-### Fetta 8 · Revisione iper-critica
+| Pezzo | Stato |
+|---|---|
+| Proposta, accettazione, rifiuto | ✅ 20 prove, `verifica-scambi.mjs` |
+| I reparti devono pareggiare | ✅ la regola che tiene in piedi le rose |
+| Rivalidazione al momento dell accettazione | ✅ una rosa cambiata nel frattempo non passa |
+
+### Fetta 8 · Revisione iper-critica — 🟡 iniziata il 4 settembre 2026
 
 Applicazione di `Metodo-QA-Testing-Iper-Critico.md` sull'app funzionante, un percorso per volta,
-partendo dall'asta.
+partendo dall'asta. **Con attenzione dichiarata alla grafica e alle animazioni**: l'utente le ha
+giudicate scarne, e «funziona» non e' la stessa cosa di «e' viva». Vedi
+`docs/qa/` per i rapporti.
 
 ---
 
@@ -171,14 +200,21 @@ non è decorativa: è il criterio di chiusura.
 
 ## Aperto / TODO
 
-- 🔴 Nessuna schermata è mai stata aperta in un browser: è la verifica che manca, e ormai riguarda quindici pagine.
-- 🔴 Serve il file ufficiale del listone per provare l importazione sul formato vero.
+- 🔴 **Recupero della password: non esiste.** Messo da parte per scelta, non per svista. Vedi Fetta 0.
+- 🔴 **Il CSV delle rose non è mai stato caricato nell'app Fantacalcio.** Vedi Fetta 6.
+- 🟡 **Un'asta vera, in movimento.** Finora: prove lato server, e una simulazione con compagni finti
+  da un dispositivo solo. Quattro difetti erano usciti da quella; da una vera ne escono altri.
+- 🟡 **Fetta 8**, iniziata, con la grafica e le animazioni fra gli oggetti dell'esame.
+- 🟡 Una prova di `verifica-asta-completa.mjs` è fallita **una volta sola** e non si è più
+  riprodotta in tre rilanci. Lasciata dichiarata come irrisolta invece che fatta sparire.
 - ✅ Pubblicazione online: https://nanniumegghiu.github.io/fantasta, ricompilata a ogni push.
+- ✅ Il listone vero è caricato: 531 calciatori 2026/27, con statistiche, volti e stemmi.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.18 | 2026-09-04 | Stato riallineato al codice: fette 6 e 7 chiuse, Google e pubblicazione fatte, e tre buchi scritti come tali — password, CSV mai caricato, asta mai vissuta. |
 | 1.17 | 2026-09-04 | Le squadre fuori Serie A si cercano per nome: 92% dei volti e tutti gli stemmi. |
 | 1.16 | 2026-09-04 | Stemmi delle squadre, e la chiave dei nomi resa simmetrica. |
 | 1.15 | 2026-09-04 | Revisione dei volti a mano, e cinque abbinamenti recuperati dalle lettere nordiche. |
