@@ -233,6 +233,31 @@ Lo script non chiede la password personale del proprietario. Si crea un account 
 i permessi di amministrazione con la chiave di gestione che già usa per le migrazioni, e **lo
 cancella appena finito**. Nessun segreto nuovo entra nel progetto.
 
+## 2ter. L'esportazione, com'e' fatta
+
+Fetta 6, costruita il 4 settembre 2026. Il formato e' quello di ADR-0008 e non si discute; quello
+che si e' deciso qui e' il contorno.
+
+**Si vede prima di scaricare.** Anteprima delle righe e avvertimenti — squadre incomplete, nomi con
+caratteri che nei fogli danno noia — prima che il file esista. Un file che non si carica si scopre
+dall'altra parte, a serata finita: il momento in cui l'errore costa poco e' prima.
+
+**Il separatore si sceglie.** Le istruzioni ufficiali dicono quali colonne servono, non con che
+carattere separarle. Il valore predefinito e' il punto e virgola, che e' quello che Excel in
+italiano si aspetta; la virgola e' a un tocco, e la schermata dice quando provarla. Indovinare per
+l'utente e sbagliare vorrebbe dire lasciarlo fermo senza sapere cosa tentare.
+
+**I campi si proteggono secondo RFC 4180.** Prima o poi qualcuno chiamera' la sua squadra «Bomber;
+il ritorno» per scherzo. Senza virgolette quel file si rompe in silenzio e sposta tutte le colonne
+di uno: il portiere di uno diventa il prezzo di un altro. E' la prova a cui e' dedicata meta' della
+verifica.
+
+**C'e' il segno d'ordine dei byte.** Senza, Excel apre gli accenti come caratteri strani e chi
+guarda pensa che il file sia sbagliato.
+
+Resta vero quello che dice ADR-0008: **una specifica letta non e' un caricamento riuscito.** Il
+formato va provato con un caricamento vero prima di dire che la fetta e' chiusa.
+
 ## 3. File coinvolti
 
 🔴 Nessuno. Previsti: `app/src/features/import/`, `app/src/features/export/`,

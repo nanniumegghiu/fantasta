@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.3 · **Data** · 2026-09-04
+**Versione documento** · 2.4 · **Data** · 2026-09-04
 
 ---
 
@@ -184,7 +184,8 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
 | Fetta 5: facepack | ✅ 403 volti caricati, 98% dei calciatori abbinabili |
 | Fetta 5b: schermata di abbinamento manuale | 🔴 serve per i casi che l algoritmo lascia fuori |
-| Fette 6, 7: esportazione CSV, scambi | 🔴 non iniziate |
+| Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
+| Fetta 7: scambi fra squadre | 🔴 non iniziata |
 
 **Prossimo passo** · Provare **un'asta vera su due dispositivi**, con lo schermo condiviso acceso:
 è l'unica parte che nessuno ha ancora visto viva. Le altre schermate l'utente le ha aperte e provate
@@ -212,6 +213,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-leghe.mjs` | Trentadue prove su leghe, inviti, squadre e regolamento. Con `--pulisci` rimuove gli utenti di prova. |
 | `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciannove prove sulla lettura dei file e sull importazione del listone. Due sono la sentinella: un calciatore vero che deve sopravvivere alle prove e alla pulizia. Costruisce da zero un vero `.xlsx` per provarci sopra. |
 | `node scripts/verifica-obiettivi.mjs` | Quarantaquattro prove sulla lista obiettivi: fra le altre, che un attaccante non entri in una fascia di difensori e che il numero degli slot non si possa toccare dal client. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
+| `node --experimental-strip-types scripts/verifica-esportazione.mjs` | Quattordici prove sul file delle rose. Le piu importanti provano nomi di squadra con punto e virgola, virgolette e ritorni a capo: un CSV rotto non da errore, sposta le colonne di uno. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
 | `node scripts/verifica-asta-completa.mjs` | Cinquantaquattro prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore, la catena che si apre da sola, il riempimento per nome e la rete di sicurezza. |
@@ -242,6 +244,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.4 | 2026-09-04 | Fetta 6: esportazione delle rose nel file che l app Fantacalcio sa caricare. |
 | 2.3 | 2026-09-04 | Fetta 5: i volti del facepack nel listone, nell asta e sullo schermo condiviso. Corretto il listone che mostrava tutte le stagioni insieme. |
 | 2.2 | 2026-09-03 | L amministratore corregge rose e prezzi, con motivo obbligatorio, e ogni intervento finisce in un registro che leggono tutti. |
 | 2.1 | 2026-09-03 | Rose sempre in vista nella schermata personale, obiettivi vivi che nascondono chi e gia stato comprato, e la freccia indietro che torna da dove si veniva. |

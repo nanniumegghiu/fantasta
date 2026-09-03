@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
 import { Intestazione } from '@/components/Intestazione'
+import { EsportaRose } from '@/features/asta/EsportaRose'
 import { useAccesso } from '@/features/auth/ContestoAccesso'
 import {
   indirizzoRegolamento,
@@ -70,9 +71,30 @@ export function PaginaLega() {
         <RiquadroMiaSquadra lega={lega} idUtente={utente?.id} />
         <RiquadroRegole lega={lega} />
         <RiquadroRegolamento lega={lega} sonoAdmin={sonoAdmin} />
+        <RiquadroEsportazione lega={lega} />
         {sonoAdmin && <ZonaPericolosa lega={lega} />}
       </main>
     </div>
+  )
+}
+
+// ─── Esportazione ───────────────────────────────────────────────────────────
+
+/**
+ * Il file da caricare nell'app Fantacalcio.
+ *
+ * Sta qui e non nella schermata dell'asta perche' non lo si scarica una volta
+ * sola: lo si riscarica il giorno dopo, quando serve davvero, e la schermata
+ * dell'asta a quel punto e' chiusa.
+ */
+function RiquadroEsportazione({ lega }: { lega: LegaCompleta }) {
+  return (
+    <Riquadro
+      titolo="Esporta le rose"
+      sottotitolo="Il file per l'app Fantacalcio, nel formato delle istruzioni ufficiali"
+    >
+      <EsportaRose idLega={lega.id} nomeLega={lega.name} stagione={lega.season} />
+    </Riquadro>
   )
 }
 
