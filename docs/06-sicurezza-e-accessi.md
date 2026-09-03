@@ -125,6 +125,30 @@ Il contrappeso non è un limite tecnico, è la **visibilità**:
 Il criterio: **non si toglie il potere a chi serve che ce l'abbia, si toglie la possibilità di
 usarlo di nascosto.**
 
+## 2ter. Da quando è online
+
+L'indirizzo dell'app è pubblico, quindi chiunque lo trovi può **registrarsi**. È la scelta fatta, e
+regge perché la registrazione non dà accesso a niente di privato:
+
+| Cosa | Chi la vede |
+|---|---|
+| Il listone e le statistiche | Chiunque abbia fatto l'accesso |
+| Una lega, le sue rose, la sua asta | Solo chi ci è entrato col codice di invito di sei caratteri |
+| Le liste obiettivi | Solo il proprietario. Nemmeno l'amministratore |
+| Il registro dell'asta e gli scambi | I partecipanti di quella lega |
+
+Il codice di invito è la porta, ed è protetto dal limite sui tentativi che era già in piedi.
+
+**La password degli amici di prova non sta più nel codice.** Era scritta in chiaro in
+`scripts/amici-di-prova.mjs`, con la scusa che sono account finti su un dominio che non esiste. La
+scusa reggeva finché l'app stava sul computer di casa: in un repository pubblico quella riga
+diventava la chiave buona per entrare nella lega vera e rovinare un'asta. Adesso si genera al primo
+uso e vive in `.env.local`, e una prova della suite controlla che non torni nel sorgente.
+
+Il repository è stato controllato prima di renderlo pubblico: nessun valore di credenziale in
+nessun commit, presente o passato. Solo i **nomi** delle variabili, in `.env.example`, con le
+istruzioni per procurarsele.
+
 ## 3. File coinvolti
 
 - `app/supabase/migrations/20260902120000_profili.sql` — profili e loro policy

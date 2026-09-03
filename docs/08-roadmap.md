@@ -173,12 +173,13 @@ non è decorativa: è il criterio di chiusura.
 
 - 🔴 Nessuna schermata è mai stata aperta in un browser: è la verifica che manca, e ormai riguarda quindici pagine.
 - 🔴 Serve il file ufficiale del listone per provare l importazione sul formato vero.
-- 🔴 Pubblicazione online, necessaria perché il link giri davvero su WhatsApp.
+- ✅ Pubblicazione online: https://nanniumegghiu.github.io/fantasta, ricompilata a ogni push.
 
 ## Changelog
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.14 | 2026-09-04 | Pubblicata online. Il link gira davvero su WhatsApp. |
 | 1.13 | 2026-09-04 | Fetta 7 costruita: scambi fra squadre. |
 | 1.12 | 2026-09-04 | Fetta 6 costruita: esportazione delle rose, con anteprima e avvertimenti. |
 | 1.11 | 2026-09-04 | Fetta 5 costruita: i volti del facepack arrivano nel listone e nell asta. |

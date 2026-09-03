@@ -93,6 +93,48 @@ Se mancano le variabili d'ambiente, l'app **non mostra il modulo di accesso**: m
 che dice cosa manca e come si sistema. È la regola «niente bugie all'utente»: un modulo di accesso
 che fallisce sempre con un errore incomprensibile è peggio di un messaggio chiaro.
 
+## 2bis. Come finisce online
+
+L'app sta su **GitHub Pages**, all'indirizzo `https://nanniumegghiu.github.io/fantasta`, e si
+ricompila da sola a ogni push sul ramo principale (`.github/workflows/pubblica.yml`).
+
+**Si compila in remoto, non sul computer di casa.** Così quello che è online è sempre quello che sta
+nel ramo, e non dipende da cosa aveva installato chi ha premuto il pulsante.
+
+### Il percorso base, che è la cosa che si rompe
+
+Un progetto su GitHub Pages sta sotto il nome del repository: `/fantasta/`. Un percorso base
+sbagliato non dà errori, dà una **pagina bianca**: i file ci sono, ma un livello più su. Tre punti
+lo devono sapere e li sa tutti da una variabile sola, `VITE_BASE`:
+
+| Dove | Cosa succede senza |
+|---|---|
+| `base` di Vite | Fogli di stile e pacchetti cercati alla radice: pagina bianca |
+| `basename` del router | `/fantasta/leghe` non corrisponde a nessuna rotta |
+| `start_url` e `scope` del manifesto | L'app installata parte da un indirizzo che non esiste |
+
+Le immagini scritte con un percorso assoluto nel codice non le riscrive nessuno: le tre che c'erano
+adesso usano `import.meta.env.BASE_URL`.
+
+### La ricaduta per le rotte
+
+`/lega/abc/asta` non è un file, e un servizio statico risponde 404. GitHub Pages serve però
+`404.html` per ogni indirizzo che non trova: quel file è una copia dell'indice, quindi
+l'applicazione parte e il router riconosce l'indirizzo da solo. La copia la fa un'estensione di
+Vite e non un passaggio del flusso di pubblicazione, perché una compilazione locale che si comporta
+diversamente da quella vera è una trappola.
+
+### Le chiavi
+
+`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` stanno nei segreti del repository e finiscono
+dentro il pacchetto compilato, che è pubblico. **È il loro mestiere**: sono fatte per stare in ogni
+browser che apre l'app, e ciò che protegge i dati sono le regole di accesso del database. Stanno nei
+segreti e non nel codice per due motivi pratici: si cambiano senza toccare un file, e chi legge il
+repository non le scambia per qualcosa da nascondere.
+
+Il flusso controlla che finiscano davvero nel pacchetto: senza, l'app compilerebbe lo stesso e
+mostrerebbe a tutti la schermata «manca la configurazione».
+
 ## 3. File coinvolti
 
 Tutti quelli elencati nella struttura qui sopra.
@@ -126,6 +168,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.13 | 2026-09-04 | Pubblicata online su GitHub Pages: percorso base, ricaduta per le rotte, compilazione automatica. |
 | 1.12 | 2026-09-04 | Esportazione delle rose e scambi fra squadre nella schermata della lega. |
 | 1.11 | 2026-09-04 | Volti dei calciatori ovunque, con ricaduta sulle iniziali. Il listone mostra una stagione sola. |
 | 1.10 | 2026-09-03 | Correzione delle rose nel pannello di conduzione, registro dell asta visibile a tutti. |

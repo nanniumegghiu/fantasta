@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.5 · **Data** · 2026-09-04
+**Versione documento** · 2.6 · **Data** · 2026-09-04
 
 ---
 
@@ -181,6 +181,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Tutte le schermate tranne l asta in corso | ✅ aperte e provate dall utente il 3 settembre 2026 |
 | Vista personale e schermo condiviso con un asta viva | 🟡 provati una prima volta, e rifatti su quello che è emerso |
 | Compagni di lega finti per provare l asta da soli | ✅ 18 prove, `node scripts/verifica-amici-di-prova.mjs` |
+| **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
 | Accesso con Google | 🔴 provider non configurato, servono le chiavi Google |
 | Fetta 5: facepack | ✅ 403 volti caricati, 98% dei calciatori abbinabili |
 | Fetta 5b: schermata di abbinamento manuale | 🔴 serve per i casi che l algoritmo lascia fuori |
@@ -245,6 +246,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.6 | 2026-09-04 | Pubblicata online su GitHub Pages, con compilazione automatica a ogni push. Repository pubblico. |
 | 2.5 | 2026-09-04 | Fetta 7: scambi fra squadre, con la regola dei reparti che pareggiano e la rivalidazione al momento dell accettazione. |
 | 2.4 | 2026-09-04 | Fetta 6: esportazione delle rose nel file che l app Fantacalcio sa caricare. |
 | 2.3 | 2026-09-04 | Fetta 5: i volti del facepack nel listone, nell asta e sullo schermo condiviso. Corretto il listone che mostrava tutte le stagioni insieme. |
