@@ -126,6 +126,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.8 | 2026-09-03 | Schermo condiviso con le rose complete. Conduzione a scomparsa. Riempimento per nome e chiusura a mano dell asta. |
 | 1.7 | 2026-09-03 | Colonna del ruolo nel listone. Slot fissati dal regolamento, con un massimale per posto. Schermate provate tranne l asta in corso. |
 | 1.6 | 2026-09-03 | Obiettivi divisi per reparto con il filtro in cima; il reparto sta nell indirizzo, e l asta ci porta su quello in corso. |
 | 1.5 | 2026-09-03 | Corretti due difetti segnalati all uso: il campo password si riempiva da solo e mancava la conferma in registrazione. |

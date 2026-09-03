@@ -97,7 +97,50 @@ crediti sufficienti nemmeno per l'offerta minima.
 Se **tutti** sono da saltare, il reparto è finito: nelle varianti per ruolo si passa al reparto
 successivo, e lo schermo condiviso lo annuncia con la campanella.
 
-### 2.6 Da quale listone si pesca
+### 2.6 La catena dei lotti, nei metodi automatici
+
+Nell'asta a estrazione — alfabetica o casuale — il calciatore successivo **si apre da solo** dentro
+la chiusura del precedente. Vale sia dopo un'aggiudicazione sia dopo un «non lo vuole nessuno».
+
+Prima ogni chiusura lasciava lo schermo fermo finché l'amministratore non premeva «estrai il
+prossimo». In un'asta a estrazione lui non deve condurre, deve guardare: ogni gesto che gli si
+chiede è un momento in cui la stanza aspetta una persona invece di aspettare il gioco.
+
+L'apertura automatica non passa dal controllo dei permessi, perché la chiusura può partire da
+chiunque: dal client di un partecipante che si accorge che il countdown è scaduto, o dal compito
+pianificato. Il permesso resta sulla porta d'ingresso, `apri_prossimo_lotto`, che l'amministratore
+usa per far partire il primo lotto.
+
+**La pausa ferma la catena.** È l'unico modo di prendersi un momento senza che si apra subito un
+altro nome, e serve anche per usare l'assegnazione rapida, che giustamente rifiuta di assegnare un
+calciatore mentre la stanza sta rilanciando su un altro.
+
+### 2.7 Quando il listone finisce prima delle rose
+
+Sono due fatti diversi e per un po' erano la stessa risposta:
+
+| Situazione | Cosa succede |
+|---|---|
+| Tutte le rose complete | L'asta si chiude da sola, la lega passa a `done` |
+| Listone esaurito, slot ancora vuoti | L'asta **resta aperta** e risponde `listone_finito` |
+
+Il secondo caso è la norma, non l'eccezione: i calciatori che nessuno ha voluto restano fuori, e gli
+slot restano vuoti. Chiudere lì vorrebbe dire lasciare squadre incomplete.
+
+Da qui `apri_lotto_scelto`: l'amministratore cerca un calciatore per nome e lo rimette all'asta,
+**anche se era già stato passato**. Un calciatore passato non è rifiutato per sempre: è uno che a
+quel prezzo, in quel momento, non interessava; mezz'ora dopo, a chi ha tre buchi in difesa,
+interessa eccome. Il filtro guarda solo chi è già stato **comprato**.
+
+Il reparto in corso si può scavalcare **solo se è finito davvero**: finché restano calciatori di
+quel reparto da chiamare, aprire un attaccante in mezzo ai portieri scavalcherebbe la regola della
+lega senza che nessuno l'abbia deciso.
+
+E siccome l'asta non si chiude più da sola in quel caso, esiste `chiudi_asta`: il messaggio dice
+quanti slot restano scoperti, perché chiudere con dei buchi è una scelta legittima ma va vista
+mentre la si fa.
+
+### 2.8 Da quale listone si pesca
 
 Ogni lega dichiara la sua stagione, e l'asta pesca **solo da quella**. Vale sia per l'estrazione
 automatica, sia per la chiamata: un calciatore di un'altra stagione viene rifiutato con un messaggio
@@ -107,7 +150,7 @@ L'importazione, dal canto suo, ritira i calciatori mancanti della sola stagione 
 il listone nuovo non cancella la storia del vecchio. Vedi
 `docs/decisioni/2026-09-03-il-listone-ha-una-stagione.md`.
 
-### 2.7 Riconnessione
+### 2.9 Riconnessione
 
 Chi torna online non ricostruisce niente a mano: richiede lo stato corrente dell'asta e gli eventi
 successivi all'ultimo che aveva ricevuto. Il registro eventi ha un numero progressivo proprio per
@@ -116,7 +159,7 @@ questo. In due richieste è di nuovo allineato.
 Sulla vista personale compare un indicatore di connessione. Se il canale cade, l'utente lo **vede**:
 non gli si lascia credere di essere in asta mentre sta guardando una schermata congelata.
 
-### 2.8 Modalità live
+### 2.10 Modalità live
 
 Quando l'asta è condotta a voce, il timer è spento e nessuno rilancia dal telefono. Il canale resta
 attivo perché lo schermo condiviso e le viste personali mostrino comunque rose, crediti e listone
@@ -160,6 +203,7 @@ lotto si chiude e l'offerta viene rifiutata. Mai entrambe.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.4 | 2026-09-03 | La catena dei lotti si apre da sola. A listone finito l asta resta aperta e si riempie per nome. Chiusura a mano. |
 | 1.3 | 2026-09-03 | L asta pesca solo dal listone della stagione della lega. |
 | 1.2 | 2026-09-03 | Varianti, passo, poteri dell amministratore e rete di sicurezza pianificata. |
 | 1.1 | 2026-09-02 | Motore realizzato. Semplificazione: il countdown si ricava dal solo `last_bid_at`, senza un secondo istante da tenere allineato. |

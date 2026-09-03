@@ -99,7 +99,13 @@ process.on('exit', () => {
 // del listone ritira i calciatori della stagione indicata che non sono nel
 // file, e con una stagione condivisa manderebbe fuori listone i calciatori
 // veri. E' gia' successo.
-const STAGIONE_DI_PROVA = 'PROVA'
+// Una stagione tutta sua, diversa da quella di ogni altra suite.
+// `importa_listone` ritira i calciatori della stagione che sta caricando e
+// che non trova nel file: con una stagione condivisa, ogni suite spegneva il
+// listone di quella lanciata prima, e le prove passavano o fallivano a
+// seconda dell'ordine. Vale anche la ragione originale: non e' mai la
+// stagione vera, perche' spegnerebbe il listone dell'utente.
+const STAGIONE_DI_PROVA = 'PROVA-ASTA'
 
 const esiti = []
 function esito(nome, ok, dettaglio) {
@@ -462,7 +468,7 @@ while (giri < 20) {
   // Solo il listone di prova: da quando l'asta rispetta la stagione della
   // lega, pescare fra i calciatori veri porterebbe a chiamate rifiutate.
   const disponibile = (await sql(`select p.id from public.players p
-    where p.season = '${STAGIONE_DI_PROVA}'
+    where p.season = '${STAGIONE_DI_PROVA}' and p.active
       and p.role = any(array[${mancanti.map((r) => `'${r}'`).join(',')}]::public.ruolo_calciatore[])
       and not exists (select 1 from public.roster_players r
                       where r.league_id = '${lega}' and r.player_id = p.id)

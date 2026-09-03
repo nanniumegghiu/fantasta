@@ -430,3 +430,24 @@ export function useAssegnaRapido(idLega: string | undefined) {
 export function useAnnullaUltima(idLega: string | undefined) {
   return useAzioneAdmin<void>(idLega, 'annulla_ultima_aggiudicazione', () => ({ p_lega: idLega }))
 }
+
+/**
+ * Mette all'asta un calciatore cercato per nome.
+ *
+ * È lo strumento di fine serata: quando il listone è finito e certe squadre
+ * hanno ancora slot vuoti, si ripescano i nomi che nessuno aveva voluto.
+ */
+export function useApriLottoScelto(idLega: string | undefined) {
+  return useAzioneAdmin<number>(idLega, 'apri_lotto_scelto', (idCalciatore) => ({
+    p_lega: idLega,
+    p_player_id: idCalciatore,
+  }))
+}
+
+/**
+ * Chiude l'asta. Prima si chiudeva da sola appena finiva il listone; adesso
+ * che resta aperta per il riempimento, serve un modo di dire «basta».
+ */
+export function useChiudiAsta(idLega: string | undefined) {
+  return useAzioneAdmin<void>(idLega, 'chiudi_asta', () => ({ p_lega: idLega }))
+}

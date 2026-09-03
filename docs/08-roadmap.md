@@ -93,19 +93,21 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Fasce e slot **divisi per reparto**, con il filtro che nasconde gli altri tre | ✅ 44 prove, `node scripts/verifica-obiettivi.mjs` |
 | Slot: quantità dal regolamento, nome modificabile, **un massimale per posto** | ✅ 8 prove dedicate, comprese quelle che provano a violare la regola |
 
-### Fetta 4 · L'asta — ✅ costruita, 🟡 mai vista con un'asta viva
+### Fetta 4 · L'asta — ✅ costruita, 🟡 provata una prima volta e corretta
 
 È il cuore dell'app e il pezzo più difficile. Va spezzata.
 | Sotto-fetta | Stato |
 |---|---|
 | **4a · Motore** | ✅ 26 prove, `node scripts/verifica-asta.mjs` |
-| **4b · Schermo condiviso** | 🟡 scritto con i suoni, **mai visto con un asta in corso** |
+| **4b · Schermo condiviso** | 🟡 provato, poi rifatto: rose intere con i prezzi, crediti sempre in cima |
 | **4c · Varianti** | ✅ tutte e sette, più la modalità live |
 | **4d · Poteri amministratore** | ✅ passa, assegna, aggiudica, annulla, pausa |
 | **4e · Chiamata con passo** | ✅ irreversibile, chiude in anticipo quando resta uno solo |
 | **4f · Aggancio obiettivi** | ✅ tetto e nota del calciatore in asta, nella vista personale; la scorciatoia apre gli obiettivi sul reparto in corso |
 | Rete di sicurezza sui lotti dimenticati | ✅ pianificata ogni dieci secondi |
-| Prova su dispositivi veri | 🔴 |
+| Prova su dispositivi veri | 🟡 prima asta provata con compagni finti, quattro difetti trovati e corretti |
+| La catena dei lotti si apre da sola | ✅ dopo aggiudicazioni e passaggi, nei metodi a estrazione |
+| Riempimento finale: si rimette all asta un nome cercato | ✅ 11 prove |
 
 | Sotto-fetta | Contenuto | Come si dimostra |
 |---|---|---|
@@ -164,6 +166,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.8 | 2026-09-03 | Prima asta provata davvero, con compagni di lega finti. Catena automatica, riempimento per nome, schermo condiviso con le rose. |
 | 1.7 | 2026-09-03 | Slot come il regolamento, con un massimale a testa. Colonna del ruolo nel listone. Tutte le schermate provate tranne l asta in corso. |
 | 1.6 | 2026-09-03 | Fasce per reparto e filtro del reparto in corso. L asta pesca solo dal listone della stagione della lega. |
 | 1.5 | 2026-09-03 | Fetta 4 completata: sette varianti, modalità live, passo, poteri dell amministratore, rete di sicurezza. |

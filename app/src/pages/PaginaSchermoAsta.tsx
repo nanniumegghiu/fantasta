@@ -13,6 +13,7 @@ import {
   useLottoCorrente,
   useRose,
   useScartoOrologio,
+  type AcquistoInRosa,
   type BudgetSquadra,
   type Lotto,
 } from '@/features/asta/api'
@@ -146,7 +147,7 @@ export function PaginaSchermoAsta() {
         }}
       />
 
-      <div className="min-h-0 flex-1 px-6 py-4">
+      <div className="min-h-0 shrink-0 basis-[44%] px-6 py-3">
         {lotto ? (
           <InAsta lotto={lotto} timer={timer} squadre={squadre} />
         ) : (
@@ -154,11 +155,18 @@ export function PaginaSchermoAsta() {
             asta={asta}
             squadre={squadre}
             chiusa={asta?.status === 'closed'}
+            slotVuoti={squadre.reduce((n, s) => n + s.slot_rimanenti, 0)}
+            iniziata={presiTotali > 0}
           />
         )}
       </div>
 
-      <FasciaSquadre squadre={squadre} lega={lega} idLottoCorrente={lotto?.current_bidder_team_id} />
+      <FasciaSquadre
+        squadre={squadre}
+        rose={rose}
+        lega={lega}
+        idSquadraInTesta={lotto?.current_bidder_team_id}
+      />
     </div>
   )
 }
@@ -439,17 +447,29 @@ function NessunaChiamata({
   asta,
   squadre,
   chiusa,
+  slotVuoti,
+  iniziata,
 }: {
-  asta: { nomination_order: string[]; current_turn_index: number; status: string } | null | undefined
+  asta:
+    | { nomination_order: string[]; current_turn_index: number; status: string; method: string }
+    | null
+    | undefined
   squadre: BudgetSquadra[]
   chiusa: boolean
+  slotVuoti: number
+  /** Vero appena e' stato assegnato il primo calciatore. */
+  iniziata: boolean
 }) {
   if (chiusa) {
     const ordinate = [...squadre].sort((a, b) => a.credits_remaining - b.credits_remaining)
     return (
       <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
         <p className="text-7xl font-extrabold text-verde-acceso">Asta conclusa</p>
-        <p className="text-3xl text-fumo">Tutte le rose sono complete.</p>
+        <p className="text-3xl text-fumo">
+          {slotVuoti === 0
+            ? 'Tutte le rose sono complete.'
+            : `Chiusa con ${slotVuoti} slot rimasti vuoti.`}
+        </p>
         <ul className="cifre-fisse mt-4 flex flex-wrap justify-center gap-x-10 gap-y-2 text-2xl">
           {ordinate.map((s) => (
             <li key={s.team_id} className="text-nebbia">
@@ -462,6 +482,35 @@ function NessunaChiamata({
   }
 
   const diTurno = asta ? squadre.find((s) => s.team_id === asta.nomination_order[asta.current_turn_index]) : null
+
+  // Nei metodi a estrazione il calciatore successivo si apre da solo. Se qui
+  // non c'è nessuno vuol dire una di due cose, e vanno dette in due modi
+  // diversi: o la catena non è ancora partita, o il listone si è esaurito
+  // prima delle rose. Il turno non distingue niente, perché avanza anche
+  // quando a scegliere è il server: quello che distingue è se qualcosa è già
+  // stato assegnato.
+  if (asta?.status === 'open' && asta.method !== 'chiamata') {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+        {iniziata ? (
+          <>
+            <p className="text-6xl font-extrabold text-oro">Il listone è finito</p>
+            <p className="cifre-fisse text-3xl text-fumo">Restano {slotVuoti} slot da riempire.</p>
+            <p className="text-2xl text-fumo">
+              L&apos;amministratore rimette all&apos;asta i nomi che servono.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-6xl font-extrabold text-nebbia">Si comincia</p>
+            <p className="text-3xl text-fumo">
+              L&apos;amministratore fa partire la prima estrazione.
+            </p>
+          </>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
@@ -492,17 +541,40 @@ function NessunaChiamata({
     </div>
   )
 }
+// ─── Fascia inferiore: le rose, per intero ──────────────────────────────────
 
-// ─── Fascia inferiore: tutte le squadre ─────────────────────────────────────
-
+/**
+ * Tutte le squadre affiancate, con la **rosa completa** e il prezzo pagato per
+ * ogni calciatore.
+ *
+ * PERCHE' LE ROSE PER INTERO
+ * Prima qui c'erano solo dei contatori: «D 5/8». Dicono quanto manca, non
+ * cosa c'è. Durante un'asta la domanda vera è un'altra: chi ha già preso il
+ * portiere del Milan, e a quanto. Senza quel dato non si capisce se
+ * l'avversario che rilancia sta completando un reparto o si sta togliendo uno
+ * sfizio, e si offre alla cieca.
+ *
+ * PERCHE' ANCHE GLI SLOT VUOTI
+ * Le righe mancanti si vedono, tratteggiate. Sono la cosa che alla fine della
+ * serata conta di più: chi deve ancora riempire e in che reparto. E tenendo
+ * il numero di righe **costante** — sempre quante ne prevede il regolamento —
+ * la fascia non cambia altezza mano a mano che le rose si riempiono, che su un
+ * televisore vorrebbe dire un layout che balla tutta la sera.
+ *
+ * PERCHE' I CREDITI STANNO IN CIMA A OGNI COLONNA
+ * Sono il dato che si guarda più spesso e da più lontano. Restano fermi
+ * mentre la rosa sotto cresce, e non vanno mai cercati.
+ */
 function FasciaSquadre({
   squadre,
+  rose,
   lega,
-  idLottoCorrente,
+  idSquadraInTesta,
 }: {
   squadre: BudgetSquadra[]
+  rose: AcquistoInRosa[] | undefined
   lega: { slots_p: number; slots_d: number; slots_c: number; slots_a: number } | null | undefined
-  idLottoCorrente: string | null | undefined
+  idSquadraInTesta: string | null | undefined
 }) {
   const previsti: Record<Ruolo, number> = {
     P: lega?.slots_p ?? 3,
@@ -510,58 +582,106 @@ function FasciaSquadre({
     C: lega?.slots_c ?? 8,
     A: lega?.slots_a ?? 6,
   }
-  const presi = (s: BudgetSquadra, r: Ruolo) =>
-    r === 'P' ? s.presi_p : r === 'D' ? s.presi_d : r === 'C' ? s.presi_c : s.presi_a
+
+  // Una passata sola su tutti gli acquisti, invece di filtrare l'elenco intero
+  // dentro ogni riga di ogni colonna.
+  const perSquadra = new Map<string, Record<Ruolo, AcquistoInRosa[]>>()
+  for (const s of squadre) perSquadra.set(s.team_id, { P: [], D: [], C: [], A: [] })
+  for (const r of rose ?? []) {
+    perSquadra.get(r.team_id)?.[r.players.role].push(r)
+  }
+  for (const gruppi of perSquadra.values()) {
+    for (const ruolo of ORDINE_RUOLI) {
+      gruppi[ruolo].sort((a, b) => b.price - a.price || a.players.name.localeCompare(b.players.name, 'it'))
+    }
+  }
 
   return (
-    <footer className="border-t border-verde-campo px-6 py-4">
-      <div className="flex gap-3 overflow-x-auto">
-        {squadre.map((s) => {
-          const inTesta = s.team_id === idLottoCorrente
-          return (
-            <div
-              key={s.team_id}
-              className={[
-                'min-w-56 flex-1 rounded-2xl border p-3 transition-colors',
-                inTesta ? 'border-oro bg-oro/10' : 'border-verde-campo bg-verde-campo/30',
-              ].join(' ')}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="min-w-0 truncate text-2xl font-bold text-nebbia">{s.name}</p>
-                <p className="cifre-fisse shrink-0 text-3xl font-extrabold text-oro">
-                  {s.credits_remaining}
-                </p>
-              </div>
+    <footer className="flex min-h-0 flex-1 gap-3 border-t border-verde-campo px-4 py-3">
+      {squadre.map((s) => {
+        const gruppi = perSquadra.get(s.team_id) ?? { P: [], D: [], C: [], A: [] }
+        const inTesta = s.team_id === idSquadraInTesta
+        const spesi = ORDINE_RUOLI.reduce(
+          (n, r) => n + gruppi[r].reduce((m, x) => m + x.price, 0),
+          0,
+        )
 
-              <p className="cifre-fisse text-lg text-fumo">
-                max {s.massimo_offribile} · restano {s.slot_rimanenti}
+        return (
+          <div
+            key={s.team_id}
+            className={[
+              'flex min-h-0 min-w-0 flex-1 flex-col rounded-2xl border transition-colors',
+              inTesta ? 'border-oro bg-oro/10' : 'border-verde-campo bg-verde-campo/25',
+            ].join(' ')}
+          >
+            {/* I crediti, sempre in cima e sempre fermi. */}
+            <div className="shrink-0 border-b border-verde-campo/70 px-3 py-2">
+              <p className="truncate text-[clamp(1rem,1.7vh,1.5rem)] font-bold leading-tight text-nebbia">
+                {s.name}
               </p>
-
-              <div className="mt-2 flex gap-2">
-                {ORDINE_RUOLI.map((r) => {
-                  const completo = presi(s, r) >= previsti[r]
-                  return (
-                    <div
-                      key={r}
-                      title={`${NOME_RUOLO[r]}: ${presi(s, r)} di ${previsti[r]}`}
-                      className={[
-                        'flex-1 rounded-lg px-1 py-1 text-center',
-                        completo ? CLASSE_RUOLO[r] : 'bg-verde-notte text-fumo',
-                      ].join(' ')}
-                    >
-                      <p className="text-sm font-bold">{r}</p>
-                      <p className="cifre-fisse text-lg font-bold">
-                        {presi(s, r)}
-                        <span className="text-[0.7em] opacity-70">/{previsti[r]}</span>
-                      </p>
-                    </div>
-                  )
-                })}
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="cifre-fisse text-[clamp(1.6rem,3.4vh,2.75rem)] font-extrabold leading-none text-oro">
+                  {s.credits_remaining}
+                </span>
+                <span className="cifre-fisse text-right text-[clamp(0.6rem,1.15vh,0.9rem)] leading-tight text-fumo">
+                  max {s.massimo_offribile}
+                  <br />
+                  spesi {spesi}
+                </span>
               </div>
             </div>
-          )
-        })}
-      </div>
+
+            {/* La rosa: una riga per ogni posto previsto, piena o vuota. */}
+            <div className="min-h-0 flex-1 overflow-hidden px-2 py-1.5">
+              {ORDINE_RUOLI.map((ruolo) => {
+                const presi = gruppi[ruolo]
+                const vuoti = Math.max(0, previsti[ruolo] - presi.length)
+                return (
+                  <div key={ruolo} className="mb-1 last:mb-0">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`flex size-[clamp(0.9rem,1.7vh,1.3rem)] items-center justify-center rounded text-[clamp(0.55rem,1vh,0.8rem)] font-bold ${CLASSE_RUOLO[ruolo]}`}
+                      >
+                        {ruolo}
+                      </span>
+                      <span className="cifre-fisse text-[clamp(0.55rem,1vh,0.8rem)] text-fumo">
+                        {presi.length}/{previsti[ruolo]}
+                      </span>
+                      <span className="h-px flex-1 bg-verde-campo/60" />
+                    </div>
+
+                    {presi.map((r) => (
+                      <div
+                        key={r.id}
+                        className="flex items-baseline justify-between gap-2 leading-tight"
+                      >
+                        <span className="min-w-0 flex-1 truncate text-[clamp(0.7rem,1.35vh,1.05rem)] text-nebbia">
+                          {r.players.name}
+                        </span>
+                        <span className="cifre-fisse shrink-0 text-[clamp(0.7rem,1.35vh,1.05rem)] font-bold text-oro">
+                          {r.price}
+                        </span>
+                      </div>
+                    ))}
+
+                    {Array.from({ length: vuoti }, (_, i) => (
+                      <div
+                        key={`vuoto-${ruolo}-${i}`}
+                        aria-hidden
+                        className="flex items-center leading-tight"
+                      >
+                        <span className="w-full border-b border-dashed border-fumo/25 text-[clamp(0.7rem,1.35vh,1.05rem)]">
+                          &nbsp;
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
     </footer>
   )
 }

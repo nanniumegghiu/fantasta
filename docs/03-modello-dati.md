@@ -268,6 +268,9 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903140000_fasce_per_ruolo.sql` | `tiers.role` obbligatorio, fasce di partenza per reparto, `aggiungi_a_fascia`, riordino che non mescola i reparti |
 | `20260903150000_asta_rispetta_la_stagione.sql` | L asta pesca solo dal listone della stagione della lega |
 | `20260903170000_slot_come_il_regolamento.sql` | `roster_slots.max_price`, `sincronizza_slot`, `togli_da_slot`, permessi ridotti a `label` e `max_price` |
+| `20260903190000_chi_se_ne_va_esce_dal_registro.sql` | Correzione: un account che avesse fatto un'offerta non si poteva più cancellare |
+| `20260903200000_esito_listone_finito.sql` | Nuovo esito `listone_finito`, in una migrazione sua perché un valore d'enum non si usa nella transazione che lo aggiunge |
+| `20260903210000_lasta_scorre_da_sola.sql` | `apri_lotto_automatico`, `apri_lotto_scelto`, `chiudi_asta`, e la chiusura di un lotto che apre il successivo |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

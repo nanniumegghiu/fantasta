@@ -39,7 +39,13 @@ const ref = URL_BASE.replace('https://', '').split('.')[0]
 // Dominio tutto suo: `--elimina` porta via ogni account del dominio, e non
 // deve nemmeno sfiorare @amici.fantasta, dove stanno i compagni veri.
 const DOMINIO_PROVA = 'prova.amici.fantasta'
-const STAGIONE_DI_PROVA = 'PROVA'
+// Una stagione tutta sua, diversa da quella di ogni altra suite.
+// `importa_listone` ritira i calciatori della stagione che sta caricando e
+// che non trova nel file: con una stagione condivisa, ogni suite spegneva il
+// listone di quella lanciata prima, e le prove passavano o fallivano a
+// seconda dell'ordine. Vale anche la ragione originale: non e' mai la
+// stagione vera, perche' spegnerebbe il listone dell'utente.
+const STAGIONE_DI_PROVA = 'PROVA-AMICI'
 
 async function sql(query) {
   const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {

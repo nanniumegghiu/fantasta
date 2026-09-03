@@ -97,7 +97,13 @@ process.on('exit', () => {
 // del listone ritira i calciatori della stagione indicata che non sono nel
 // file, e con una stagione condivisa manderebbe fuori listone i calciatori
 // veri. E' gia' successo.
-const STAGIONE_DI_PROVA = 'PROVA'
+// Una stagione tutta sua, diversa da quella di ogni altra suite.
+// `importa_listone` ritira i calciatori della stagione che sta caricando e
+// che non trova nel file: con una stagione condivisa, ogni suite spegneva il
+// listone di quella lanciata prima, e le prove passavano o fallivano a
+// seconda dell'ordine. Vale anche la ragione originale: non e' mai la
+// stagione vera, perche' spegnerebbe il listone dell'utente.
+const STAGIONE_DI_PROVA = 'PROVA-VAR'
 
 const esiti = []
 function esito(nome, ok, dettaglio) {
@@ -156,6 +162,15 @@ for (const [ruolo, base] of [['P', 'portiere'], ['D', 'difensore'], ['C', 'centr
 }
 await rpc(admin, 'importa_listone', { p_stagione: STAGIONE_DI_PROVA, p_righe: CALCIATORI })
 const idDi = (nome) => CALCIATORI.find((c) => c.nome === nome).id
+
+/** Il calciatore in asta adesso, con il suo lotto. Null se non c'e' nessuno. */
+async function inAsta(lega) {
+  return (await sql(`select l.id, p.name, p.role, p.quotation
+    from public.auction_lots l
+    join public.auctions a on a.id = l.auction_id
+    join public.players p on p.id = l.player_id
+    where a.league_id = '${lega}' and l.status = 'open';`))[0] ?? null
+}
 
 /** Costruisce una lega pronta con l'asta configurata e aperta. */
 async function scenario(nome, impostazioni, opzioni = {}) {
@@ -311,17 +326,16 @@ console.log('\n── 4c · le varianti ─────────────�
     `${passato.riga?.messaggio} · stato del lotto: ${stato}`,
   )
 
-  const secondo = await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
-  const nomeSecondo = (await sql(`select p.name from public.auction_lots l join public.players p on p.id = l.player_id
-                                  where l.id = '${secondo.riga.lotto}';`))[0].name
+  // Il pezzo nuovo: nessuno ha premuto niente, e il prossimo e' gia' in asta.
+  const secondo = await inAsta(s.lega)
   esito(
-    'Chi è stato passato non viene riproposto',
-    nomeSecondo === 'Acentrocampo',
-    `secondo lotto: ${nomeSecondo} (atteso Acentrocampo, non Aattacco)`,
+    'Chiuso un lotto, il successivo si apre da solo',
+    secondo !== null && secondo.name === 'Acentrocampo',
+    `in asta adesso: ${secondo?.name ?? 'nessuno'} (atteso Acentrocampo, non Aattacco che era stato passato)`,
   )
 
   // La prima offerta su un lotto aperto dal server vale come apertura.
-  const primaOfferta = await rpc(amico, 'rilancia', { p_lotto: secondo.riga.lotto, p_importo: 4 })
+  const primaOfferta = await rpc(amico, 'rilancia', { p_lotto: secondo.id, p_importo: 4 })
   esito(
     'Sul lotto aperto dal server la prima offerta vale come apertura',
     primaOfferta.riga?.esito === 'ok' && primaOfferta.riga?.offerta === 4,
@@ -345,19 +359,20 @@ console.log('\n── 4c · le varianti ─────────────�
 // Random, con e senza filtro del bacino.
 {
   const s = await scenario('Random', { metodo: 'random', variante: 'totale' })
+  // Solo la prima estrazione si chiede: da lì in poi la catena va da sola.
+  await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
   const nomi = new Set()
   for (let i = 0; i < 4; i++) {
-    const l = await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
-    if (l.riga?.esito !== 'ok') break
-    nomi.add((await sql(`select p.name from public.auction_lots l join public.players p on p.id = l.player_id
-                         where l.id = '${l.riga.lotto}';`))[0].name)
-    await scadi(l.riga.lotto)
-    await rpc(admin, 'chiudi_lotto_se_scaduto', { p_lotto: l.riga.lotto })
+    const l = await inAsta(s.lega)
+    if (!l) break
+    nomi.add(l.name)
+    await scadi(l.id)
+    await rpc(admin, 'chiudi_lotto_se_scaduto', { p_lotto: l.id })
   }
   esito(
-    'Random: il server estrae calciatori diversi',
+    'Random: una sola estrazione chiesta, e la catena va avanti da sola',
     nomi.size === 4,
-    `estratti: ${[...nomi].join(', ')}`,
+    `estratti di fila senza premere altro: ${[...nomi].join(', ')}`,
   )
 
   const f = await scenario('RandomFiltro', {
@@ -469,15 +484,38 @@ console.log("\n── 4d · i poteri dell'amministratore ───────�
     `${passa.riga?.messaggio}`,
   )
 
-  const l2 = await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
-  await rpc(amico, 'rilancia', { p_lotto: l2.riga.lotto, p_importo: 5 })
-  const passaConOfferta = await rpc(admin, 'passa_lotto', { p_lotto: l2.riga.lotto })
+  // Anche dopo un «non lo vuole nessuno» il prossimo e' gia' li'.
+  const l2 = await inAsta(s.lega)
+  esito(
+    'Dopo un passaggio il successivo si apre da solo',
+    l2 !== null,
+    `in asta adesso: ${l2?.name ?? 'nessuno'}`,
+  )
+
+  await rpc(amico, 'rilancia', { p_lotto: l2.id, p_importo: 5 })
+  const passaConOfferta = await rpc(admin, 'passa_lotto', { p_lotto: l2.id })
   esito(
     "Non si passa un calciatore su cui c'è già un'offerta",
     passaConOfferta.riga?.esito === 'lotto_chiuso',
     `${passaConOfferta.riga?.messaggio}`,
   )
-  await rpc(admin, 'aggiudica_ora', { p_lotto: l2.riga.lotto })
+  await rpc(admin, 'aggiudica_ora', { p_lotto: l2.id })
+
+  // ─── Come si ferma la catena ──────────────────────────────────────────────
+  // Da quando i lotti si aprono da soli, in un'asta automatica c'e' sempre
+  // qualcuno in asta: e l'assegnazione rapida, giustamente, rifiuta di
+  // assegnare un calciatore mentre la stanza sta rilanciando su un altro.
+  // La via d'uscita e' la pausa: ferma la catena, e il lotto in corso lo si
+  // chiude a mano. Va provata, perche' e' l'unica che c'e'.
+  await rpc(admin, 'pausa_asta', { p_lega: s.lega, p_in_pausa: true })
+  const daChiudere = await inAsta(s.lega)
+  if (daChiudere) await rpc(admin, 'passa_lotto', { p_lotto: daChiudere.id })
+  const dopoLaPausa = await inAsta(s.lega)
+  esito(
+    'In pausa la catena si ferma: chiuso il lotto, non se ne apre un altro',
+    dopoLaPausa === null,
+    `chiuso "${daChiudere?.name ?? 'nessuno'}", in asta adesso: ${dopoLaPausa?.name ?? 'nessuno'}`,
+  )
 
   // Assegnazione rapida.
   const troppo = await rpc(admin, 'assegna_rapido', {
@@ -575,6 +613,118 @@ console.log('\n── la rete di sicurezza ────────────�
     'La rete di sicurezza è pianificata e attiva',
     pianificato.length === 1 && pianificato[0].active === true,
     `compito "${pianificato[0]?.jobname}" ogni ${pianificato[0]?.schedule}`,
+  )
+}
+
+console.log("\n── il riempimento finale ─────────────────────────────────────\n")
+
+// Il listone finisce prima delle rose: quattro attaccanti per sei posti.
+// E' la situazione vera di fine serata, quella in cui prima l'asta si
+// chiudeva lasciando le squadre incomplete.
+{
+  const s = await scenario('Riempimento', { metodo: 'alfabetico', variante: 'totale' }, {
+    slot: { P: 1, D: 1, C: 1, A: 3 },
+  })
+
+  // Nessuno offre niente: la catena scorre da sola e passa tutti.
+  await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
+  let passati = 0
+  for (let i = 0; i < 40; i++) {
+    const l = await inAsta(s.lega)
+    if (!l) break
+    await scadi(l.id)
+    await rpc(admin, 'chiudi_lotto_se_scaduto', { p_lotto: l.id })
+    passati++
+  }
+
+  const astaDopo = (await sql(`select status from public.auctions where league_id = '${s.lega}';`))[0]
+  const vuoti = (await sql(`select coalesce(sum(slot_rimanenti), 0)::int n
+    from public.team_budget where league_id = '${s.lega}';`))[0].n
+  esito(
+    'Finito il listone con le rose incomplete, l asta NON si chiude',
+    astaDopo.status === 'open' && vuoti > 0,
+    `${passati} calciatori passati, asta ancora ${astaDopo.status}, slot vuoti ${vuoti}`,
+  )
+
+  const finito = await rpc(admin, 'apri_prossimo_lotto', { p_lega: s.lega })
+  esito(
+    'E lo dice: il listone e finito, non la partita',
+    finito.riga?.esito === 'listone_finito',
+    `${finito.riga?.esito}: ${finito.riga?.messaggio}`,
+  )
+
+  // Il pezzo nuovo: si ripesca per nome chi era stato passato.
+  const nonAdmin = await rpc(amico, 'apri_lotto_scelto', {
+    p_lega: s.lega, p_player_id: idDi('Aattacco'),
+  })
+  esito(
+    'Mette all asta un nome scelto solo l amministratore',
+    nonAdmin.riga?.esito === 'non_autorizzato',
+    `${nonAdmin.riga?.messaggio}`,
+  )
+
+  const ripescato = await rpc(admin, 'apri_lotto_scelto', {
+    p_lega: s.lega, p_player_id: idDi('Aattacco'),
+  })
+  const inAstaOra = await inAsta(s.lega)
+  esito(
+    'Chi era stato passato si puo rimettere all asta cercandolo per nome',
+    ripescato.riga?.esito === 'ok' && inAstaOra?.name === 'Aattacco',
+    `${ripescato.riga?.messaggio} · in asta: ${inAstaOra?.name}`,
+  )
+
+  const doppio = await rpc(admin, 'apri_lotto_scelto', {
+    p_lega: s.lega, p_player_id: idDi('Battacco'),
+  })
+  esito(
+    'Non se ne aprono due insieme nemmeno cosi',
+    doppio.riga?.esito === 'lotto_chiuso',
+    `${doppio.riga?.messaggio}`,
+  )
+
+  // Lo si compra davvero, e da comprato non si ripesca piu'.
+  const squadraAmico = s.squadre.find((q) => q.user_id === amico.id).id
+  await rpc(amico, 'rilancia', { p_lotto: inAstaOra.id, p_importo: 3 })
+  await rpc(admin, 'aggiudica_ora', { p_lotto: inAstaOra.id })
+
+  const giaPreso = await rpc(admin, 'apri_lotto_scelto', {
+    p_lega: s.lega, p_player_id: idDi('Aattacco'),
+  })
+  esito(
+    'Un calciatore gia comprato non torna all asta',
+    giaPreso.riga?.esito === 'gia_acquistato',
+    `${giaPreso.riga?.messaggio}`,
+  )
+
+  const inRosa = (await sql(`select price from public.roster_players
+    where league_id = '${s.lega}' and team_id = '${squadraAmico}'
+      and player_id = ${idDi('Aattacco')};`))[0]
+  esito(
+    'Il ripescato finisce in rosa al prezzo battuto',
+    inRosa?.price === 3,
+    `comprato a ${inRosa?.price}`,
+  )
+
+  // Chiusura a mano: prima non esisteva, perche' l'asta si chiudeva da sola.
+  const chiusuraNonAdmin = await rpc(amico, 'chiudi_asta', { p_lega: s.lega })
+  const chiusura = await rpc(admin, 'chiudi_asta', { p_lega: s.lega })
+  const finale = (await sql(`select a.status, l.status lega from public.auctions a
+    join public.leagues l on l.id = a.league_id where a.league_id = '${s.lega}';`))[0]
+  esito(
+    'L amministratore chiude l asta a mano, e il messaggio dice cosa resta scoperto',
+    chiusuraNonAdmin.riga?.esito === 'non_autorizzato' &&
+      chiusura.riga?.esito === 'ok' &&
+      finale.status === 'closed' && finale.lega === 'done',
+    `${chiusura.riga?.messaggio} · asta ${finale.status}, lega ${finale.lega}`,
+  )
+
+  const dopoChiusa = await rpc(admin, 'apri_lotto_scelto', {
+    p_lega: s.lega, p_player_id: idDi('Battacco'),
+  })
+  esito(
+    'A asta chiusa non si apre piu niente',
+    dopoChiusa.riga?.esito === 'asta_non_aperta',
+    `${dopoChiusa.riga?.messaggio}`,
   )
 }
 

@@ -65,7 +65,13 @@ if (process.argv.includes('--pulisci')) {
 // del listone ritira i calciatori della stagione indicata che non sono nel
 // file, e con una stagione condivisa manderebbe fuori listone i calciatori
 // veri. E' gia' successo.
-const STAGIONE_DI_PROVA = 'PROVA'
+// Una stagione tutta sua, diversa da quella di ogni altra suite.
+// `importa_listone` ritira i calciatori della stagione che sta caricando e
+// che non trova nel file: con una stagione condivisa, ogni suite spegneva il
+// listone di quella lanciata prima, e le prove passavano o fallivano a
+// seconda dell'ordine. Vale anche la ragione originale: non e' mai la
+// stagione vera, perche' spegnerebbe il listone dell'utente.
+const STAGIONE_DI_PROVA = 'PROVA-DEL'
 
 const esiti = []
 function esito(nome, ok, dettaglio) {

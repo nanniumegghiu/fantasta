@@ -156,7 +156,17 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
 13. Vista personale dell'asta: calciatore in asta, mie informazioni su di lui, rilanci +1, +5, +10
     e libero, crediti, obiettivi residui, accesso rapido a rose e listone. La scorciatoia agli
     obiettivi porta al **solo reparto in corso** e lo dice nel nome: «I miei difensori».
-14. Vista amministratore dell'asta: la precedente più passa, assegna, annulla, pausa.
+14. Vista amministratore dell'asta: la precedente più i poteri di conduzione, su **due piani**.
+
+    Sopra, sempre visibile, **solo l'azione del momento**: aggiudicare quando c'è un'offerta,
+    passare quando non c'è nessuno, estrarre quando non c'è nessuno in asta. Una alla volta, ed è
+    quella che serve adesso.
+
+    Sotto, **a scomparsa**, tutto il resto: pausa, assegnazione senza asta, riempimento per nome,
+    annullamento, chiusura. Chi conduce è anche uno che gioca, e prima la sua asta finiva
+    schiacciata sotto pulsanti che servono tre volte in una serata. Nascondere anche l'azione del
+    momento sarebbe stato più pulito da guardare e peggio da usare: costringerebbe ad aprire un
+    pannello ogni volta che la stanza aspetta una decisione.
 15. **Schermo condiviso**: la vista da proiettare, senza comandi, con i suoni.
 
     Disposizione richiesta dall'utente, in due fasce orizzontali.
@@ -166,9 +176,20 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
     statistiche di campionato, con la giornata di riferimento. Il countdown occupa il centro
     quando parte.
 
-    **Fascia inferiore, il quadro generale.** Tutte le squadre affiancate: per ognuna il nome, i
-    crediti residui, gli slot occupati reparto per reparto e il massimo che può ancora offrire.
-    È il riepilogo totale dell'asta, e resta sempre visibile mentre sopra si svolge la chiamata.
+    **Fascia inferiore, le rose per intero.** Tutte le squadre affiancate, una colonna a testa,
+    con la **rosa completa e il prezzo pagato per ogni calciatore**. I crediti stanno in cima alla
+    colonna e non si muovono: sono il dato che si guarda più spesso e da più lontano.
+
+    I contatori da soli — «D 5/8» — dicono quanto manca, non cosa c'è. La domanda vera durante
+    un'asta è chi ha già preso il portiere del Milan, e a quanto: senza quel dato non si capisce se
+    chi rilancia sta completando un reparto o togliendosi uno sfizio, e si offre alla cieca.
+
+    Gli slot ancora vuoti si vedono tratteggiati. Sono la cosa che a fine serata conta di più, e
+    tenendo il numero di righe costante la fascia non cambia altezza mano a mano che le rose si
+    riempiono: su un televisore vorrebbe dire un layout che balla tutta la sera.
+
+    Accanto ai crediti restano il massimo ancora offribile e la spesa fatta finora. È il riepilogo
+    totale dell'asta, e resta sempre visibile mentre sopra si svolge la chiamata.
 
     Il senso della divisione: chi guarda da tre metri deve capire in un colpo d'occhio *cosa sta
     succedendo adesso* e *come sta andando la serata*, senza che nessuno debba cambiare schermata.
@@ -245,6 +266,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.6 | 2026-09-03 | Schermo condiviso con le rose intere e i prezzi. Comandi di conduzione a due piani, con il secondo a scomparsa. |
 | 1.5 | 2026-09-03 | Colonna del ruolo nel listone. Gli slot sono i posti del regolamento, con un massimale a testa. Tutte le schermate provate tranne l asta in corso. |
 | 1.4 | 2026-09-03 | Obiettivi divisi per reparto, con il filtro del reparto in corso. |
 | 1.3 | 2026-09-02 | Vista personale dell asta e schermo condiviso. Suoni sintetizzati invece che da file. |
