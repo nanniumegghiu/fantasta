@@ -82,6 +82,7 @@ volta sola non valeva la pena aprirlo.
 | `/listone` | Tabella dei calciatori: filtri per ruolo e squadra, ordinamento su ogni colonna. |
 | `/importazione` | Caricamento di listone e statistiche. Solo amministratori dell applicazione. |
 | `/volti` | Revisione dei volti: chi non ce l ha e chi ce l ha dedotto. Solo amministratori dell applicazione. |
+| `/tv/:codice` | Lo schermo condiviso su un televisore. **L'unica rotta senza accesso**: la chiave è il codice di sei caratteri, e quello che si vede da qui lo decide `schermo_tv`. |
 | qualsiasi altro | Rimanda a `/leghe`. |
 
 Chi arriva da un link di invito senza aver fatto l'accesso viene mandato ad `/accesso`, e **dopo
@@ -169,6 +170,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.16 | 2026-09-04 | Rotta `/tv/:codice` senza accesso, e schermo condiviso diviso fra disegno e sorgente dei dati. |
 | 1.15 | 2026-09-04 | Stemmi delle squadre, firmati a blocchi come i volti. |
 | 1.14 | 2026-09-04 | Schermata di revisione dei volti, raggiungibile dal listone. |
 | 1.13 | 2026-09-04 | Pubblicata online su GitHub Pages: percorso base, ricaduta per le rotte, compilazione automatica. |

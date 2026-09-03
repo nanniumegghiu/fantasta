@@ -208,6 +208,17 @@ arrivando da un collegamento esterno o riaprendo l'app su quella schermata.
     pannello ogni volta che la stanza aspetta una decisione.
 15. **Schermo condiviso**: la vista da proiettare, senza comandi, con i suoni.
 
+    Si apre in due modi, e il disegno è **lo stesso componente**: dalla sessione di un partecipante,
+    che ascolta il canale in tempo reale, oppure dal **codice della TV** (`/tv/K7M2PQ`), che
+    interroga ogni secondo e mezzo senza nessun accesso. Due copie della stessa schermata
+    divergerebbero al primo ritocco, e ce ne si accorgerebbe la sera dell'asta guardando due
+    televisori diversi.
+
+    Il codice è di sei caratteri senza O, 0, I e 1: si digita col telecomando, dove quei quattro
+    caratteri si sbagliano sempre. Nel pannello di conduzione l'indirizzo è scritto su due righe,
+    con il codice staccato e spaziato, perché chi digita alterna lo sguardo fra telefono e
+    televisore e la parte che si sbaglia è quella.
+
     Disposizione richiesta dall'utente, in due fasce orizzontali.
 
     **Fascia superiore, il momento presente.** A sinistra il calciatore chiamato con la cifra
@@ -328,6 +339,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.13 | 2026-09-04 | Lo schermo condiviso si apre anche da un codice di sei caratteri, per il televisore. |
 | 1.12 | 2026-09-04 | Stemmi delle squadre nel listone, nell asta e sullo schermo condiviso. |
 | 1.11 | 2026-09-04 | Schermata di revisione dei volti, con i due lavori tenuti separati. |
 | 1.10 | 2026-09-04 | Scambi fra squadre, con il conto dei reparti che si vede mentre si sceglie. |

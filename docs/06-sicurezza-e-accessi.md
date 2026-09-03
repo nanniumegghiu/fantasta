@@ -149,6 +149,49 @@ Il repository è stato controllato prima di renderlo pubblico: nessun valore di 
 nessun commit, presente o passato. Solo i **nomi** delle variabili, in `.env.example`, con le
 istruzioni per procurarsele.
 
+## 2quater. L'unico punto in cui si vede una lega senza farne parte
+
+Il codice per il televisore apre lo schermo condiviso **senza accesso**. È l'unica eccezione al
+principio «si vede solo la lega di cui si fa parte», e per questo il confine non sta
+nell'interfaccia: sta in **una funzione sola**, `schermo_tv`.
+
+### Perché una funzione e non delle policy
+
+L'alternativa era dare a un visitatore speciale il permesso di leggere auctions, auction_lots,
+teams, roster_players, players, player_stats, club_logos. Sette tabelle, sette policy da scrivere
+giuste, e ogni tabella che si aggiunge in futuro è un'ottava occasione di dimenticarsene.
+
+Con una funzione il confine è enumerato: **quello che non è dentro quella funzione, da quel link
+non si vede**, e per verificarlo si legge un file solo.
+
+### Cosa quella funzione non restituisce
+
+| Non c'è | Perché è la cosa che conta |
+|---|---|
+| Liste obiettivi, tetti di spesa, note | Sono private anche dall'amministratore |
+| Indirizzi email | Il televisore è in salotto, e lo guardano tutti |
+| Identificativi delle persone | Le squadre hanno un nome, e basta quello |
+
+Metà delle diciotto prove verifica **assenze**: si prende la risposta intera come testo e si
+controlla che una nota scritta apposta, un tetto di spesa e una chiocciola non compaiano per
+nessuna strada.
+
+### Il visitatore anonimo, e perché non allarga niente
+
+La pagina entra da sola come utente anonimo. Non serve a leggere l'asta — quella la dà la funzione
+col codice — ma a poter **firmare gli indirizzi delle immagini**, che stanno in archivi riservati a
+chi usa l'applicazione. Senza, il televisore mostrerebbe le iniziali al posto delle facce, che è
+proprio quello che sul grande schermo si voleva evitare.
+
+Non allarga il perimetro: **la registrazione è già aperta a chiunque**, quindi chi volesse leggere
+il listone o le immagini poteva già farlo creando un account. L'accesso anonimo toglie solo il
+passaggio dell'email.
+
+### Il codice scade
+
+Dodici ore, che coprono una serata con abbondanza. Un link che non scade è un link che gira per
+sempre. Uno per lega: rigenerarlo spegne il precedente, e l'amministratore può revocarlo subito.
+
 ## 3. File coinvolti
 
 - `app/supabase/migrations/20260902120000_profili.sql` — profili e loro policy
