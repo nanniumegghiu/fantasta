@@ -2,8 +2,10 @@ import { useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Intestazione } from '@/components/Intestazione'
 import { Bottone } from '@/components/Bottone'
+import { Link } from 'react-router-dom'
 import { Volto } from '@/components/Volto'
 import { useVolti } from '@/features/listone/volti'
+import { useSonoAmministratoreApp } from '@/features/listone/api'
 import {
   giornataAggiornamento,
   useListone,
@@ -111,6 +113,7 @@ export function PaginaListone() {
             : undefined
         }
         indietroA="/leghe"
+        azione={<ScorciatoiaVolti />}
       />
 
       <div className="mx-auto w-full max-w-5xl px-4 pt-4">
@@ -370,4 +373,25 @@ function Tabella({
     </div>
   )
 }
-
+
+/**
+ * La scorciatoia alla revisione dei volti, solo per chi amministra.
+ *
+ * Sta qui perche' e' guardando il listone che ci si accorge di una faccia
+ * sbagliata o mancante: mettere il collegamento altrove vorrebbe dire
+ * ricordarsi dov'era quando serve.
+ */
+function ScorciatoiaVolti() {
+  const { data: sonoAdmin } = useSonoAmministratoreApp()
+  if (!sonoAdmin) return null
+  return (
+    <Link
+      to="/volti"
+      title="Rivedi i volti dei calciatori"
+      aria-label="Rivedi i volti dei calciatori"
+      className="flex size-10 shrink-0 items-center justify-center rounded-xl text-lg text-fumo hover:bg-verde-campo hover:text-nebbia"
+    >
+      👤
+    </Link>
+  )
+}

@@ -30,6 +30,8 @@
 //   node scripts/volti.mjs --abbina         solo il passo 2, mostra cosa farebbe
 //   node scripts/volti.mjs                  tutti e tre i passi
 //   node scripts/volti.mjs --limite 50      carica al massimo 50 immagini
+//   node scripts/volti.mjs --proponi        chi resta fuori, e a chi somiglia
+//   node scripts/volti.mjs --manuale        li passa uno per uno, e decidi tu
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
@@ -106,11 +108,30 @@ function argomento(nome, ripiego) {
  * Ulien». Senza questo passaggio l'abbinamento fallirebbe su un nome su dieci
  * per motivi tipografici, non di identita'.
  */
+/**
+ * Le lettere che la decomposizione degli accenti non scompone.
+ *
+ * «Guðmundsson» e «Gudmundsson» sono la stessa persona, ma la ð non è una d
+ * con un segno sopra: è una lettera a sé, e `normalize('NFD')` non la tocca.
+ * Senza questa tabella quel calciatore resta senza faccia, e con lui le Ø
+ * scandinave, le Ł polacche e le Đ balcaniche, che nel calcio non sono rare.
+ *
+ * Trovate guardando i candidati che `--proponi` metteva al primo posto: il
+ * nome giusto c'era, e l'abbinamento automatico non ci arrivava per una
+ * lettera.
+ */
+const LETTERE_INTERE = {
+  'ð': 'd', 'þ': 'th', 'ø': 'o', 'œ': 'oe', 'æ': 'ae',
+  'ł': 'l', 'đ': 'd', 'ħ': 'h', 'ı': 'i', 'ß': 'ss',
+}
+
 function normalizza(s) {
   return (s ?? '')
+    .toLowerCase()
+    .replace(/[\u00f0\u00fe\u00f8\u0153\u00e6\u0142\u0111\u0127\u0131\u00df]/g,
+      (c) => LETTERE_INTERE[c] ?? c)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 }
@@ -372,6 +393,159 @@ function abbina(listone, elencoFm) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// A mano · Per chi l'abbinamento automatico lascia fuori
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Quanto due nomi si somigliano, fra 0 e 1.
+ *
+ * E' la distanza di Levenshtein normalizzata sulla lunghezza. Serve a
+ * **proporre**, non a decidere: la decisione resta di chi guarda, e l'ordine
+ * dei candidati e' solo un modo di non far scorrere millesettecento nomi.
+ *
+ * Scritta a mano perche' sono quindici righe e l'elenco delle dipendenze e'
+ * chiuso (ADR-0006): una libreria per questo sarebbe sproporzionata.
+ */
+function somiglianza(a, b) {
+  if (a === b) return 1
+  if (!a || !b) return 0
+
+  const righe = Array.from({ length: b.length + 1 }, (_, i) => [i, ...Array(a.length).fill(0)])
+  for (let j = 0; j <= a.length; j++) righe[0][j] = j
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      righe[i][j] = Math.min(
+        righe[i - 1][j] + 1,
+        righe[i][j - 1] + 1,
+        righe[i - 1][j - 1] + (b[i - 1] === a[j - 1] ? 0 : 1),
+      )
+    }
+  }
+  return 1 - righe[b.length][a.length] / Math.max(a.length, b.length)
+}
+
+/**
+ * I candidati piu' probabili per un calciatore che non si e' abbinato.
+ *
+ * Il punteggio somma tre cose: quanto si somigliano i nomi, un premio se la
+ * squadra combacia, e un premio piccolo alla reputazione. La reputazione conta
+ * poco ma conta: fra due sconosciuti con lo stesso cognome, quello che gioca
+ * in Serie A e' piu' probabilmente quello del listone.
+ */
+function candidati(calciatore, elencoFm, quanti = 5) {
+  const squadra = chiaveSquadra(calciatore.serie_a_team)
+  const forme = [...formeDelNome(calciatore.name)]
+
+  return elencoFm
+    .map((g) => {
+      const sueForme = [...formeDelNome(g.nome, g.alternative)]
+      let migliore = 0
+      for (const a of forme) for (const b of sueForme) migliore = Math.max(migliore, somiglianza(a, b))
+
+      const stessaSquadra = chiaveSquadra(g.squadra) === squadra
+      const punteggio = migliore + (stessaSquadra ? 0.35 : 0) + Math.min(g.reputazione, 200) / 4000
+      return { ...g, somiglianza: migliore, stessaSquadra, punteggio }
+    })
+    .filter((g) => g.somiglianza > 0.45 || g.stessaSquadra)
+    .sort((a, b) => b.punteggio - a.punteggio)
+    .slice(0, quanti)
+}
+
+/** Stampa chi resta fuori e a chi somiglia, senza chiedere niente. */
+function proponi(esiti, elencoFm) {
+  const fuori = esiti.filter((e) => e.esito !== 'ok')
+  if (fuori.length === 0) {
+    console.log('\nNon resta fuori nessuno.')
+    return
+  }
+
+  console.log(`\n${fuori.length} da sistemare a mano. Per ognuno, i più somiglianti:\n`)
+  for (const e of fuori.slice(0, 40)) {
+    const c = e.calciatore
+    console.log(`${c.name} (${c.role}, ${c.serie_a_team})`)
+    const prop = candidati(c, elencoFm)
+    if (prop.length === 0) {
+      console.log('   nessun candidato somigliante')
+    } else {
+      prop.forEach((g, i) => {
+        const foto = existsSync(join(VOLTI, `${g.fm_id}.png`)) ? 'foto sì' : 'foto NO'
+        console.log(
+          `   ${i + 1}. ${g.nome} — ${g.squadra} — fm ${g.fm_id} — ` +
+            `somiglianza ${Math.round(g.somiglianza * 100)}% — ${foto}`,
+        )
+      })
+    }
+    console.log('')
+  }
+  if (fuori.length > 40) console.log(`…e altri ${fuori.length - 40}.`)
+}
+
+/**
+ * Li passa uno per uno e chiede.
+ *
+ * PERCHE' DA TERMINALE E NON DALLA SCHERMATA
+ * Le immagini stanno nel facepack, sul disco: il browser non lo puo' leggere.
+ * La schermata `/volti` serve a caricare un file scelto a mano e a dire «e'
+ * lui» o «non e' lui»; questo serve a passare in rassegna novanta nomi
+ * pescando dal facepack, che e' un lavoro diverso.
+ */
+async function aMano(esiti, elencoFm, stagione) {
+  const { createInterface } = await import('node:readline/promises')
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+
+  const fuori = esiti.filter((e) => e.esito !== 'ok')
+  console.log(`\n${fuori.length} da sistemare. Per ognuno: un numero per scegliere,`)
+  console.log('invio per saltare, «f» per finire.\n')
+
+  const scelte = []
+  for (const e of fuori) {
+    const c = e.calciatore
+    const prop = candidati(c, elencoFm)
+    if (prop.length === 0) continue
+
+    console.log(`\n${c.name} (${c.role}, ${c.serie_a_team})`)
+    prop.forEach((g, i) => {
+      const foto = existsSync(join(VOLTI, `${g.fm_id}.png`))
+      console.log(
+        `   ${i + 1}. ${g.nome} — ${g.squadra} — ${Math.round(g.somiglianza * 100)}%` +
+          (foto ? '' : '  (senza foto nel facepack)'),
+      )
+    })
+
+    const risposta = (await rl.question('   scelta: ')).trim().toLowerCase()
+    if (risposta === 'f') break
+    const n = Number(risposta)
+    if (!Number.isInteger(n) || n < 1 || n > prop.length) continue
+
+    const scelto = prop[n - 1]
+    if (!existsSync(join(VOLTI, `${scelto.fm_id}.png`))) {
+      console.log('   quello non ha la foto nel facepack: salto')
+      continue
+    }
+    scelte.push({ calciatore: c, fm: scelto })
+    console.log(`   → ${scelto.nome}`)
+  }
+  rl.close()
+
+  if (scelte.length === 0) {
+    console.log('\nNiente da caricare.')
+    return
+  }
+
+  console.log(`\nCarico ${scelte.length} immagini scelte a mano.`)
+  // Origine «confermata»: le ha decise una persona guardando, e nessun giro
+  // automatico deve poterle sovrascrivere.
+  const esito = await carica(
+    scelte.map((x) => ({ esito: 'ok', calciatore: x.calciatore, fm: x.fm, origine: 'confermata' })),
+    stagione,
+    scelte.length,
+  )
+  console.log(`${esito.caricate} caricate.`)
+  if (esito.conto) console.log(`Corrispondenze scritte: ${esito.conto.aggiornati}.`)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Passo 3 · Caricare le immagini
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -510,7 +684,12 @@ if (process.argv.includes('--stato')) {
 // ─── Passo 1 ────────────────────────────────────────────────────────────────
 
 let elencoFm
-if (process.argv.includes('--abbina') && existsSync(ELENCO_FM)) {
+const riusaElenco =
+  process.argv.includes('--abbina') ||
+  process.argv.includes('--proponi') ||
+  process.argv.includes('--manuale')
+
+if (riusaElenco && existsSync(ELENCO_FM)) {
   elencoFm = JSON.parse(readFileSync(ELENCO_FM, 'utf8'))
   console.log(`Riuso l'elenco già scaricato: ${elencoFm.length} calciatori.\n`)
 } else {
@@ -580,6 +759,17 @@ if (sparsi.length) {
   for (const e of sparsi.slice(0, 10)) {
     console.log(`  · ${e.calciatore.name} (${e.calciatore.serie_a_team})`)
   }
+}
+
+if (process.argv.includes('--proponi')) {
+  proponi(esiti, elencoFm)
+  console.log('\nNiente è stato caricato. Per decidere uno per uno: --manuale')
+  process.exit(0)
+}
+
+if (process.argv.includes('--manuale')) {
+  await aMano(esiti, elencoFm, stagione.season)
+  process.exit(0)
 }
 
 if (process.argv.includes('--abbina')) {

@@ -81,6 +81,7 @@ volta sola non valeva la pena aprirlo.
 | `/lega/:id/obiettivi` | La lista obiettivi: fasce, tetti, note, slot, incroci. Privata. Accetta `?ruolo=P|D|C|A` e apre già filtrata su quel reparto. |
 | `/listone` | Tabella dei calciatori: filtri per ruolo e squadra, ordinamento su ogni colonna. |
 | `/importazione` | Caricamento di listone e statistiche. Solo amministratori dell applicazione. |
+| `/volti` | Revisione dei volti: chi non ce l ha e chi ce l ha dedotto. Solo amministratori dell applicazione. |
 | qualsiasi altro | Rimanda a `/leghe`. |
 
 Chi arriva da un link di invito senza aver fatto l'accesso viene mandato ad `/accesso`, e **dopo
@@ -168,6 +169,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.14 | 2026-09-04 | Schermata di revisione dei volti, raggiungibile dal listone. |
 | 1.13 | 2026-09-04 | Pubblicata online su GitHub Pages: percorso base, ricaduta per le rotte, compilazione automatica. |
 | 1.12 | 2026-09-04 | Esportazione delle rose e scambi fra squadre nella schermata della lega. |
 | 1.11 | 2026-09-04 | Volti dei calciatori ovunque, con ricaduta sulle iniziali. Il listone mostra una stagione sola. |

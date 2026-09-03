@@ -233,6 +233,55 @@ Lo script non chiede la password personale del proprietario. Si crea un account 
 i permessi di amministrazione con la chiave di gestione che già usa per le migrazioni, e **lo
 cancella appena finito**. Nessun segreto nuovo entra nel progetto.
 
+## 2bis-bis. Quando l'automatico non basta
+
+ADR-0011 lo prevedeva: «ciò che resta scoperto va nella schermata di abbinamento manuale, che serve
+comunque». Sono due strumenti, e sono due perché il lavoro è di due tipi diversi.
+
+### La schermata `/volti`, per chi amministra l'applicazione
+
+Mostra **solo chi vale la pena guardare**, non i cinquecento del listone:
+
+| Chi | Perché | Cosa si fa |
+|---|---|---|
+| Senza foto | Non si vede niente | Si carica un'immagine dal disco |
+| Con volto **dedotto dal solo cognome** | Può essere la faccia di un altro | Si guarda e si dice «è lui» o «non è lui» |
+
+Gli abbinamenti nati incrociando cognome **e** squadra non compaiono: sono affidabili, e metterceli
+vorrebbe dire nascondere i novanta che contano dentro cinquecento che non contano.
+
+Quello che si carica da qui nasce **confermato**: l'ha scelto una persona guardando, e nessun giro
+automatico lo sovrascrive più. È la regola scritta nella migrazione 0022, ed è la ragione per cui
+questa schermata vale la pena di esistere: senza, il lavoro di revisione andrebbe rifatto ogni
+stagione e nessuno lo farebbe più di una volta.
+
+«Non è lui» toglie anche l'identificativo di Football Manager, non solo l'immagine: se la faccia era
+sbagliata lo era anche la persona, e lasciare l'identificativo vorrebbe dire ritrovarsi la stessa
+faccia al giro successivo.
+
+### `--proponi` e `--manuale`, dal terminale
+
+Le immagini stanno nel facepack, sul disco: il browser non lo può leggere. Per passare in rassegna
+novanta nomi pescando dal facepack serve lo script.
+
+`--proponi` stampa chi resta fuori e i cinque nomi più somiglianti, con scritto se la foto nel
+facepack c'è davvero. `--manuale` fa la stessa cosa e chiede, uno per uno, con un numero per
+scegliere e invio per saltare.
+
+La somiglianza è la distanza di Levenshtein normalizzata, più un premio se la squadra combacia e uno
+piccolo alla reputazione. Serve a **proporre**, non a decidere: l'ordine dei candidati è solo un modo
+di non far scorrere millesettecento nomi.
+
+### Cinque abbinamenti recuperati guardando le proposte
+
+Le proposte hanno mostrato un difetto dell'automatico: «Guðmundsson» e «Gudmundsson» sono la stessa
+persona, ma la ð non è una d con un segno sopra — è una lettera a sé, e `normalize('NFD')` non la
+tocca. Il nome giusto era il primo dei candidati proposti, e l'abbinamento automatico non ci
+arrivava per una lettera.
+
+Aggiunta una tabella per ð, þ, ø, œ, æ, ł, đ, ħ, ı, ß: **da 437 a 442 abbinati**, da 420 a 424 con
+la foto. È il tipo di cosa che si vede solo guardando cosa il sistema propone quando sbaglia.
+
 ## 2ter. L'esportazione, com'e' fatta
 
 Fetta 6, costruita il 4 settembre 2026. Il formato e' quello di ADR-0008 e non si discute; quello

@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.6 · **Data** · 2026-09-04
+**Versione documento** · 2.7 · **Data** · 2026-09-04
 
 ---
 
@@ -184,7 +184,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
 | Accesso con Google | 🟡 tutto pronto, mancano le due chiavi da Google Cloud: `node scripts/accendi-google.mjs --istruzioni` |
 | Fetta 5: facepack | ✅ 403 volti caricati, 98% dei calciatori abbinabili |
-| Fetta 5b: schermata di abbinamento manuale | 🔴 serve per i casi che l algoritmo lascia fuori |
+| Fetta 5b: revisione dei volti a mano | ✅ 15 prove, schermata `/volti` più `--proponi` e `--manuale` |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
 
@@ -215,6 +215,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node --experimental-strip-types scripts/verifica-listone.mjs` | Diciannove prove sulla lettura dei file e sull importazione del listone. Due sono la sentinella: un calciatore vero che deve sopravvivere alle prove e alla pulizia. Costruisce da zero un vero `.xlsx` per provarci sopra. |
 | `node scripts/verifica-obiettivi.mjs` | Quarantaquattro prove sulla lista obiettivi: fra le altre, che un attaccante non entri in una fascia di difensori e che il numero degli slot non si possa toccare dal client. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 | `node --experimental-strip-types scripts/verifica-esportazione.mjs` | Quattordici prove sul file delle rose. Le piu importanti provano nomi di squadra con punto e virgola, virgolette e ritorni a capo: un CSV rotto non da errore, sposta le colonne di uno. |
+| `node scripts/verifica-volti.mjs` | Quindici prove sui volti. La piu importante: un abbinamento confermato a mano non lo sovrascrive nessun giro automatico. |
 | `node scripts/accendi-google.mjs` | Accende l accesso con Google quando le due chiavi sono in `.env.local`. Con `--istruzioni` stampa i cinque minuti da fare su Google Cloud, con dentro l indirizzo di ritorno gia pronto. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
 | `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
@@ -247,6 +248,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.7 | 2026-09-04 | Revisione dei volti a mano: schermata per chi amministra, proposte dal terminale, e cinque abbinamenti recuperati sistemando le lettere nordiche. |
 | 2.6 | 2026-09-04 | Pubblicata online su GitHub Pages, con compilazione automatica a ogni push. Repository pubblico. |
 | 2.5 | 2026-09-04 | Fetta 7: scambi fra squadre, con la regola dei reparti che pareggiano e la rivalidazione al momento dell accettazione. |
 | 2.4 | 2026-09-04 | Fetta 6: esportazione delle rose nel file che l app Fantacalcio sa caricare. |

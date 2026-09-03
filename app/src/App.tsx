@@ -31,6 +31,9 @@ const PaginaListone = lazy(() =>
 const PaginaImportazione = lazy(() =>
   import('@/pages/PaginaImportazione').then((m) => ({ default: m.PaginaImportazione })),
 )
+const PaginaVolti = lazy(() =>
+  import('@/pages/PaginaVolti').then((m) => ({ default: m.PaginaVolti })),
+)
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -199,6 +202,16 @@ function Rotte() {
         element={
           <SoloAutenticati>
             <PaginaImportazione />
+          </SoloAutenticati>
+        }
+      />
+      {/* La revisione dei volti: la schermata dice da sola a chi non
+          amministra che non deve fare niente. */}
+      <Route
+        path="/volti"
+        element={
+          <SoloAutenticati>
+            <PaginaVolti />
           </SoloAutenticati>
         }
       />

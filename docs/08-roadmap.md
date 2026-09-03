@@ -128,7 +128,7 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | Ponte automatico verso gli identificativi di Football Manager | ✅ 437 abbinati su 531 |
 | Immagini caricate nell archivio | ✅ 403, indirizzi firmati a blocchi |
 | Volti nel listone, nell asta e sullo schermo condiviso | ✅ con ricaduta sulle iniziali |
-| Schermata di abbinamento manuale | 🔴 serve per i 90 che restano fuori |
+| Schermata di abbinamento manuale | ✅ `/volti`, più `--proponi` e `--manuale` dal terminale |
 | Loghi delle squadre | 🔴 il logopack c è, non è ancora usato |
 
 *Descrizione originale della fetta:*
@@ -179,6 +179,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.15 | 2026-09-04 | Revisione dei volti a mano, e cinque abbinamenti recuperati dalle lettere nordiche. |
 | 1.14 | 2026-09-04 | Pubblicata online. Il link gira davvero su WhatsApp. |
 | 1.13 | 2026-09-04 | Fetta 7 costruita: scambi fra squadre. |
 | 1.12 | 2026-09-04 | Fetta 6 costruita: esportazione delle rose, con anteprima e avvertimenti. |

@@ -242,6 +242,14 @@ arrivando da un collegamento esterno o riaprendo l'app su quella schermata.
     squadra A dà alla squadra B» — perché con sei squadre in lega capire da che parte si sta
     richiede un attimo di troppo mentre si decide.
 
+15quater. **Revisione dei volti** (`/volti`, solo per chi amministra l'applicazione). Si arriva
+    dall'icona nell'intestazione del listone, perché è guardando il listone che ci si accorge di una
+    faccia sbagliata: un collegamento altrove andrebbe ricordato proprio quando serve.
+
+    Tiene separati i due lavori — «manca la foto» si risolve caricando, «c'è ma è dedotta» si
+    risolve guardando — perché sono due gesti con due rischi diversi. A chi non amministra la
+    schermata dice che non deve fare niente, invece di mostrargli comandi che fallirebbero.
+
 16. Fine asta: riepilogo ed esportazione in CSV.
 
 ### 2.7 Struttura mobile
@@ -315,6 +323,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.11 | 2026-09-04 | Schermata di revisione dei volti, con i due lavori tenuti separati. |
 | 1.10 | 2026-09-04 | Scambi fra squadre, con il conto dei reparti che si vede mentre si sceglie. |
 | 1.9 | 2026-09-04 | I volti dei calciatori nel listone, nell asta e sullo schermo condiviso. |
 | 1.8 | 2026-09-03 | Correzione delle rose con motivo obbligatorio, e registro dell asta visibile a tutti. |
