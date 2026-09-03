@@ -6,6 +6,7 @@ import { Campo } from '@/components/Campo'
 import { Intestazione } from '@/components/Intestazione'
 import { EsportaRose } from '@/features/asta/EsportaRose'
 import { Scambi } from '@/features/scambi/Scambi'
+import { useAffidaSquadra, useLiberaSquadra } from '@/features/leghe/partecipanti'
 import { useAccesso } from '@/features/auth/ContestoAccesso'
 import {
   indirizzoRegolamento,
@@ -68,7 +69,7 @@ export function PaginaLega() {
         <RiquadroObiettivi idLega={lega.id} />
         <RiquadroListone />
         {sonoAdmin && <RiquadroInvito lega={lega} />}
-        <RiquadroPartecipanti lega={lega} idUtente={utente?.id} />
+        <RiquadroPartecipanti lega={lega} idUtente={utente?.id} sonoAdmin={sonoAdmin} />
         <RiquadroMiaSquadra lega={lega} idUtente={utente?.id} />
         <RiquadroRegole lega={lega} />
         <RiquadroRegolamento lega={lega} sonoAdmin={sonoAdmin} />
@@ -283,11 +284,22 @@ function RiquadroInvito({ lega }: { lega: LegaCompleta }) {
 function RiquadroPartecipanti({
   lega,
   idUtente,
+  sonoAdmin,
 }: {
   lega: LegaCompleta
   idUtente: string | undefined
+  sonoAdmin: boolean
 }) {
   const { data: profili } = useProfili(lega.league_members.map((m) => m.user_id))
+  const libera = useLiberaSquadra(lega.id)
+  const [daLiberare, setDaLiberare] = useState<string | null>(null)
+  const [motivo, setMotivo] = useState('')
+  const [messaggio, setMessaggio] = useState<string | null>(null)
+
+  // Una squadra senza proprietario non compare fra i partecipanti — nessuno la
+  // guida — ma esiste, con la sua rosa e i suoi crediti, e va mostrata o
+  // sembrerebbe sparita.
+  const libere = lega.teams.filter((t) => !t.user_id)
 
   return (
     <Riquadro
@@ -318,10 +330,97 @@ function RiquadroPartecipanti({
               <span className="cifre-fisse shrink-0 text-sm font-bold text-oro">
                 {squadra?.credits_remaining ?? lega.credits_initial}
               </span>
+
+              {/* Chi amministra può togliere qualcuno, ma non se stesso: una
+                  lega senza amministratore non si sblocca più. */}
+              {sonoAdmin && m.role !== 'admin' && squadra && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDaLiberare(squadra.id)
+                    setMotivo('')
+                    setMessaggio(null)
+                  }}
+                  aria-label={`Togli ${profilo?.display_name ?? 'questo partecipante'} dalla lega`}
+                  title="Togli dalla lega, lasciando la squadra"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-lg text-fumo hover:bg-errore/15 hover:text-errore"
+                >
+                  ✕
+                </button>
+              )}
             </li>
           )
         })}
       </ul>
+
+      {messaggio && (
+        <p className="mt-3 rounded-xl border border-verde-acceso/40 bg-verde-acceso/10 px-4 py-3 text-sm text-nebbia">
+          {messaggio}
+        </p>
+      )}
+
+      {daLiberare && (
+        <div className="mt-3 rounded-xl border border-errore/40 bg-errore/10 p-3">
+          <p className="text-sm text-nebbia">
+            Tolgo <strong>{lega.teams.find((t) => t.id === daLiberare)?.name}</strong> a chi la
+            guida adesso. <strong>La squadra resta</strong>: rosa, crediti e nome non si toccano, e
+            potrai affidarla a qualcun altro. Se ne va solo la sua lista obiettivi, che era sua e
+            privata.
+          </p>
+          <label className="mt-3 flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-nebbia">
+              Perché <span className="text-oro">*</span>
+            </span>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value.slice(0, 200))}
+              rows={2}
+              placeholder="Es. ha lasciato il gruppo"
+              className="rounded-xl border border-verde-acceso/30 bg-verde-notte p-3 text-sm text-nebbia outline-none placeholder:text-fumo/60"
+            />
+          </label>
+          <div className="mt-3 flex gap-2">
+            <Bottone
+              aspetto="secondario"
+              inCorso={libera.isPending}
+              disabilitato={motivo.trim().length < 3}
+              onClick={() =>
+                libera.mutate(
+                  { idSquadra: daLiberare, motivo: motivo.trim() },
+                  {
+                    onSuccess: (e) => {
+                      setMessaggio(e.messaggio)
+                      if (e.esito === 'ok') setDaLiberare(null)
+                    },
+                    onError: (e) => setMessaggio(e.message),
+                  },
+                )
+              }
+            >
+              Sì, toglilo
+            </Bottone>
+            <Bottone aspetto="fantasma" onClick={() => setDaLiberare(null)}>
+              Lascia stare
+            </Bottone>
+          </div>
+        </div>
+      )}
+
+      {libere.length > 0 && (
+        <div className="mt-4 border-t border-verde-campo pt-3">
+          <p className="text-sm font-bold text-oro">
+            {libere.length === 1 ? 'Una squadra aspetta qualcuno' : `${libere.length} squadre aspettano qualcuno`}
+          </p>
+          <p className="mt-0.5 mb-2 text-xs text-fumo">
+            Hanno la loro rosa e i loro crediti: manca chi le guida.
+          </p>
+          <div className="flex flex-col gap-2">
+            {libere.map((t) => (
+              <SquadraLibera key={t.id} idLega={lega.id} squadra={t} sonoAdmin={sonoAdmin} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {lega.league_members.length < lega.max_members && (
         <p className="mt-3 text-xs text-fumo">
@@ -330,6 +429,79 @@ function RiquadroPartecipanti({
         </p>
       )}
     </Riquadro>
+  )
+}
+
+/**
+ * Una squadra rimasta senza nessuno, e il modo di affidarla.
+ *
+ * PERCHE' SI CHIEDE L'INDIRIZZO EMAIL
+ * È l'unica cosa che si sa di una persona prima che sia in lega. Deve avere
+ * già un account: l'alternativa sarebbe creare account per conto di altri, che
+ * è esattamente il genere di cosa che un'applicazione non deve fare.
+ */
+function SquadraLibera({
+  idLega,
+  squadra,
+  sonoAdmin,
+}: {
+  idLega: string
+  squadra: { id: string; name: string; credits_remaining: number }
+  sonoAdmin: boolean
+}) {
+  const affida = useAffidaSquadra(idLega)
+  const [email, setEmail] = useState('')
+  const [messaggio, setMessaggio] = useState<string | null>(null)
+
+  return (
+    <div className="rounded-xl border border-oro/40 bg-oro/5 p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="min-w-0 truncate text-sm font-semibold text-nebbia">{squadra.name}</p>
+        <p className="cifre-fisse shrink-0 text-sm font-bold text-oro">
+          {squadra.credits_remaining}
+        </p>
+      </div>
+
+      {sonoAdmin && (
+        <>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              inputMode="email"
+              autoComplete="off"
+              placeholder="email di chi la prende"
+              className="h-10 min-w-0 flex-1 rounded-lg border border-verde-acceso/30 bg-verde-notte px-3 text-sm text-nebbia outline-none placeholder:text-fumo/60"
+            />
+            <Bottone
+              aspetto="secondario"
+              inCorso={affida.isPending}
+              disabilitato={!email.includes('@')}
+              onClick={() =>
+                affida.mutate(
+                  { idSquadra: squadra.id, email: email.trim() },
+                  {
+                    onSuccess: (e) => {
+                      setMessaggio(e.messaggio)
+                      if (e.esito === 'ok') setEmail('')
+                    },
+                    onError: (e) => setMessaggio(e.message),
+                  },
+                )
+              }
+            >
+              Affidala
+            </Bottone>
+          </div>
+          <p className="mt-1 text-xs text-fumo">
+            Deve essersi già registrata all&apos;app con quell&apos;indirizzo.
+          </p>
+        </>
+      )}
+
+      {messaggio && <p className="mt-2 text-sm text-nebbia">{messaggio}</p>}
+    </div>
   )
 }
 

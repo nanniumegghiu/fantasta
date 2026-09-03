@@ -31,6 +31,7 @@ import { useTimerAsta } from '@/features/asta/useTimer'
 import { ImpostazioniPreAsta } from '@/features/asta/ImpostazioniPreAsta'
 import { PannelloAmministratore } from '@/features/asta/PannelloAmministratore'
 import { RegistroAsta } from '@/features/asta/RegistroAsta'
+import { useRiapriAsta } from '@/features/leghe/partecipanti'
 import { Stemma } from '@/components/Stemma'
 import { Volto } from '@/components/Volto'
 import { useLoghi } from '@/features/listone/loghi'
@@ -173,10 +174,11 @@ export function PaginaAsta() {
         )}
 
         {asta?.status === 'closed' && (
-          <div className="rounded-2xl border border-verde-acceso/40 bg-verde-acceso/10 p-5 text-center">
-            <p className="text-lg font-bold text-nebbia">Asta conclusa</p>
-            <p className="mt-1 text-sm text-fumo">Tutte le rose sono complete.</p>
-          </div>
+          <AstaConclusa
+            idLega={idLega}
+            sonoAdmin={sonoAdmin}
+            slotVuoti={(budget ?? []).reduce((n, s) => n + s.slot_rimanenti, 0)}
+          />
         )}
 
         {/* Il registro lo vedono tutti, non solo chi conduce: è la ragione
@@ -752,6 +754,105 @@ function Avversari({
         })}
       </ul>
     </section>
+  )
+}
+
+// ─── Quando l'asta è finita ─────────────────────────────────────────────────
+
+/**
+ * La schermata di fine asta, con la via d'uscita.
+ *
+ * PERCHE' IL PULSANTE PER RIAPRIRE STA QUI
+ * Prima qui c'era solo la scritta «asta conclusa» e la frase «tutte le rose
+ * sono complete», che per giunta non era sempre vera. Chi chiudeva l'asta per
+ * sbaglio si trovava davanti una schermata senza comandi, e non c'era nessun
+ * altro posto dove andare: la lega restava ferma.
+ *
+ * Un'azione che chiude una porta deve avere il suo contrario nello stesso
+ * punto in cui ci si accorge di averla chiusa.
+ */
+function AstaConclusa({
+  idLega,
+  sonoAdmin,
+  slotVuoti,
+}: {
+  idLega: string | undefined
+  sonoAdmin: boolean
+  slotVuoti: number
+}) {
+  const riapri = useRiapriAsta(idLega)
+  const [apre, setApre] = useState(false)
+  const [motivo, setMotivo] = useState('')
+  const [messaggio, setMessaggio] = useState<string | null>(null)
+
+  return (
+    <div className="rounded-2xl border border-verde-acceso/40 bg-verde-acceso/10 p-5">
+      <p className="text-center text-lg font-bold text-nebbia">Asta conclusa</p>
+      <p className="mt-1 text-center text-sm text-fumo">
+        {slotVuoti === 0
+          ? 'Tutte le rose sono complete.'
+          : `Restano ${slotVuoti} slot vuoti: qualcuno ha la rosa incompleta.`}
+      </p>
+
+      {messaggio && (
+        <p className="mt-3 rounded-xl border border-verde-acceso/40 bg-verde-notte px-4 py-3 text-sm text-nebbia">
+          {messaggio}
+        </p>
+      )}
+
+      {sonoAdmin && !apre && (
+        <div className="mt-4 text-center">
+          <Bottone aspetto="secondario" onClick={() => setApre(true)}>
+            Riapri l&apos;asta
+          </Bottone>
+          <p className="mt-2 text-xs text-fumo">
+            Se l&apos;hai chiusa per sbaglio, o se ti accorgi che manca qualcosa. Non si perde
+            niente: rose, crediti e registro restano dove sono.
+          </p>
+        </div>
+      )}
+
+      {sonoAdmin && apre && (
+        <div className="mt-4 flex flex-col gap-3">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-nebbia">
+              Perché la riapri <span className="text-oro">*</span>
+            </span>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value.slice(0, 200))}
+              rows={2}
+              placeholder="Es. l'ho chiusa per sbaglio"
+              className="rounded-xl border border-verde-acceso/30 bg-verde-notte p-3 text-sm text-nebbia outline-none placeholder:text-fumo/60"
+            />
+            <span className="text-xs text-fumo">
+              Riaprire un&apos;asta chiusa cambia le regole a partita finita: il motivo lo leggono
+              tutti nel registro.
+            </span>
+          </label>
+          <div className="flex gap-2">
+            <Bottone
+              inCorso={riapri.isPending}
+              disabilitato={motivo.trim().length < 3}
+              onClick={() =>
+                riapri.mutate(motivo.trim(), {
+                  onSuccess: (e) => {
+                    setMessaggio(e.messaggio)
+                    if (e.esito === 'ok') setApre(false)
+                  },
+                  onError: (e) => setMessaggio(e.message),
+                })
+              }
+            >
+              Riapri
+            </Bottone>
+            <Bottone aspetto="fantasma" onClick={() => setApre(false)}>
+              Lascia stare
+            </Bottone>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

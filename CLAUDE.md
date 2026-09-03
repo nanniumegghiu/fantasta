@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.9 · **Data** · 2026-09-04
+**Versione documento** · 3.0 · **Data** · 2026-09-04
 
 ---
 
@@ -219,6 +219,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/accendi-google.mjs` | Accende l accesso con Google quando le due chiavi sono in `.env.local`. Con `--istruzioni` stampa i cinque minuti da fare su Google Cloud, con dentro l indirizzo di ritorno gia pronto. |
 | `node scripts/loghi.mjs` | Gli stemmi delle squadre dal logopack. Gli identificativi dei club arrivano gratis dallo stesso scaricamento dei volti. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
+| `node scripts/verifica-partecipanti.mjs` | Venti prove su riapertura dell asta e cambio di proprietario di una squadra. La piu importante chiude un asta e la riapre: era il difetto che bloccava una lega senza via d uscita. |
 | `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
 | `node scripts/verifica-asta-completa.mjs` | Cinquantaquattro prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore, la catena che si apre da sola, il riempimento per nome e la rete di sicurezza. |
@@ -249,6 +250,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.0 | 2026-09-04 | Un asta chiusa per sbaglio si riapre, e una squadra puo cambiare proprietario conservando rosa e crediti. |
 | 2.9 | 2026-09-04 | Le squadre che nel gioco non sono in Serie A si cercano per nome: 487 volti invece di 408, e tutti e venti gli stemmi. |
 | 2.8 | 2026-09-04 | Gli stemmi delle squadre. La chiave dei nomi di squadra era asimmetrica: corretta, e l Atalanta ha ritrovato stemma e facce. |
 | 2.7 | 2026-09-04 | Revisione dei volti a mano: schermata per chi amministra, proposte dal terminale, e cinque abbinamenti recuperati sistemando le lettere nordiche. |

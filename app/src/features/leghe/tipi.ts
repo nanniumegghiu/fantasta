@@ -33,7 +33,11 @@ export type Lega = {
 export type Squadra = {
   id: string
   league_id: string
-  user_id: string
+  /**
+   * Chi guida la squadra. Nullo quando il partecipante ha lasciato la lega:
+   * la rosa e i crediti restano, e aspettano che qualcuno la prenda.
+   */
+  user_id: string | null
   name: string
   credits_remaining: number
 }
