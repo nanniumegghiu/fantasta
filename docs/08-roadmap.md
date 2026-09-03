@@ -179,6 +179,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.13 | 2026-09-04 | Fetta 7 costruita: scambi fra squadre. |
 | 1.12 | 2026-09-04 | Fetta 6 costruita: esportazione delle rose, con anteprima e avvertimenti. |
 | 1.11 | 2026-09-04 | Fetta 5 costruita: i volti del facepack arrivano nel listone e nell asta. |
 | 1.10 | 2026-09-03 | Correzioni sulle rose con motivo obbligatorio, e registro dell asta visibile a tutti. |

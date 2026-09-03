@@ -245,6 +245,7 @@ portieri con una nota sull'alternanza dei calendari.
 | `available_players` | Il listone svincolati: calciatori meno quelli già acquistati in quella lega. Con statistiche già unite, così la tabella si ordina e si filtra senza query aggiuntive. |
 | `team_budget` | Per ogni squadra: crediti residui, slot mancanti per ruolo, **massimo offribile**. È il numero che lo schermo condiviso mostra accanto a ogni nome. |
 | `target_progress` | Per la lista di un utente: quanti obiettivi restano liberi, quanti presi da altri, quanti vinti. |
+| `scambi` | Gli scambi con i nomi delle squadre e i calciatori già uniti, divisi fra chi dà e chi riceve. Li leggono tutti i partecipanti. |
 | `registro_asta` | Il registro con i nomi al posto degli identificativi, e la colonna `manuale` che distingue gli interventi dell amministratore dal gioco normale. La leggono tutti i partecipanti. |
 
 ## 3. File coinvolti
@@ -275,6 +276,8 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903230000_correzioni_a_registro_aperto.sql` | `rimuovi_dalla_rosa`, `correggi_prezzo`, `evento_manuale`, vista `registro_asta` |
 | `20260903234500_anche_la_ripresa_e_un_intervento.sql` | Correzione: `ripresa` mancava fra gli interventi manuali |
 | `20260904010000_i_volti_dei_calciatori.sql` | `players.fm_id` e `fm_origine`, archivio `volti`, `imposta_volto` e `imposta_volti` |
+| `20260904030000_scambi_fra_squadre.sql` | `trades`, `trade_players`, `problema_dello_scambio`, `proponi_scambio`, `accetta_scambio`, `rispondi_scambio`, vista `scambi` |
+| `20260904050000_correzioni_senza_asta.sql` | Correzione: `rimuovi_dalla_rosa` e `correggi_prezzo` sollevavano un errore se la lega non aveva un asta |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

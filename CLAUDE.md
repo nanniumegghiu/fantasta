@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 2.4 · **Data** · 2026-09-04
+**Versione documento** · 2.5 · **Data** · 2026-09-04
 
 ---
 
@@ -185,7 +185,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Fetta 5: facepack | ✅ 403 volti caricati, 98% dei calciatori abbinabili |
 | Fetta 5b: schermata di abbinamento manuale | 🔴 serve per i casi che l algoritmo lascia fuori |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
-| Fetta 7: scambi fra squadre | 🔴 non iniziata |
+| Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
 
 **Prossimo passo** · Provare **un'asta vera su due dispositivi**, con lo schermo condiviso acceso:
 è l'unica parte che nessuno ha ancora visto viva. Le altre schermate l'utente le ha aperte e provate
@@ -215,6 +215,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-obiettivi.mjs` | Quarantaquattro prove sulla lista obiettivi: fra le altre, che un attaccante non entri in una fascia di difensori e che il numero degli slot non si possa toccare dal client. Le sette che contano di più provano a leggere la lista di un altro, amministratore compreso. |
 | `node --experimental-strip-types scripts/verifica-esportazione.mjs` | Quattordici prove sul file delle rose. Le piu importanti provano nomi di squadra con punto e virgola, virgolette e ritorni a capo: un CSV rotto non da errore, sposta le colonne di uno. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
+| `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
 | `node scripts/verifica-asta-completa.mjs` | Cinquantaquattro prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore, la catena che si apre da sola, il riempimento per nome e la rete di sicurezza. |
 | `node scripts/amici-di-prova.mjs` | **Non è una verifica, è un attrezzo.** Mette in lega compagni finti con cui provare un asta da soli, e permette di rilanciare per conto loro dalla riga di comando. |
@@ -244,6 +245,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 2.5 | 2026-09-04 | Fetta 7: scambi fra squadre, con la regola dei reparti che pareggiano e la rivalidazione al momento dell accettazione. |
 | 2.4 | 2026-09-04 | Fetta 6: esportazione delle rose nel file che l app Fantacalcio sa caricare. |
 | 2.3 | 2026-09-04 | Fetta 5: i volti del facepack nel listone, nell asta e sullo schermo condiviso. Corretto il listone che mostrava tutte le stagioni insieme. |
 | 2.2 | 2026-09-03 | L amministratore corregge rose e prezzi, con motivo obbligatorio, e ogni intervento finisce in un registro che leggono tutti. |

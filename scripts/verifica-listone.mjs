@@ -56,6 +56,11 @@ if (process.argv.includes('--pulisci')) {
   // successo una volta. Si cancellano soltanto i calciatori di prova, che per
   // questo hanno identificativi da 900000 in su: quelli del listone ufficiale
   // sono di quattro o cinque cifre e non arrivano mai lì.
+  // Prima le leghe: un calciatore che sta in una rosa non si cancella, e la
+  // rosa se ne va solo con la lega. Senza questa riga la pulizia funziona solo
+  // se e' la prima a girare.
+  await sql(`delete from public.leagues
+    where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
   await sql('delete from public.player_stats where player_id >= 900000;')
   await sql('delete from public.players where id >= 900000;')
   await sql("delete from public.app_admin_emails where email like '%@fantasta.test';")
@@ -498,7 +503,9 @@ esito(
   `la sentinella, stagione 2026/27, è ancora in listone: ${dopoImportazioni?.active}`,
 )
 
-// Seconda prova: le stesse istruzioni del ramo --pulisci.
+// Seconda prova: le stesse istruzioni del ramo --pulisci, nello stesso ordine.
+await sql(`delete from public.leagues
+  where admin_user_id in (select id from auth.users where email like '%@fantasta.test');`)
 await sql('delete from public.player_stats where player_id >= 900000;')
 await sql('delete from public.players where id >= 900000;')
 

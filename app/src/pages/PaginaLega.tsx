@@ -5,6 +5,7 @@ import { Bottone } from '@/components/Bottone'
 import { Campo } from '@/components/Campo'
 import { Intestazione } from '@/components/Intestazione'
 import { EsportaRose } from '@/features/asta/EsportaRose'
+import { Scambi } from '@/features/scambi/Scambi'
 import { useAccesso } from '@/features/auth/ContestoAccesso'
 import {
   indirizzoRegolamento,
@@ -71,10 +72,32 @@ export function PaginaLega() {
         <RiquadroMiaSquadra lega={lega} idUtente={utente?.id} />
         <RiquadroRegole lega={lega} />
         <RiquadroRegolamento lega={lega} sonoAdmin={sonoAdmin} />
+        {lega.trades_enabled && <RiquadroScambi lega={lega} />}
         <RiquadroEsportazione lega={lega} />
         {sonoAdmin && <ZonaPericolosa lega={lega} />}
       </main>
     </div>
+  )
+}
+
+// ─── Scambi ─────────────────────────────────────────────────────────────────
+
+/**
+ * Compare solo se la lega li ha abilitati: una sezione che spiega una funzione
+ * che quella lega non usa e' rumore in mezzo a cose che servono.
+ */
+function RiquadroScambi({ lega }: { lega: LegaCompleta }) {
+  return (
+    <Riquadro
+      titolo="Scambi"
+      sottotitolo={
+        lega.trades_with_credits_enabled
+          ? 'Con conguaglio in crediti. Ogni reparto deve pareggiare.'
+          : 'Solo scambi secchi. Ogni reparto deve pareggiare.'
+      }
+    >
+      <Scambi idLega={lega.id} scambiConCrediti={lega.trades_with_credits_enabled} />
+    </Riquadro>
   )
 }
 

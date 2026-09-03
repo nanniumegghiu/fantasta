@@ -232,6 +232,16 @@ arrivando da un collegamento esterno o riaprendo l'app su quella schermata.
     aggiudicazioni — è la maggioranza e annegherebbe le poche righe che contano; «tutta la serata» è
     a un tocco. Ogni intervento porta il motivo scritto da chi l'ha fatto e il suo nome.
 
+15ter. **Scambi**, nella schermata della lega e solo se la lega li ha abilitati. Si sceglie
+    l'avversario, si spuntano i calciatori da una parte e dall'altra, e **il conto dei reparti si
+    vede mentre si sceglie**: il pulsante resta spento finché non pareggiano. La regola la fa
+    rispettare il server comunque, ma impararla da un rifiuto dopo aver composto tutto vorrebbe
+    dire comporre la proposta due volte.
+
+    Le proposte si raccontano sempre dal punto di vista di chi guarda — «dai» e «prendi», non «la
+    squadra A dà alla squadra B» — perché con sei squadre in lega capire da che parte si sta
+    richiede un attimo di troppo mentre si decide.
+
 16. Fine asta: riepilogo ed esportazione in CSV.
 
 ### 2.7 Struttura mobile
@@ -305,6 +315,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.10 | 2026-09-04 | Scambi fra squadre, con il conto dei reparti che si vede mentre si sceglie. |
 | 1.9 | 2026-09-04 | I volti dei calciatori nel listone, nell asta e sullo schermo condiviso. |
 | 1.8 | 2026-09-03 | Correzione delle rose con motivo obbligatorio, e registro dell asta visibile a tutti. |
 | 1.7 | 2026-09-03 | Rose nella vista personale, obiettivi vivi senza i calciatori gia comprati, freccia indietro che torna da dove si veniva. |

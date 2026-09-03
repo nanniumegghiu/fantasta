@@ -4,7 +4,7 @@
 crediti, metodi d'asta, timer, vincoli sulle offerte. È la fonte unica: il codice le implementa,
 non le reinventa.
 **Proprietario** · backend-engineer (le regole vivono sul server)
-**Stato** · ✅ tutte le regole di questo documento sono realizzate e verificate · scambi 🔴
+**Stato** · ✅ tutte le regole di questo documento sono realizzate e verificate, scambi compresi
 **Data** · 2026-09-02
 
 ---
@@ -159,7 +159,26 @@ Sono visibili **solo nella sua vista personale**, mai sullo schermo condiviso.
 Impostazione di lega: scambi **consentiti o no**, e scambi **con conguaglio in crediti** consentiti
 o no. Uno scambio è una proposta fra due squadre che diventa effettiva solo con l'accettazione di
 entrambe, e deve lasciare **entrambe le rose valide**, cioè con lo stesso numero di slot per ruolo,
-e i crediti non negativi. 🔴 Non implementato: previsto dopo l'asta, vedi roadmap.
+e i crediti non negativi. ✅ Realizzato, 20 prove.
+
+Cosa vuol dire in pratica «rose valide»: **ogni reparto deve pareggiare**. Un difensore si scambia
+con un difensore, due centrocampisti con due centrocampisti. Non è una limitazione arbitraria, è
+l'unica forma che lascia in piedi due rose già complete: scambiare un difensore per un attaccante
+lascerebbe uno con la difesa scoperta e l'altro con un attaccante che non può schierare.
+
+Tre scelte che il documento non prevedeva e sono emerse costruendo:
+
+1. **Si ricontrolla tutto al momento dell'accettazione.** Fra la proposta e la risposta possono
+   passare giorni, e nel frattempo un calciatore può essere finito in un altro scambio o i crediti
+   possono non bastare più. Fidarsi dei controlli fatti alla proposta vorrebbe dire eseguire uno
+   scambio impossibile. Se non regge più, la proposta **decade** e lo dice.
+2. **Accettata una proposta, le altre sugli stessi calciatori decadono subito.** Lasciarle in
+   attesa vorrebbe dire farle fallire una per una più tardi, senza che nessuno capisca perché.
+3. **Rifiutare e ritirare sono due gesti distinti.** «Mi hanno detto di no» e «ci ho ripensato» non
+   raccontano la stessa cosa, e il registro deve poterli distinguere.
+
+Gli scambi li vedono **tutti i partecipanti**, non solo le due squadre coinvolte: uno scambio
+cambia gli equilibri di tutti, e una lega in cui si scambia di nascosto è una lega in cui si litiga.
 
 ---
 
@@ -195,7 +214,7 @@ credito residuo, reparto già completo.
   `docs/decisioni/2026-09-03-filtro-random-e-liste-obiettivi.md`.
 - 🟡 Composizione rosa diversa da 3-8-8-6: supportata dal modello, provata con 1-1-1-1 nelle
   verifiche, non con valori grandi e sbilanciati.
-- 🔴 Gli scambi fra squadre restano da costruire.
+- ✅ Gli scambi fra squadre sono costruiti e verificati.
 
 ## Changelog
 
