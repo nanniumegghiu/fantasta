@@ -32,6 +32,8 @@
 //   node scripts/volti.mjs --limite 50      carica al massimo 50 immagini
 //   node scripts/volti.mjs --proponi        chi resta fuori, e a chi somiglia
 //   node scripts/volti.mjs --manuale        li passa uno per uno, e decidi tu
+//   node scripts/volti.mjs --conferma "Terracciano=43017977"
+//                                           scrive una decisione gia' presa
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
@@ -137,6 +139,23 @@ function formeDelNome(nome, alternative = []) {
   const forme = new Set()
   const pulito = normalizza(nome)
 
+  // L'abbreviazione in coda si riconosce dal punto, non dalla lunghezza.
+  //
+  // Tagliare per lunghezza vuol dire scegliere un numero, e ogni numero
+  // sbaglia da una parte: fermandosi a due lettere «Pessina Mas.» resta
+  // intero e non trova nessuno, arrivando a tre «Mario Rui» perde il
+  // cognome. Il punto invece lo mette il listone apposta, ed e' li' solo
+  // quando l'abbreviazione c'e' davvero.
+  const intero = String(nome).trim()
+  const senzaPunto = intero.replace(RE_ABBREVIAZIONE, '')
+  if (senzaPunto !== intero) {
+    const p = normalizza(senzaPunto)
+    if (p) {
+      forme.add(p)
+      forme.add(p.split(' ').pop())
+    }
+  }
+
   if (pulito) {
     forme.add(pulito)
     const parole = pulito.split(' ')
@@ -166,15 +185,26 @@ function formeDelNome(nome, alternative = []) {
 
 /** L'iniziale del nome di battesimo, se il listone l'ha messa: «Gonzalez N.» → «n». */
 function inizialePuntata(nome) {
-  const m = /\s([a-z])$/.exec(normalizza(nome))
-  return m ? m[1] : null
+  const m = RE_ABBREVIAZIONE.exec(String(nome).trim())
+  if (m) return normalizza(m[0].trim().split('.')[0])
+  // Anche senza punto, una lettera sola in coda e' un'iniziale.
+  const s = /\s([a-z])$/.exec(normalizza(nome))
+  return s ? s[1] : null
 }
 
 /** L'iniziale del nome di battesimo di un calciatore scritto per intero. */
 function inizialeDiBattesimo(nome) {
   const parole = normalizza(nome).split(' ')
-  return parole.length > 1 ? parole[0][0] : null
+  return parole.length > 1 ? parole[0] : null
 }
+
+/**
+ * L'abbreviazione che il listone mette in coda per distinguere gli omonimi:
+ * «Gonzalez N.», «Pessina Mas.», «Ederson D.S.». Una, due o tre lettere e un
+ * punto. Non e' un'iniziale sola: «Jo.» sta per Josep, e le due lettere
+ * servono proprio perche' una sola non basterebbe a distinguerlo da Lautaro.
+ */
+const RE_ABBREVIAZIONE = /\s[A-Za-z]{1,3}(?:\.[A-Za-z]{1,3})*\.$/
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Passo 1 · Scaricare l'elenco di Serie A
@@ -313,9 +343,19 @@ function abbina(listone, elencoFm) {
     if (distinti.length > 1) {
       const iniziale = inizialePuntata(c.name)
       if (iniziale) {
-        const filtrati = distinti.filter((x) => inizialeDiBattesimo(x.nome) === iniziale)
+        const filtrati = distinti.filter((x) =>
+          (inizialeDiBattesimo(x.nome) ?? '').startsWith(iniziale),
+        )
         if (filtrati.length === 1) distinti = filtrati
       }
+    }
+
+    // Lo stesso nome due volte non e' un'ambiguita': e' la stessa persona
+    // schedata due volte, e capita spesso ai ragazzi delle giovanili appena
+    // saliti in prima squadra. Fra due copie identiche si prende quella che
+    // nel facepack ha la faccia; l'altra e' una riga e basta.
+    if (distinti.length > 1 && new Set(distinti.map((x) => normalizza(x.nome))).size === 1) {
+      distinti = [distinti.find((x) => existsSync(join(VOLTI, `${x.fm_id}.png`))) ?? distinti[0]]
     }
 
     if (distinti.length > 1) {
@@ -482,6 +522,66 @@ async function aMano(esiti, elencoFm, stagione) {
   if (esito.conto) console.log(`Corrispondenze scritte: ${esito.conto.aggiornati}.`)
 }
 
+/**
+ * Le decisioni prese altrove, scritte in un colpo solo.
+ *
+ * PERCHE' NON BASTA LA VIA INTERATTIVA
+ *
+ * `--manuale` fa scorrere i dubbi uno per uno e chiede di scegliere. Va bene
+ * per chi sta al terminale. Ma i dubbi veri — «il Terracciano del Milan e'
+ * Pietro o Filippo?» — non si sciolgono guardando due nomi: si sciolgono
+ * chiedendo a chi il fantacalcio lo gioca. Quella risposta arriva a voce, o
+ * per messaggio, e va scritta senza rifare tutto il giro delle domande.
+ *
+ * PERCHE' PUO' SCRIVERE «CONFERMATA»
+ *
+ * Perche' dietro c'e' una persona che ha deciso, esattamente come in
+ * `--manuale`. La guardia sull'origine non difende dall'automatismo in se':
+ * difende dal fatto che **nessuno** abbia guardato. Qui qualcuno ha guardato.
+ *
+ * Uso:  node scripts/volti.mjs --conferma "Terracciano=43017977" "Bleve=43095136"
+ */
+async function perDecisione(coppie, listone, elencoFm, stagione) {
+  const perNomeListone = new Map(listone.map((c) => [normalizza(c.name), c]))
+  const perFm = new Map(elencoFm.map((g) => [String(g.fm_id), g]))
+  const scelte = []
+
+  for (const coppia of coppie) {
+    const taglio = coppia.lastIndexOf('=')
+    if (taglio < 1) {
+      console.log(`  ✗ «${coppia}»: si scrive «Nome del listone=identificativo».`)
+      continue
+    }
+    const nome = coppia.slice(0, taglio).trim()
+    const fmId = coppia.slice(taglio + 1).trim()
+
+    const calciatore = perNomeListone.get(normalizza(nome))
+    if (!calciatore) {
+      console.log(`  ✗ ${nome}: non c'e' nessuno con questo nome nel listone.`)
+      continue
+    }
+    if (!existsSync(join(VOLTI, `${fmId}.png`))) {
+      console.log(`  ✗ ${nome}: nel facepack non c'e' nessun ${fmId}.png.`)
+      continue
+    }
+
+    // Se non e' nell'elenco locale va bene lo stesso: quello che serve per
+    // scrivere la riga e' l'identificativo, e il nome e' solo per leggere.
+    const fm = perFm.get(String(fmId)) ?? { fm_id: Number(fmId), nome: `(fm ${fmId})` }
+    scelte.push({ esito: 'ok', calciatore, fm, origine: 'confermata' })
+    console.log(`  → ${calciatore.name} (${calciatore.serie_a_team}) = ${fm.nome}`)
+  }
+
+  if (!scelte.length) {
+    console.log('\nNessuna decisione da scrivere.')
+    return
+  }
+
+  const esito = await carica(scelte, stagione, scelte.length)
+  console.log(`\n${esito.caricate} immagini caricate.`)
+  if (esito.conto) console.log(`Corrispondenze scritte: ${esito.conto.aggiornati}.`)
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Passo 3 · Caricare le immagini
 // ═══════════════════════════════════════════════════════════════════════════
@@ -529,18 +629,24 @@ async function chiudiAccessoDiServizio(email) {
 
 async function carica(esiti, stagione, limite) {
   const { token, email } = await accessoDiServizio()
-  const daFare = esiti.filter((e) => e.esito === 'ok').slice(0, limite)
+  const abbinati = esiti.filter((e) => e.esito === 'ok')
+
+  // Il limite conta le immagini caricate, non gli abbinati esaminati.
+  //
+  // Erano la stessa fetta, e non lo sono: chi e' abbinato ma nel facepack non
+  // ha il file occupa un posto senza caricare niente. Con il limite messo di
+  // default al numero di chi il file ce l'ha, ogni giro perdeva in coda
+  // esattamente tanti volti quanti erano i senza file — sempre gli stessi,
+  // gli ultimi dell'elenco, e mai gli stessi due giri di fila se il listone
+  // cambiava. Diciassette facce sono rimaste fuori cosi'.
+  const conIlFile = abbinati.filter((e) => existsSync(join(VOLTI, `${e.fm.fm_id}.png`)))
+  const senzaFile = abbinati.length - conIlFile.length
 
   let caricate = 0
-  let senzaFile = 0
   const righe = []
 
-  for (const e of daFare) {
+  for (const e of conIlFile.slice(0, limite)) {
     const sorgente = join(VOLTI, `${e.fm.fm_id}.png`)
-    if (!existsSync(sorgente)) {
-      senzaFile++
-      continue
-    }
 
     // Le immagini del facepack stanno fra i 10 e i 30 KB: si caricano come
     // sono. Ridimensionarle vorrebbe dire una libreria grafica, e ADR-0006
@@ -572,7 +678,11 @@ async function carica(esiti, stagione, limite) {
     // senza che nessuno le avesse confermate, e sarebbero rimaste fuori da
     // ogni correzione futura e da ogni revisione. Non ho ricostruito come, e
     // per questo la difesa sta qui, dove il dato viene scritto.
-    if (e.origine === 'confermata' && !process.argv.includes('--manuale')) {
+    if (
+      e.origine === 'confermata' &&
+      !process.argv.includes('--manuale') &&
+      !process.argv.some((a) => a.startsWith('--conferma'))
+    ) {
       throw new Error(
         `${e.calciatore.name}: il giro automatico stava per scrivere «confermata». ` +
           "Solo --manuale, dove una persona sceglie, puo' farlo.",
@@ -760,6 +870,14 @@ if (squadreFuori.length) {
   console.log('il listone caricato è di un\'annata diversa da quella del gioco.')
 }
 
+if (ambigui.length) {
+  console.log('\nAmbigui: piu\' di un candidato, e nessun modo di scegliere da soli.')
+  for (const e of ambigui) {
+    console.log(`  · ${e.calciatore.name} (${e.calciatore.serie_a_team}) — ${e.quanti} candidati`)
+  }
+  console.log('  Si sciolgono a mano: node scripts/volti.mjs --manuale')
+}
+
 const sparsi = nessuno.filter((e) => !squadreFuori.some((x) => x.sq === e.calciatore.serie_a_team))
 if (sparsi.length) {
   console.log(`\n${sparsi.length} non trovati sparsi fra le altre squadre. I primi dieci:`)
@@ -771,6 +889,13 @@ if (sparsi.length) {
 if (process.argv.includes('--proponi')) {
   proponi(esiti, elencoFm)
   console.log('\nNiente è stato caricato. Per decidere uno per uno: --manuale')
+  process.exit(0)
+}
+
+const decisioni = process.argv.filter((a) => a.includes('=') && !a.startsWith('--'))
+if (process.argv.includes('--conferma') && decisioni.length) {
+  console.log(`\nScrivo ${decisioni.length} decisioni prese a mano.`)
+  await perDecisione(decisioni, listone, elencoFm, stagione.season)
   process.exit(0)
 }
 

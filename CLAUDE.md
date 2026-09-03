@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.1 · **Data** · 2026-09-04
+**Versione documento** · 3.2 · **Data** · 2026-09-04
 
 ---
 
@@ -183,7 +183,7 @@ L'applicazione compila e si avvia, ma **non è ancora collegata al backend**: ma
 | Compagni di lega finti per provare l asta da soli | ✅ 18 prove, `node scripts/verifica-amici-di-prova.mjs` |
 | **Pubblicata online** | ✅ https://nanniumegghiu.github.io/fantasta |
 | Accesso con Google | 🟡 tutto pronto, mancano le due chiavi da Google Cloud: `node scripts/accendi-google.mjs --istruzioni` |
-| Fetta 5: facepack | ✅ 487 volti su 531 (92%) e 20 stemmi su 20 |
+| Fetta 5: facepack | ✅ 507 volti su 531 (95%) e 20 stemmi su 20 |
 | Fetta 5b: revisione dei volti a mano | ✅ 15 prove, schermata `/volti` più `--proponi` e `--manuale` |
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
@@ -220,6 +220,8 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/loghi.mjs` | Gli stemmi delle squadre dal logopack. Gli identificativi dei club arrivano gratis dallo stesso scaricamento dei volti. |
 | `node scripts/volti.mjs` | **Non è una verifica, è un attrezzo.** Costruisce il ponte fra il facepack di Football Manager e il listone, e carica i volti. Con `--abbina` dice cosa farebbe senza fare niente. |
 | `node scripts/verifica-codice-tv.mjs` | Diciotto prove sul codice per il televisore. Meta non controlla che qualcosa funzioni: controlla che dalla TV non si veda nessuna nota privata, nessun tetto di spesa, nessuna email. |
+| `node scripts/volti-mancanti.mjs` | Chi resta senza faccia, diviso per **motivo**: non abbinato, oppure abbinato ma il volto nel facepack non c'e'. Sono due problemi diversi e si risolvono in due modi diversi. |
+| `node scripts/volti-cerca.mjs` | Cerca su fmref, una grafia alla volta, solo chi e' rimasto senza volto, e dice se quella faccia nel facepack c'e'. Non scrive niente: propone. |
 | `node scripts/verifica-partecipanti.mjs` | Venti prove su riapertura dell asta e cambio di proprietario di una squadra. La piu importante chiude un asta e la riapre: era il difetto che bloccava una lega senza via d uscita. |
 | `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
@@ -251,6 +253,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.2 | 2026-09-04 | Venti volti recuperati: il limite di caricamento tagliava sempre la coda, le abbreviazioni di due lettere non erano riconosciute e i doppioni della stessa persona bloccavano l abbinamento. |
 | 3.1 | 2026-09-04 | Un codice di sei caratteri apre lo schermo condiviso sul televisore, senza accesso e senza indirizzi lunghi da digitare col telecomando. |
 | 3.0 | 2026-09-04 | Un asta chiusa per sbaglio si riapre, e una squadra puo cambiare proprietario conservando rosa e crediti. |
 | 2.9 | 2026-09-04 | Le squadre che nel gioco non sono in Serie A si cercano per nome: 487 volti invece di 408, e tutti e venti gli stemmi. |
