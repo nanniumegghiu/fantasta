@@ -126,6 +126,7 @@ comune: è un segnale onesto e va tenuto d'occhio, non silenziato.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.11 | 2026-09-04 | Volti dei calciatori ovunque, con ricaduta sulle iniziali. Il listone mostra una stagione sola. |
 | 1.10 | 2026-09-03 | Correzione delle rose nel pannello di conduzione, registro dell asta visibile a tutti. |
 | 1.9 | 2026-09-03 | La freccia indietro usa la cronologia. Rose nella vista personale. Obiettivi vivi. |
 | 1.8 | 2026-09-03 | Schermo condiviso con le rose complete. Conduzione a scomparsa. Riempimento per nome e chiusura a mano dell asta. |

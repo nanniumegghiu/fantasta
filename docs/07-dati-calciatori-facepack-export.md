@@ -173,6 +173,66 @@ sempre**: è l'unica difesa contro le omonimie, e in Serie A ce ne sono ogni ann
 > 🟡 **Resta da provare davvero.** Avere la specifica non è avere un caricamento riuscito. Prima di
 > chiudere la Fetta 6 il file va caricato una volta nell'app di destinazione.
 
+## 2bis. I volti, come sono arrivati davvero
+
+Fetta 5, costruita il 3 settembre 2026 seguendo ADR-0011. Il procedimento è in
+`scripts/volti.mjs` e si fa in tre passi separati, perché falliscono in modi diversi:
+
+| Passo | Cosa fa | Quando si rilancia |
+|---|---|---|
+| `--scarica` | Sette richieste al servizio di ricerca, elenco della Serie A in `.cache/` | Una volta a stagione |
+| `--abbina` | Incrocia listone e Football Manager, e **dice cosa farebbe senza fare niente** | Ogni volta che si migliora una regola |
+| (senza argomenti) | Tutti e tre, e carica le immagini | Quando l'abbinamento convince |
+
+### Le regole di abbinamento, e perché sono quelle
+
+**I nomi si normalizzano** togliendo accenti e punteggiatura: i due elenchi scrivono «Martínez» e
+«Martinez», «O'Riley» e «O Riley». Senza, si perderebbe un nome su dieci per motivi tipografici.
+
+**Le squadre si riducono alla parola che le identifica**: «F.C. Internazionale Milano» → Inter. Una
+tabella di traduzione andrebbe aggiornata a mano a ogni cambio di denominazione sociale.
+
+**Le iniziali puntate si tolgono.** Il listone scrive «Gonzalez N.», «Esposito Se.», «Ederson D.S.»
+quando due calciatori condividono il cognome. Trattarle come cognomi costava **76 abbinamenti**: è
+stata la correzione più redditizia di tutte. L'iniziale non si butta però: serve a sciogliere
+l'ambiguità fra due Gonzalez.
+
+**Nel dubbio non si abbina.** Due candidati che l'iniziale non distingue restano senza foto. Una
+faccia sbagliata sullo schermo condiviso non la corregge nessuno: ci si ride sopra e resta lì tutta
+la serata.
+
+### Il risultato misurato, non stimato
+
+Sul listone caricato dall'utente, 531 calciatori:
+
+| | Quanti |
+|---|---|
+| Abbinati | 437 |
+| Con la foto davvero presente nel facepack | 420 |
+| Caricati | 403 |
+| Ambigui, lasciati stare | 4 |
+| Non trovati | 90 |
+
+**Degli 81 non trovati su 90, il motivo è uno solo**: Venezia, Monza e Frosinone. In Football
+Manager quelle squadre non sono in Serie A, perché il listone caricato è di un'annata diversa da
+quella del gioco. Non è un difetto dell'abbinamento e non si corregge con regole migliori: lo
+script lo dice a parte, distinguendolo dai nomi sparsi, perché la decisione — caricare il listone
+giusto o abbinare a mano — è dell'utente. Sui calciatori realmente abbinabili la copertura è del
+98%, in linea con quanto ADR-0011 aveva misurato.
+
+### Perché l'archivio è privato e gli indirizzi si firmano
+
+Le immagini vengono da un facepack di terzi (ADR-0011, dichiarato e accettato). L'archivio `volti`
+non è pubblico: le vede chi ha fatto l'accesso. Un tag `<img>` non manda intestazioni, quindi ogni
+immagine ha bisogno di un indirizzo firmato; si firmano **tutti in una chiamata sola** all'apertura
+del listone, con validità due ore, invece di quattrocento richieste.
+
+### L'accesso con cui si carica
+
+Lo script non chiede la password personale del proprietario. Si crea un account di servizio, gli dà
+i permessi di amministrazione con la chiave di gestione che già usa per le migrazioni, e **lo
+cancella appena finito**. Nessun segreto nuovo entra nel progetto.
+
 ## 3. File coinvolti
 
 🔴 Nessuno. Previsti: `app/src/features/import/`, `app/src/features/export/`,

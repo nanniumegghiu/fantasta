@@ -121,7 +121,17 @@ attacco con i candidati, creo un incrocio fra due portieri. Da un altro account,
 | **4e · Chiamata con passo** | Esclusione dai rilanci, chiusura anticipata. | Tutti passano tranne uno e il lotto si chiude subito. |
 | **4f · Integrazione obiettivi** | Durante l'asta la lista mostra solo gli obiettivi liberi, col contatore; il calciatore in asta mostra le mie note e il mio tetto. | Chiamo un mio obiettivo e vedo il tetto che mi ero dato. |
 
-### Fetta 5 · Facepack
+### Fetta 5 · Facepack — ✅ costruita, 🟡 manca l'abbinamento manuale
+
+| Pezzo | Stato |
+|---|---|
+| Ponte automatico verso gli identificativi di Football Manager | ✅ 437 abbinati su 531 |
+| Immagini caricate nell archivio | ✅ 403, indirizzi firmati a blocchi |
+| Volti nel listone, nell asta e sullo schermo condiviso | ✅ con ricaduta sulle iniziali |
+| Schermata di abbinamento manuale | 🔴 serve per i 90 che restano fuori |
+| Loghi delle squadre | 🔴 il logopack c è, non è ancora usato |
+
+*Descrizione originale della fetta:*
 
 Caricamento in blocco, associazione automatica, schermata di abbinamento manuale per il resto, foto
 nel listone e nelle rose.
@@ -169,6 +179,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.11 | 2026-09-04 | Fetta 5 costruita: i volti del facepack arrivano nel listone e nell asta. |
 | 1.10 | 2026-09-03 | Correzioni sulle rose con motivo obbligatorio, e registro dell asta visibile a tutti. |
 | 1.9 | 2026-09-03 | Rose sempre in vista, obiettivi vivi, navigazione che torna in asta. |
 | 1.8 | 2026-09-03 | Prima asta provata davvero, con compagni di lega finti. Catena automatica, riempimento per nome, schermo condiviso con le rose. |

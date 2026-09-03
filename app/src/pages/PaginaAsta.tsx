@@ -31,6 +31,8 @@ import { useTimerAsta } from '@/features/asta/useTimer'
 import { ImpostazioniPreAsta } from '@/features/asta/ImpostazioniPreAsta'
 import { PannelloAmministratore } from '@/features/asta/PannelloAmministratore'
 import { RegistroAsta } from '@/features/asta/RegistroAsta'
+import { Volto } from '@/components/Volto'
+import { useVolti } from '@/features/listone/volti'
 import type { Ruolo } from '@/domain/listone'
 
 export function PaginaAsta() {
@@ -226,6 +228,7 @@ function InAstaOra({
     setLibero(lotto.current_bidder_team_id ? lotto.current_bid + 1 : offertaMinima)
   }, [lotto.current_bid, lotto.current_bidder_team_id, offertaMinima])
 
+  const volto = useVolti()
   const offerente = squadre.find((s) => s.team_id === lotto.current_bidder_team_id)
   const sonoInTesta = mioBudget?.team_id === lotto.current_bidder_team_id
   const massimo = mioBudget?.massimo_offribile ?? 0
@@ -276,11 +279,13 @@ function InAstaOra({
   return (
     <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
       <div className="flex items-start gap-3">
-        <span
-          className={`flex size-12 shrink-0 items-center justify-center rounded-xl text-lg font-extrabold ${CLASSE_RUOLO[lotto.players.role]}`}
-        >
-          {lotto.players.role}
-        </span>
+        {/* La faccia, quando c'è: si riconosce prima di leggere il nome. */}
+        <Volto
+          nome={lotto.players.name}
+          indirizzo={volto(lotto.players.photo_path)}
+          classeRuolo={CLASSE_RUOLO[lotto.players.role]}
+          misura={56}
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-xl font-extrabold text-nebbia">{lotto.players.name}</p>
           <p className="cifre-fisse truncate text-sm text-fumo">
@@ -558,6 +563,7 @@ function Rosa({
   previsti: Record<Ruolo, number>
   compatta?: boolean
 }) {
+  const volto = useVolti()
   const perRuolo: Record<Ruolo, AcquistoInRosa[]> = { P: [], D: [], C: [], A: [] }
   for (const a of acquisti) perRuolo[a.players.role].push(a)
   for (const r of ORDINE_RUOLI) {
@@ -585,7 +591,13 @@ function Rosa({
 
             <ul className="mt-1">
               {presi.map((a) => (
-                <li key={a.id} className="flex items-baseline gap-2 py-0.5">
+                <li key={a.id} className="flex items-center gap-2 py-0.5">
+                  <Volto
+                    nome={a.players.name}
+                    indirizzo={volto(a.players.photo_path)}
+                    classeRuolo={CLASSE_RUOLO[a.players.role]}
+                    misura={22}
+                  />
                   <span className="min-w-0 flex-1 truncate text-sm text-nebbia">
                     {a.players.name}
                     <span className="text-xs text-fumo"> · {a.players.serie_a_team}</span>

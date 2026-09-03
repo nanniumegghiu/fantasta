@@ -124,6 +124,15 @@ Il volume è regolabile e i suoni si possono spegnere del tutto dallo schermo co
 9. Rose degli avversari: tutte le squadre con crediti residui aggiornati.
 10. Listone: tabella filtrabile per ruolo e squadra, ordinabile per ogni statistica, con foto.
 
+    Mostra **una stagione sola**: quella corrente se c'è, altrimenti la più popolata. Prima
+    mescolava tutte le stagioni presenti nel database, comprese quelle finte delle prove
+    automatiche, e chi apriva la pagina vedeva «P1 Prova» in mezzo ai calciatori veri.
+
+    Il **volto** del calciatore, quando c'è, sta accanto al nome. Quando non c'è ci sono le
+    iniziali sul colore del ruolo: un quarto dei calciatori non ha la foto e ce ne saranno sempre,
+    quindi la ricaduta non è un caso limite ma metà del disegno. Vale anche quando l'immagine
+    esiste ma non arriva.
+
     La prima colonna è il **ruolo**, come pastiglia colorata. Si ordina per reparto, P D C A, che è
     l'ordine in cui si gioca l'asta: l'ordine alfabetico dei codici non vuol dire niente. A parità
     di colonna le righe si dispongono per nome, altrimenti dentro un reparto l'ordine sarebbe
@@ -296,6 +305,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.9 | 2026-09-04 | I volti dei calciatori nel listone, nell asta e sullo schermo condiviso. |
 | 1.8 | 2026-09-03 | Correzione delle rose con motivo obbligatorio, e registro dell asta visibile a tutti. |
 | 1.7 | 2026-09-03 | Rose nella vista personale, obiettivi vivi senza i calciatori gia comprati, freccia indietro che torna da dove si veniva. |
 | 1.6 | 2026-09-03 | Schermo condiviso con le rose intere e i prezzi. Comandi di conduzione a due piani, con il secondo a scomparsa. |

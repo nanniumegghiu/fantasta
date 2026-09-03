@@ -39,3 +39,7 @@ desktop.ini
 *.log
 npm-debug.log*
 logs/
+
+# L elenco scaricato dal servizio di ricerca: si riscarica in sette richieste,
+# non ha senso versionarlo e cambia a ogni aggiornamento del database di gioco.
+.cache/

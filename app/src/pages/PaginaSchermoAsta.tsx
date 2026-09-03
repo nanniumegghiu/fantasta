@@ -30,6 +30,8 @@ import {
   suonoTic,
 } from '@/features/asta/suoni'
 import { CLASSE_RUOLO, NOME_RUOLO, ORDINE_RUOLI } from '@/features/obiettivi/tipi'
+import { Volto } from '@/components/Volto'
+import { useVolti } from '@/features/listone/volti'
 import type { Ruolo } from '@/domain/listone'
 
 /**
@@ -309,6 +311,7 @@ function InAsta({
   timer: { fase: string; mancanti: number; quota: number }
   squadre: BudgetSquadra[]
 }) {
+  const volto = useVolti()
   const offerente = squadre.find((s) => s.team_id === lotto.current_bidder_team_id)
   const stat = lotto.players.player_stats
   const inCountdown = timer.fase === 'countdown' || timer.fase === 'scaduto'
@@ -324,8 +327,15 @@ function InAsta({
         className="min-w-0"
       >
         <div className="flex items-center gap-4">
+          {/* Da tre metri la faccia arriva prima del nome. */}
+          <Volto
+            nome={lotto.players.name}
+            indirizzo={volto(lotto.players.photo_path)}
+            classeRuolo={CLASSE_RUOLO[lotto.players.role]}
+            misura={112}
+          />
           <span
-            className={`flex size-16 items-center justify-center rounded-2xl text-3xl font-extrabold ${CLASSE_RUOLO[lotto.players.role]}`}
+            className={`flex size-10 items-center justify-center rounded-xl text-xl font-extrabold ${CLASSE_RUOLO[lotto.players.role]}`}
           >
             {lotto.players.role}
           </span>

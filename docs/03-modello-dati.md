@@ -274,6 +274,7 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903210000_lasta_scorre_da_sola.sql` | `apri_lotto_automatico`, `apri_lotto_scelto`, `chiudi_asta`, e la chiusura di un lotto che apre il successivo |
 | `20260903230000_correzioni_a_registro_aperto.sql` | `rimuovi_dalla_rosa`, `correggi_prezzo`, `evento_manuale`, vista `registro_asta` |
 | `20260903234500_anche_la_ripresa_e_un_intervento.sql` | Correzione: `ripresa` mancava fra gli interventi manuali |
+| `20260904010000_i_volti_dei_calciatori.sql` | `players.fm_id` e `fm_origine`, archivio `volti`, `imposta_volto` e `imposta_volti` |
 
 La forma dei dati vista dal client è in `app/src/features/leghe/tipi.ts`.
 

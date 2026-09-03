@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { richiediSupabase } from '@/lib/supabase'
 import { messaggioErrore } from '@/lib/messaggioErrore'
 import type { RigaListone, RigaStatistiche, Ruolo } from '@/domain/listone'
+import { stagioneCorrente } from '@/domain/stagione'
 
 export type CalciatoreInListone = {
   id: number
+  season: string
   name: string
   role: Ruolo
   serie_a_team: string
@@ -30,6 +32,39 @@ export type CalciatoreInListone = {
  * interrogare il server a ogni cambio di filtro. Durante l'asta la reattività
  * conta più del traffico risparmiato.
  */
+/**
+ * Sceglie di quale stagione è il listone.
+ *
+ * PERCHE' SERVE
+ * Nel database possono convivere più stagioni: quella vera, quella dell'anno
+ * scorso, e — mentre si lavora — quelle finte delle prove automatiche. Senza
+ * questa scelta finivano tutte nella stessa tabella, e chi apriva il listone
+ * vedeva «P1 Prova» in mezzo ai calciatori veri. È successo davvero.
+ *
+ * La regola: si prende la stagione corrente se c'è, altrimenti **quella con
+ * più calciatori**. Il secondo caso copre chi ha caricato un listone di
+ * un'altra annata: meglio mostrargli il suo listone che una pagina vuota, e
+ * la schermata dice comunque quale stagione sta guardando.
+ */
+export function stagioneDelListone(righe: CalciatoreInListone[]): string | null {
+  if (righe.length === 0) return null
+  const conta = new Map<string, number>()
+  for (const r of righe) conta.set(r.season, (conta.get(r.season) ?? 0) + 1)
+
+  const corrente = stagioneCorrente()
+  if (conta.has(corrente)) return corrente
+
+  return [...conta.entries()].sort((a, b) => b[1] - a[1])[0][0]
+}
+
+/**
+ * Il listone di **una stagione sola**.
+ *
+ * Scarica tutto e sceglie qui, invece di filtrare nella richiesta: le righe
+ * sono poche decine di kilobyte, e così la scelta della stagione sta in un
+ * posto solo per tutte le schermate che usano questo aggancio, compreso il
+ * selettore dei calciatori della lista obiettivi.
+ */
 export function useListone() {
   return useQuery({
     queryKey: ['listone'],
@@ -50,7 +85,9 @@ export function useListone() {
         tutti.push(...righe)
         if (righe.length < passo) break
       }
-      return tutti
+
+      const stagione = stagioneDelListone(tutti)
+      return stagione ? tutti.filter((r) => r.season === stagione) : tutti
     },
   })
 }

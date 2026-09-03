@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Intestazione } from '@/components/Intestazione'
 import { Bottone } from '@/components/Bottone'
+import { Volto } from '@/components/Volto'
+import { useVolti } from '@/features/listone/volti'
 import {
   giornataAggiornamento,
   useListone,
@@ -240,6 +242,7 @@ function Tabella({
   ordine: { chiave: string; crescente: boolean }
   setOrdine: (o: { chiave: string; crescente: boolean }) => void
 }) {
+  const volto = useVolti()
   const contenitore = useRef<HTMLDivElement>(null)
 
   // Con oltre cinquecento righe si disegnano solo quelle visibili: una tabella
@@ -315,7 +318,11 @@ function Tabella({
                     className="sticky left-0 z-10 flex h-full items-center gap-2 bg-verde-notte px-3"
                     style={{ width: LARGHEZZA_NOME }}
                   >
-                    <Ritratto calciatore={c} classeRuolo={ruolo.classe} />
+                    <Volto
+                      nome={c.name}
+                      indirizzo={volto(c.photo_path)}
+                      classeRuolo={ruolo.classe}
+                    />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-nebbia">{c.name}</p>
                       <p className="truncate text-[11px] text-fumo">{c.serie_a_team}</p>
@@ -363,40 +370,4 @@ function Tabella({
     </div>
   )
 }
-
-/** La foto del calciatore, o le sue iniziali sul colore del ruolo. */
-function Ritratto({
-  calciatore,
-  classeRuolo,
-}: {
-  calciatore: CalciatoreInListone
-  classeRuolo: string
-}) {
-  const iniziali = calciatore.name
-    .split(/[\s']+/)
-    .slice(0, 2)
-    .map((p) => p.charAt(0))
-    .join('')
-    .toUpperCase()
-
-  if (calciatore.photo_path) {
-    return (
-      <img
-        src={calciatore.photo_path}
-        alt=""
-        width={32}
-        height={32}
-        className="size-8 shrink-0 rounded-full object-cover"
-      />
-    )
-  }
-
-  return (
-    <span
-      aria-hidden
-      className={`flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${classeRuolo}`}
-    >
-      {iniziali}
-    </span>
-  )
-}
+
