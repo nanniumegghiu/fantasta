@@ -6,6 +6,10 @@ import { SelettoreCalciatore } from '@/features/obiettivi/SelettoreCalciatore'
 import { CodiceTv } from './CodiceTv'
 import { CorreggiRose } from './CorreggiRose'
 import { NOME_RUOLO } from '@/features/obiettivi/tipi'
+import type { Ruolo } from '@/domain/listone'
+
+/** «Comincia **i** difensori», «Comincia **gli** attaccanti». */
+const ARTICOLO: Record<Ruolo, string> = { P: 'i', D: 'i', C: 'i', A: 'gli' }
 import {
   useAggiudicaOra,
   useAnnullaUltima,
@@ -104,6 +108,29 @@ export function PannelloAmministratore({
         <span aria-hidden className="text-lg">
           🎙️
         </span>
+
+        {/* ─────────────────────────────────────────────────────────────────
+            IL VIA AL REPARTO NUOVO
+
+            Fra un reparto e l'altro l'asta si ferma da sola: è il momento in
+            cui la stanza guarda i crediti, commenta, va a prendere da bere.
+            Riparte quando lo dici tu, e il tasto lo dice con il nome del
+            reparto — «Comincia i difensori» — perché «Riprendi» da solo non
+            dice cosa sta per succedere a otto persone che stanno parlando
+            d'altro. */}
+        {inPausa && (
+          <Bottone
+            aspetto="oro"
+            inCorso={pausa.isPending}
+            onClick={() => pausa.mutate(false, { onSuccess: dice, onError: sbaglia })}
+          >
+            {asta.current_role_phase
+              ? `Comincia ${ARTICOLO[asta.current_role_phase]} ${NOME_RUOLO[
+                  asta.current_role_phase
+                ].toLowerCase()}`
+              : 'Riprendi l’asta'}
+          </Bottone>
+        )}
 
         {lotto && lotto.current_bidder_team_id && (
           <Bottone

@@ -65,9 +65,9 @@ export function stagioneDelListone(righe: CalciatoreInListone[]): string | null 
  * posto solo per tutte le schermate che usano questo aggancio, compreso il
  * selettore dei calciatori della lista obiettivi.
  */
-export function useListone() {
+export function useListone(voluta?: string) {
   return useQuery({
-    queryKey: ['listone'],
+    queryKey: ['listone', voluta ?? 'corrente'],
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<CalciatoreInListone[]> => {
       const sb = richiediSupabase()
@@ -86,7 +86,12 @@ export function useListone() {
         if (righe.length < passo) break
       }
 
-      const stagione = stagioneDelListone(tutti)
+      // Chiesta una stagione, si prende quella. Serve quando il listone si apre
+      // **da una lega**: il bacino dell'asta è la stagione di quella lega, e
+      // indovinarla dal conteggio delle righe funziona finché di stagioni ce
+      // n'è una sola. La prima lega su un'annata diversa vedrebbe il listone
+      // sbagliato senza che niente lo dica.
+      const stagione = voluta ?? stagioneDelListone(tutti)
       return stagione ? tutti.filter((r) => r.season === stagione) : tutti
     },
   })

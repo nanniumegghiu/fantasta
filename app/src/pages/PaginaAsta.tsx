@@ -776,9 +776,7 @@ function Avversari({
                   ▶
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm text-nebbia">{s.name}</span>
-                <span className="cifre-fisse shrink-0 text-xs text-fumo">
-                  max {s.massimo_offribile} · {s.slot_rimanenti} slot
-                </span>
+                <RepartiDi squadra={s} previsti={previsti} />
                 <span className="cifre-fisse shrink-0 text-base font-bold text-oro">
                   {s.credits_remaining}
                 </span>
@@ -803,6 +801,61 @@ function Avversari({
         })}
       </ul>
     </section>
+  )
+}
+
+/**
+ * I quattro reparti di una squadra, in una riga: P 3/3 · D 8/8 · C 6/7 · A 0/8.
+ *
+ * PERCHE' NON «12 SLOT»
+ *
+ * Un numero solo dice quanto manca e non dice **cosa** manca, che in asta è
+ * l'unica cosa che serve. «Gli restano dodici posti» non aiuta a decidere se
+ * rilanciare su un difensore; «ha finito i difensori e gli mancano sei
+ * attaccanti» sì: quello è un avversario che sui difensori non ti darà
+ * fastidio e sugli attaccanti ti scavalcherà a qualunque prezzo.
+ *
+ * PERCHE' IL REPARTO PIENO SI SPEGNE
+ *
+ * Perché smette di essere un'informazione da leggere e diventa una cosa da
+ * saltare con l'occhio. Restare acceso quanto gli altri vorrebbe dire farlo
+ * rileggere ogni volta. Lo stesso vale per il grassetto: ce l'hanno solo i
+ * reparti ancora aperti.
+ */
+function RepartiDi({
+  squadra,
+  previsti,
+}: {
+  squadra: BudgetSquadra
+  previsti: Record<Ruolo, number>
+}) {
+  const presi: Record<Ruolo, number> = {
+    P: squadra.presi_p,
+    D: squadra.presi_d,
+    C: squadra.presi_c,
+    A: squadra.presi_a,
+  }
+
+  return (
+    <span className="cifre-fisse flex shrink-0 gap-1.5 text-[11px]">
+      {ORDINE_RUOLI.map((r) => {
+        const pieno = presi[r] >= previsti[r]
+        return (
+          <span
+            key={r}
+            title={`${NOME_RUOLO[r]}: ${presi[r]} su ${previsti[r]}`}
+            className={[
+              'rounded px-1 py-0.5',
+              pieno
+                ? 'bg-verde-notte/60 text-fumo/50'
+                : `${CLASSE_RUOLO[r]} font-bold`,
+            ].join(' ')}
+          >
+            {r} {presi[r]}/{previsti[r]}
+          </span>
+        )
+      })}
+    </span>
   )
 }
 
@@ -929,7 +982,7 @@ function Scorciatoie({
           {ruolo ? `I miei ${NOME_RUOLO[ruolo].toLowerCase()}` : 'I miei obiettivi'}
         </Bottone>
       </Link>
-      <Link to="/listone">
+      <Link to={`/listone?lega=${idLega}${ruolo ? `&ruolo=${ruolo}` : ""}`}>
         <Bottone aspetto="secondario">Listone</Bottone>
       </Link>
       {sonoAdmin && (

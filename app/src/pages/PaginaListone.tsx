@@ -2,7 +2,10 @@ import { useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Intestazione } from '@/components/Intestazione'
 import { Bottone } from '@/components/Bottone'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import { useRose } from '@/features/asta/api'
+import { useLega } from '@/features/leghe/api'
+import { useListaObiettivi } from '@/features/obiettivi/api'
 import { Stemma } from '@/components/Stemma'
 import { Volto } from '@/components/Volto'
 import { useLoghi } from '@/features/listone/loghi'
@@ -56,10 +59,56 @@ const COLONNE: Colonna[] = [
 
 const LARGHEZZA_NOME = 176
 
-export function PaginaListone() {
-  const { data: righe, isPending, error, refetch } = useListone()
+/** «fra i difensori», «fra gli attaccanti». */
+const NOME_REPARTO: Record<Ruolo, string> = {
+  P: 'portieri',
+  D: 'difensori',
+  C: 'centrocampisti',
+  A: 'attaccanti',
+}
 
-  const [ruolo, setRuolo] = useState<Ruolo | null>(null)
+/**
+ * Il listone, e cosa cambia quando ci si arriva **da un'asta in corso**.
+ *
+ * Aperto dal menù è l'enciclopedia: tutti i cinquecento, ordinabili per ogni
+ * colonna. Aperto durante l'asta è un'altra cosa, e la differenza la fa
+ * l'indirizzo: `?lega=…&ruolo=D`.
+ *
+ * Da lì dentro le domande sono due sole, e sono urgenti: **chi è ancora
+ * libero** in questo reparto, e **quali dei miei obiettivi sono ancora in
+ * ballo**. Un elenco che contiene anche i duecento già venduti non risponde a
+ * nessuna delle due: costringe a leggere nomi che non si possono più
+ * comprare, mentre il countdown scorre.
+ *
+ * Quindi con la lega si parte da: solo gli svincolati, solo il reparto in
+ * corso, i propri obiettivi accesi e contati. Tutti e tre si possono togliere
+ * con un tocco — è sempre lo stesso listone, cambia solo da dove lo si guarda.
+ */
+export function PaginaListone() {
+  const [parametri] = useSearchParams()
+  const idLega = parametri.get('lega') ?? undefined
+  const ruoloDiTurno = (parametri.get('ruolo') as Ruolo | null) ?? null
+
+  // Arrivando da una lega il bacino è la **sua** stagione, non quella con più
+  // righe: sono la stessa cosa finché di stagioni ce n'è una, e smettono di
+  // esserlo esattamente quando conta.
+  const { data: lega } = useLega(idLega)
+  const { data: righe, isPending, error, refetch } = useListone(lega?.season)
+
+  // Solo quando si arriva da un'asta: fuori da lì queste due non servono e non
+  // si chiedono nemmeno al server.
+  const { data: rose } = useRose(idLega)
+  const { data: lista } = useListaObiettivi(idLega)
+
+  const venduti = useMemo(() => new Set((rose ?? []).map((r) => r.player_id)), [rose])
+  const miei = useMemo(
+    () => new Set((lista?.targets ?? []).map((t) => t.player_id)),
+    [lista],
+  )
+
+  const [ruolo, setRuolo] = useState<Ruolo | null>(ruoloDiTurno)
+  const [soloLiberi, setSoloLiberi] = useState(Boolean(idLega))
+  const [soloMiei, setSoloMiei] = useState(false)
   const [squadra, setSquadra] = useState<string>('')
   const [cerca, setCerca] = useState('')
   const [ordine, setOrdine] = useState<{ chiave: string; crescente: boolean }>({
@@ -74,6 +123,8 @@ export function PaginaListone() {
 
   const visibili = useMemo(() => {
     let v = righe ?? []
+    if (soloLiberi) v = v.filter((c) => !venduti.has(c.id))
+    if (soloMiei) v = v.filter((c) => miei.has(c.id))
     if (ruolo) v = v.filter((c) => c.role === ruolo)
     if (squadra) v = v.filter((c) => c.serie_a_team === squadra)
     if (cerca.trim()) {
@@ -101,7 +152,18 @@ export function PaginaListone() {
       if (c === 0) return a.name.localeCompare(b.name, 'it')
       return ordine.crescente ? c : -c
     })
-  }, [righe, ruolo, squadra, cerca, ordine])
+  }, [righe, ruolo, squadra, cerca, ordine, soloLiberi, soloMiei, venduti, miei])
+
+  // Quanti dei miei obiettivi sono ancora comprabili, in tutto e in questo
+  // reparto. È il numero che dice se si può ancora stare tranquilli o se è ora
+  // di alzare la mano.
+  const obiettiviLiberi = useMemo(
+    () => (righe ?? []).filter((c) => miei.has(c.id) && !venduti.has(c.id)),
+    [righe, miei, venduti],
+  )
+  const obiettiviQui = ruolo
+    ? obiettiviLiberi.filter((c) => c.role === ruolo).length
+    : obiettiviLiberi.length
 
   const giornata = giornataAggiornamento(righe ?? [])
 
@@ -114,7 +176,7 @@ export function PaginaListone() {
             ? `${visibili.length} di ${righe.length} calciatori`
             : undefined
         }
-        indietroA="/leghe"
+        indietroA={idLega ? `/lega/${idLega}/asta` : '/leghe'}
         azione={<ScorciatoiaVolti />}
       />
 
@@ -138,6 +200,21 @@ export function PaginaListone() {
           ))}
         </div>
 
+        {idLega && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Pillola attiva={soloLiberi} onClick={() => setSoloLiberi((v) => !v)}>
+              {soloLiberi ? 'Solo svincolati' : 'Anche i venduti'}
+            </Pillola>
+            <Pillola attiva={soloMiei} onClick={() => setSoloMiei((v) => !v)}>
+              Solo i miei obiettivi
+            </Pillola>
+            <span className="cifre-fisse ml-auto rounded-full bg-verde-acceso/15 px-3 py-1.5 text-xs font-semibold text-verde-acceso">
+              {obiettiviQui} {obiettiviQui === 1 ? 'tuo obiettivo' : 'tuoi obiettivi'} ancora
+              {ruolo ? ` fra i ${NOME_REPARTO[ruolo]}` : ' in listone'}
+            </span>
+          </div>
+        )}
+
         <div className="mt-2 flex items-center gap-2">
           <select
             value={squadra}
@@ -153,13 +230,15 @@ export function PaginaListone() {
             ))}
           </select>
 
-          {(ruolo || squadra || cerca) && (
+          {(ruolo || squadra || cerca || soloMiei || (idLega && !soloLiberi)) && (
             <Bottone
               aspetto="fantasma"
               onClick={() => {
                 setRuolo(null)
                 setSquadra('')
                 setCerca('')
+                setSoloMiei(false)
+                setSoloLiberi(Boolean(idLega))
               }}
             >
               Azzera
@@ -209,7 +288,7 @@ export function PaginaListone() {
       )}
 
       {visibili.length > 0 && (
-        <Tabella righe={visibili} ordine={ordine} setOrdine={setOrdine} />
+        <Tabella righe={visibili} ordine={ordine} setOrdine={setOrdine} miei={miei} />
       )}
     </div>
   )
@@ -242,10 +321,13 @@ function Tabella({
   righe,
   ordine,
   setOrdine,
+  miei,
 }: {
   righe: CalciatoreInListone[]
   ordine: { chiave: string; crescente: boolean }
   setOrdine: (o: { chiave: string; crescente: boolean }) => void
+  /** I calciatori della propria lista obiettivi: si accendono. */
+  miei: Set<number>
 }) {
   const volto = useVolti()
   const stemma = useLoghi()
@@ -314,14 +396,24 @@ function Tabella({
             {virtuale.getVirtualItems().map((v) => {
               const c = righe[v.index]
               const ruolo = RUOLI.find((r) => r.codice === c.role)!
+              // Un obiettivo si riconosce **prima** di leggere il nome: la
+              // riga è accesa e c'è una barra sul bordo sinistro, che resta
+              // visibile anche quando la tabella è scorsa di lato.
+              const mio = miei.has(c.id)
               return (
                 <div
                   key={c.id}
-                  className="absolute left-0 flex items-center border-b border-verde-campo/50"
+                  className={[
+                    'absolute left-0 flex items-center border-b border-verde-campo/50',
+                    mio ? 'bg-verde-acceso/10' : '',
+                  ].join(' ')}
                   style={{ top: v.start, height: v.size, width: larghezzaTotale }}
                 >
                   <div
-                    className="sticky left-0 z-10 flex h-full items-center gap-2 bg-verde-notte px-3"
+                    className={[
+                      'sticky left-0 z-10 flex h-full items-center gap-2 px-3',
+                      mio ? 'border-l-4 border-verde-acceso bg-verde-notte pl-2' : 'bg-verde-notte',
+                    ].join(' ')}
                     style={{ width: LARGHEZZA_NOME }}
                   >
                     <Volto
@@ -330,7 +422,11 @@ function Tabella({
                       classeRuolo={ruolo.classe}
                     />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-nebbia">{c.name}</p>
+                      <p
+                        className={`truncate text-sm font-semibold ${mio ? 'text-verde-acceso' : 'text-nebbia'}`}
+                      >
+                        {c.name}
+                      </p>
                       <p className="flex items-center gap-1 truncate text-[11px] text-fumo">
                         <Stemma
                           squadra={c.serie_a_team}

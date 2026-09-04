@@ -300,7 +300,55 @@ try {
       '(sopra i 2 px vuol dire tagliato)',
   )
 
-  // ─── 5. Niente eccezioni ─────────────────────────────────────────────────
+  // ─── 5. Il listone aperto dall'asta ──────────────────────────────────────
+  //
+  // Da qui dentro deve rispondere a due domande urgenti: chi è ancora libero
+  // in questo reparto, e quali dei miei obiettivi sono ancora in ballo. Se
+  // mostra tutti i calciatori, comprati compresi, non risponde a nessuna delle
+  // due mentre il countdown scorre.
+  const lista = await rpc('assicura_lista_obiettivi', { p_lega: lega })
+  await sql(`insert into public.tiers (list_id, name, position, role)
+    values ('${lista}', 'Prova', 1, 'P') on conflict do nothing;`)
+  const [fascia] = await sql(`select id from public.tiers where list_id = '${lista}' limit 1;`)
+  // Due portieri fra gli obiettivi: uno resterà libero.
+  await sql(`insert into public.targets (list_id, player_id, tier_id, priority)
+    values ('${lista}', 909800, '${fascia.id}', 1), ('${lista}', 909801, '${fascia.id}', 2)
+    on conflict do nothing;`)
+
+  await scheda.vaiA(`${sito.indirizzo}/listone?lega=${lega}&ruolo=P`)
+  // Si aspetta il **sottotitolo**, non la pastiglia dei filtri: quella compare
+  // subito, il listone ci mette un attimo ad arrivare. La prima versione
+  // guardava troppo presto e leggeva zero obiettivi su zero calciatori, cioè
+  // misurava una pagina ancora vuota e la dava per rotta.
+  const listoneCaricato = await scheda.aspetta(
+    '/\\d+ di \\d+ calciatori/.test(document.body.innerText)',
+    { entro: 25000 },
+  )
+  await scheda.aspetta('/[1-9]\\d* tuoi? obiettiv/i.test(document.body.innerText)', { entro: 15000 })
+
+  const dati = await scheda.valuta(`(() => {
+    const t = document.body.innerText
+    const conteggio = (t.match(/(\\d+)\\s+tuoi? obiettiv/i) ?? [])[1] ?? null
+    const sottotitolo = (t.match(/(\\d+) di (\\d+) calciatori/) ?? []).slice(1)
+    const accesi = document.querySelectorAll('.border-verde-acceso').length
+    return { conteggio, sottotitolo, accesi }
+  })()`)
+
+  ok(
+    'Il listone aperto dall asta mostra solo il reparto in corso',
+    listoneCaricato && dati.sottotitolo.length === 2 && Number(dati.sottotitolo[0]) < Number(dati.sottotitolo[1]),
+    listoneCaricato
+      ? `${dati.sottotitolo[0]} visibili su ${dati.sottotitolo[1]} in listone`
+      : 'la schermata non e arrivata',
+  )
+
+  ok(
+    'E dice quanti dei miei obiettivi sono ancora liberi, accendendoli',
+    dati.conteggio !== null && Number(dati.conteggio) >= 1 && dati.accesi >= 1,
+    `il conteggio dice ${dati.conteggio}, e ci sono ${dati.accesi} righe accese`,
+  )
+
+  // ─── 6. Niente eccezioni ─────────────────────────────────────────────────
   const esplosioni = scheda.console.filter((c) => c.tipo === 'eccezione' || c.tipo === 'error')
   ok(
     'Nessuna eccezione nella console del browser',

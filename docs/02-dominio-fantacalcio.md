@@ -216,6 +216,25 @@ credito residuo, reparto già completo.
   verifiche, non con valori grandi e sbilanciati.
 - ✅ Gli scambi fra squadre sono costruiti e verificati.
 
+## Il ritmo della serata: la pausa fra i reparti
+
+Nella variante **per ruolo** l'asta si ferma da sola quando un reparto finisce, e riparte quando
+chi conduce lo dice.
+
+Non è una regola del fantacalcio: è una regola della stanza. Il passaggio da un reparto al
+successivo è il momento in cui si guarda quanto si è speso, si commenta, si va a prendere da bere.
+Prima l'asta non se ne accorgeva — chiuso l'ultimo portiere, un secondo dopo era già in ballo un
+difensore, e chi stava ricontando i propri crediti se lo trovava addosso.
+
+**Non all'apertura.** Il passaggio da «nessun reparto» al primo non è un cambio: è l'inizio.
+
+**E il calciatore successivo non si apre durante la pausa.** `apri_lotto_automatico` rilegge lo
+stato dopo aver aggiornato la fase: aprire un lotto dentro un'asta ferma vorrebbe dire che nessuno
+può rilanciare mentre il countdown scorre, e il primo difensore andrebbe a chi capita per un
+credito.
+
+Sei prove in `scripts/prova-cambio-reparto.mjs`.
+
 ## Changelog
 
 | Versione | Data | Cosa cambia |

@@ -90,6 +90,35 @@ I bottoni animati devono aiutare, non distrarre.
 > sensazione di «scarno»**, ed è stata corretta dove conta: il calciatore in asta, le righe delle
 > rose, il registro, la festa dell'aggiudicazione.
 
+### Il listone cambia mestiere a seconda di dove lo apri
+
+Dal menù è l'enciclopedia: tutti i calciatori, ordinabili per ogni colonna. **Aperto durante
+l'asta** (`/listone?lega=…&ruolo=D`) le domande sono due sole, e sono urgenti: chi è ancora libero
+in questo reparto, e quali dei miei obiettivi sono ancora in ballo.
+
+| Dal menù | Dall'asta |
+|---|---|
+| Tutti i calciatori | Solo gli **svincolati**, e solo il **reparto in corso** |
+| La stagione con più righe | La stagione **di quella lega** |
+| Nomi tutti uguali | I propri obiettivi accesi, con il conteggio di quanti ne restano |
+| Indietro va alle leghe | Indietro torna **in asta** |
+
+I tre filtri si tolgono con un tocco: è sempre lo stesso listone, cambia solo da dove lo si guarda.
+
+**La stagione è il dettaglio meno appariscente e il più importante.** Il listone sceglieva la
+stagione con più righe, e finché di stagioni ce n'è una sola coincide con quella della lega. La
+prima lega su un'annata diversa avrebbe visto il bacino sbagliato senza che niente lo dicesse.
+
+### Gli avversari si leggono reparto per reparto
+
+Al posto di «12 slot» ci sono i quattro reparti: `P 3/3 · D 8/8 · C 6/7 · A 0/8`. Un numero solo
+dice quanto manca e non dice **cosa** manca, che in asta è l'unica cosa che serve: «ha finito i
+difensori e gli mancano sei attaccanti» è un avversario che sui difensori non darà fastidio e
+sugli attaccanti scavalcherà a qualunque prezzo.
+
+Il reparto completo **si spegne**: smette di essere qualcosa da leggere e diventa qualcosa da
+saltare con l'occhio.
+
 ### Tre difetti che solo un browser poteva mostrare
 
 Le novanta verifiche di questo progetto parlano tutte al server, e nessuna ha potuto vedere
@@ -372,6 +401,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.17 | 2026-09-05 | Il listone aperto dall asta, gli avversari per reparto, e la pausa fra un reparto e l altro. |
 | 1.16 | 2026-09-05 | Tre difetti che vivevano dentro il browser, e la verifica che adesso ne apre uno. |
 | 1.15 | 2026-09-04 | Costruite la festa dell aggiudicazione, il sorpasso che si sente, le rose che reagiscono. Il movimento ridotto è rispettato anche dalle animazioni in JavaScript. |
 | 1.14 | 2026-09-04 | Due animazioni promesse da questo documento e mai costruite, marcate 🔴. Il movimento ridotto è rispettato a metà. |
