@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.4 · **Data** · 2026-09-04
+**Versione documento** · 3.5 · **Data** · 2026-09-04
 
 ---
 
@@ -192,7 +192,9 @@ movimento su più di un dispositivo.
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
 | Il CSV caricato davvero nell app Fantacalcio | 🔴 mai provato sul sito vero |
 | Un asta vera, in movimento, su più dispositivi | 🟡 gli avversari automatici ci sono e sono provati; manca la serata vera |
-| Fetta 8: revisione iper-critica | 🟡 iniziata, grafica e animazioni comprese |
+| Fetta 8: revisione iper-critica | 🟡 ciclo 1 sull asta svolto, in attesa di decisione: `docs/qa/2026-09-04-asta-grafica-e-animazioni.md` |
+| Animazioni promesse dal design e mai costruite | 🔴 aggiudicazione con coriandoli, transizione fra schermate |
+| Riduzione del movimento | 🟡 rispettata dalle animazioni CSS, ignorata da quelle in JavaScript |
 
 **Prossimo passo** · **Un'asta vera dall'inizio alla fine**, condotta da chi amministra con avversari
 automatici che rilanciano da soli, per arrivare a rose complete e provare l'ultimo passo che nessuno
@@ -263,6 +265,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.5 | 2026-09-04 | Fetta 8, ciclo 1 sull asta: quattro red flag, e due animazioni che il documento di design dava per fatte e non esistevano. |
 | 3.4 | 2026-09-04 | Avversari automatici: rilanciano da soli, con un carattere stabile e un limite di spesa, e non possono fare niente che una persona non possa fare. |
 | 3.3 | 2026-09-04 | Documentazione riallineata al codice, e tre buchi scritti come tali invece che taciuti: password, CSV, asta mai vissuta. |
 | 3.2 | 2026-09-04 | Venti volti recuperati: il limite di caricamento tagliava sempre la coda, le abbreviazioni di due lettere non erano riconosciute e i doppioni della stessa persona bloccavano l abbinamento. |

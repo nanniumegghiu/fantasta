@@ -73,12 +73,24 @@ I bottoni animati devono aiutare, non distrarre.
 | Rilancio accettato | Il numero sale con un rimbalzo corto | 240 ms |
 | Nuova chiamata | La scheda del calciatore entra dal basso con una leggera rotazione | 320 ms |
 | Countdown | Pulsazione a ogni secondo, il colore vira dall'oro al rosso sotto i 3 secondi | 1 s per ciclo |
-| Aggiudicazione | Coriandoli brevi e il nome della squadra che ingrandisce | 900 ms |
-| Cambio di schermata | Dissolvenza con scorrimento di 8 px | 180 ms |
+| Aggiudicazione | 🔴 **Non costruita.** Coriandoli brevi e il nome della squadra che ingrandisce | 900 ms |
+| Cambio di schermata | 🔴 **Non costruita.** Dissolvenza con scorrimento di 8 px | 180 ms |
 
-**Rispetto delle preferenze di sistema.** Chi ha attivato la riduzione del movimento sul proprio
-dispositivo riceve le stesse informazioni senza animazioni: nessun rimbalzo, nessun coriandolo,
-solo cambi di stato immediati. Non è un dettaglio di gentilezza, è che le animazioni pulsanti
+> **Questa tabella descriveva due animazioni che non esistevano**, ed è l'errore che la regola 6
+> del manuale chiama il più grave del progetto. Trovate dal ciclo 1 della Fetta 8, marcate qui, e
+> in attesa di essere costruite: [il rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md).
+>
+> Nella stessa occasione è emerso che **`AnimatePresence` non è usato in nessun file**: le entrate
+> sono curate, le uscite non esistono, e ogni cambiamento è uno scatto.
+
+**Rispetto delle preferenze di sistema.** 🟡 **Rispettato a metà.** Chi ha attivato la riduzione del
+movimento riceve le stesse informazioni senza animazioni: nessun rimbalzo, nessun coriandolo, solo
+cambi di stato immediati.
+
+La regola in `styles/index.css` azzera le durate **CSS**, ma le animazioni di `motion/react` sono
+pilotate da JavaScript e quella regola non le tocca: con «Riduci movimento» attivo il countdown
+continua a pulsare all'infinito. `useReducedMotion` non è usato da nessuna parte. Va risolto in un
+punto solo, non animazione per animazione. Non è un dettaglio di gentilezza, è che le animazioni pulsanti
 possono dare fastidio fisico a chi soffre di emicrania vestibolare.
 
 ### 2.5 Suoni
@@ -339,6 +351,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.14 | 2026-09-04 | Due animazioni promesse da questo documento e mai costruite, marcate 🔴. Il movimento ridotto è rispettato a metà. |
 | 1.13 | 2026-09-04 | Lo schermo condiviso si apre anche da un codice di sei caratteri, per il televisore. |
 | 1.12 | 2026-09-04 | Stemmi delle squadre nel listone, nell asta e sullo schermo condiviso. |
 | 1.11 | 2026-09-04 | Schermata di revisione dei volti, con i due lavori tenuti separati. |

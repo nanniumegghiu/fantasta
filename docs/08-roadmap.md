@@ -171,12 +171,22 @@ un formato sbagliato si scopre la sera in cui serve.
 | I reparti devono pareggiare | ✅ la regola che tiene in piedi le rose |
 | Rivalidazione al momento dell accettazione | ✅ una rosa cambiata nel frattempo non passa |
 
-### Fetta 8 · Revisione iper-critica — 🟡 iniziata il 4 settembre 2026
+### Fetta 8 · Revisione iper-critica — 🟡 ciclo 1 svolto, in attesa di decisione
 
 Applicazione di `Metodo-QA-Testing-Iper-Critico.md` sull'app funzionante, un percorso per volta,
 partendo dall'asta. **Con attenzione dichiarata alla grafica e alle animazioni**: l'utente le ha
-giudicate scarne, e «funziona» non e' la stessa cosa di «e' viva». Vedi
-`docs/qa/` per i rapporti.
+giudicate scarne, e «funziona» non è la stessa cosa di «è viva».
+
+| Ciclo | Percorso | Esito |
+|---|---|---|
+| 1 | L'asta viva: schermo condiviso e dispositivo personale | ✅ svolto · 4 red flag, 6 proposte, 5 approvate dal team tecnico · [rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md) |
+| 2 | Preparazione: leghe, listone, obiettivi | 🔴 non iniziato |
+
+**Il ciclo 1 non ha toccato una riga di codice**, come il metodo impone: le decisioni si prendono
+insieme prima di scrivere. La scoperta che pesa di più è che due righe della tabella delle
+animazioni in `04-frontend-e-design.md` erano **scritte e mai costruite** — l'aggiudicazione con i
+coriandoli e la transizione fra schermate — e che `AnimatePresence` non è usato da nessuna parte,
+quindi nell'app **niente esce mai di scena**. È la ragione tecnica della sensazione di «scarno».
 
 ---
 
@@ -215,6 +225,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.20 | 2026-09-04 | Fetta 8, ciclo 1: l asta viva passata al setaccio. Nessun codice toccato, come impone il metodo. |
 | 1.19 | 2026-09-04 | Avversari automatici per provare l asta da soli, e i tre difetti che la loro prima prova ha fatto uscire. |
 | 1.18 | 2026-09-04 | Stato riallineato al codice: fette 6 e 7 chiuse, Google e pubblicazione fatte, e tre buchi scritti come tali — password, CSV mai caricato, asta mai vissuta. |
 | 1.17 | 2026-09-04 | Le squadre fuori Serie A si cercano per nome: 92% dei volti e tutti gli stemmi. |
