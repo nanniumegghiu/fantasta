@@ -80,10 +80,40 @@ export type AcquistoInRosa = {
 
 // ─── L'asta e il lotto in corso ─────────────────────────────────────────────
 
+/**
+ * Ogni quanto si richiede lo stato, **anche se il canale in tempo reale tace**.
+ *
+ * PERCHE' UNA RETE SOTTO IL REALTIME
+ *
+ * Il canale funziona, e quando funziona è più veloce di qualunque intervallo.
+ * Ma è **un solo filo**: se cade, se il browser lo mette a dormire perché la
+ * scheda è in secondo piano, se un evento si perde, la pagina resta indietro
+ * senza dire niente — il pallino resta verde, perché la connessione c'è, ed è
+ * quello che rende il difetto invisibile.
+ *
+ * Su un televisore che otto persone guardano insieme non è un ritardo, è
+ * un'informazione sbagliata: si rilancia contro un prezzo che non esiste più.
+ *
+ * Quindi il realtime resta, e sotto c'è un battito. Gli intervalli sono
+ * diversi perché le cose cambiano a ritmi diversi: **il lotto cambia a ogni
+ * rilancio**, le rose solo quando qualcuno compra. Interrogare tutto ogni
+ * secondo sarebbe quattro volte il traffico per tre informazioni che non si
+ * muovono.
+ */
+const BATTITO = {
+  /** Il numero che cambia più spesso, ed è quello che tutti guardano. */
+  lotto: 1000,
+  /** Apertura, pausa, reparto: cambiano poche volte in una serata. */
+  asta: 2500,
+  /** Crediti e rose si muovono solo a ogni aggiudicazione. */
+  rose: 3000,
+}
+
 export function useAsta(idLega: string | undefined) {
   return useQuery({
     queryKey: ['asta', idLega],
     enabled: Boolean(idLega),
+    refetchInterval: BATTITO.asta,
     queryFn: async (): Promise<Asta | null> => {
       const { data, error } = await richiediSupabase()
         .from('auctions')
@@ -100,6 +130,7 @@ export function useLottoCorrente(idAsta: string | undefined) {
   return useQuery({
     queryKey: ['lotto', idAsta],
     enabled: Boolean(idAsta),
+    refetchInterval: BATTITO.lotto,
     queryFn: async (): Promise<Lotto | null> => {
       const { data, error } = await richiediSupabase()
         .from('auction_lots')
@@ -119,6 +150,7 @@ export function useBudgetSquadre(idLega: string | undefined) {
   return useQuery({
     queryKey: ['budget', idLega],
     enabled: Boolean(idLega),
+    refetchInterval: BATTITO.rose,
     queryFn: async (): Promise<BudgetSquadra[]> => {
       const { data, error } = await richiediSupabase()
         .from('team_budget')
@@ -134,6 +166,7 @@ export function useRose(idLega: string | undefined) {
   return useQuery({
     queryKey: ['rose', idLega],
     enabled: Boolean(idLega),
+    refetchInterval: BATTITO.rose,
     queryFn: async (): Promise<AcquistoInRosa[]> => {
       const { data, error } = await richiediSupabase()
         .from('roster_players')

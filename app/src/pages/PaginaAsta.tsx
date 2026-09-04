@@ -58,6 +58,16 @@ export function PaginaAsta() {
   const mioBudget = budget?.find((b) => b.user_id === utente?.id)
   const acquistati = new Set((rose ?? []).map((r) => r.player_id))
 
+  // I posti che il regolamento prevede, in un posto solo: li usano il riquadro
+  // del rilancio, la propria rosa e quella degli avversari, e tre copie che
+  // divergono vorrebbero dire tre conteggi diversi sulla stessa schermata.
+  const previsti: Record<Ruolo, number> = {
+    P: lega?.slots_p ?? 3,
+    D: lega?.slots_d ?? 8,
+    C: lega?.slots_c ?? 8,
+    A: lega?.slots_a ?? 6,
+  }
+
   // Allo scadere si chiede la chiusura, e si insiste finché il lotto non è
   // chiuso davvero. Decide comunque il server. Il perché delle precauzioni sta
   // scritto dentro il gancio, ed è una storia che vale la pena leggere prima di
@@ -133,6 +143,7 @@ export function PaginaAsta() {
                 offertaMinima={lega?.min_bid ?? 1}
                 inPausa={asta.status === 'paused'}
                 conPasso={asta.bid_type === 'con_passo'}
+                previsti={previsti}
               />
             ) : asta.method === 'chiamata' ? (
               <TuoTurno
@@ -167,7 +178,7 @@ export function PaginaAsta() {
               squadre={budget ?? []}
               idMio={mioBudget?.team_id}
               rose={rose ?? []}
-              lega={lega}
+              previsti={previsti}
             />
           </>
         )}
@@ -209,6 +220,7 @@ function InAstaOra({
   offertaMinima,
   inPausa,
   conPasso,
+  previsti,
 }: {
   lotto: Lotto
   timer: { fase: string; mancanti: number }
@@ -219,6 +231,8 @@ function InAstaOra({
   offertaMinima: number
   inPausa: boolean
   conPasso: boolean
+  /** I posti che il regolamento prevede per reparto. */
+  previsti: Record<Ruolo, number>
 }) {
   const rilancia = useRilancia(idLega)
   const passa = usePassa(idLega)
@@ -298,7 +312,28 @@ function InAstaOra({
   }
 
   const hoPassato = Boolean(mioBudget && chiHaPassato?.includes(mioBudget.team_id))
-  const bloccato = inPausa || timer.fase === 'scaduto' || hoPassato
+
+  // ─── Reparto pieno: i tasti si spengono ───────────────────────────────────
+  //
+  // Il server rifiuta già l'offerta di chi ha il reparto completo, e rispondeva
+  // «ruolo pieno» **dopo** il tocco. In asta è un tocco sprecato nel momento
+  // peggiore: si preme, si aspetta, arriva un errore rosso, e intanto il
+  // countdown è sceso di due secondi.
+  //
+  // Adesso i tasti sono spenti prima, e al loro posto c'è la ragione. Non è
+  // una regola nuova — la regola resta del server, che è l'unico che decide —
+  // è la stessa regola detta prima invece che dopo.
+  const presiNelRuolo: Record<Ruolo, number> = {
+    P: mioBudget?.presi_p ?? 0,
+    D: mioBudget?.presi_d ?? 0,
+    C: mioBudget?.presi_c ?? 0,
+    A: mioBudget?.presi_a ?? 0,
+  }
+  const ruoloInAsta = lotto.players.role
+  const repartoPieno = Boolean(mioBudget) && presiNelRuolo[ruoloInAsta] >= previsti[ruoloInAsta]
+  const rosaPiena = (mioBudget?.slot_rimanenti ?? 1) <= 0
+
+  const bloccato = inPausa || timer.fase === 'scaduto' || hoPassato || repartoPieno || rosaPiena
   // Su un lotto aperto dal server non c'è ancora un'offerta: il primo scatto
   // deve valere l'offerta minima, non uno.
   const base = lotto.current_bidder_team_id ? lotto.current_bid : Math.max(offertaMinima - 1, 0)
@@ -411,6 +446,14 @@ function InAstaOra({
         </p>
       )}
 
+      {(repartoPieno || rosaPiena) && (
+        <p className="mt-4 rounded-xl border border-verde-acceso/40 bg-verde-acceso/10 px-4 py-3 text-center text-sm font-semibold text-verde-acceso">
+          {rosaPiena
+            ? 'La tua rosa è completa: hai finito.'
+            : `Hai già i tuoi ${NOME_RUOLO[ruoloInAsta].toLowerCase()}. Si riapre al prossimo reparto.`}
+        </p>
+      )}
+
       <div className="mt-4 grid grid-cols-3 gap-2">
         {[1, 5, 10].map((passo) => {
           const importo = base + passo
@@ -488,7 +531,7 @@ function InAstaOra({
               </div>
             </div>
           ) : (
-            <Bottone aspetto="fantasma" disabilitato={inPausa} onClick={() => setConfermaPasso(true)}>
+            <Bottone aspetto="fantasma" disabilitato={bloccato} onClick={() => setConfermaPasso(true)}>
               Passo su questo calciatore
             </Bottone>
           )}
@@ -734,23 +777,16 @@ function Avversari({
   squadre,
   idMio,
   rose,
-  lega,
+  previsti,
 }: {
   squadre: BudgetSquadra[]
   idMio: string | undefined
   rose: AcquistoInRosa[]
-  lega: { slots_p: number; slots_d: number; slots_c: number; slots_a: number } | null | undefined
+  previsti: Record<Ruolo, number>
 }) {
   const [aperta, setAperta] = useState<string | null>(null)
   const altri = squadre.filter((s) => s.team_id !== idMio)
   if (altri.length === 0) return null
-
-  const previsti: Record<Ruolo, number> = {
-    P: lega?.slots_p ?? 3,
-    D: lega?.slots_d ?? 8,
-    C: lega?.slots_c ?? 8,
-    A: lega?.slots_a ?? 6,
-  }
 
   return (
     <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">

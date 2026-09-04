@@ -234,14 +234,35 @@ try {
   // Non basta cercare «7»: una cifra sola compare in mezzo schermo, e la prova
   // passerebbe anche con la pagina ferma. Si guarda il numero grande
   // dell'offerta, che è l'unico posto dove quel 7 deve comparire.
+  //
+  // E non basta nemmeno che compaia: **quanto ci mette** è tutta la
+  // differenza. Su un televisore che otto persone guardano insieme, un rilancio
+  // che arriva dopo otto secondi non è un ritardo, è un'informazione
+  // sbagliata: qualcuno rilancia contro un prezzo che non esiste più. La prima
+  // versione di questa prova aspettava dodici secondi e diceva OK, cioè
+  // certificava come funzionante esattamente il difetto che l'utente vedeva.
+  const primaDelRilancio = Date.now()
   const rilancioVisto = await scheda.aspetta(
     "[...document.querySelectorAll('p')].some(p => p.innerText.trim() === '7' && parseFloat(getComputedStyle(p).fontSize) > 60)",
-    { entro: 12000 },
+    { entro: 12000, ogni: 100 },
+  )
+  const ritardo = Date.now() - primaDelRilancio
+  ok(
+    'Un rilancio fatto da un altro dispositivo compare **subito**',
+    rilancioVisto && ritardo < 3000,
+    rilancioVisto
+      ? `l offerta 7 e apparsa dopo ${(ritardo / 1000).toFixed(1)}s ` +
+        '(sopra i 3 s sul televisore si rilancia contro un prezzo che non esiste piu)'
+      : 'l offerta non e mai arrivata: lo schermo non si aggiorna',
+  )
+
+  const collegato = await scheda.valuta(
+    "Boolean(document.querySelector('[aria-label=\"Collegato\"]'))",
   )
   ok(
-    'Un rilancio fatto da un altro dispositivo compare sullo schermo',
-    rilancioVisto,
-    rilancioVisto ? 'l offerta 7 e apparsa' : 'l offerta non e mai arrivata: lo schermo non si aggiorna',
+    'Lo schermo dichiara di essere collegato al canale in tempo reale',
+    collegato,
+    collegato ? 'il pallino e verde' : 'il pallino e rosso: il canale non e collegato',
   )
 
   // ─── 2. Allo scadere: poche richieste, non una raffica ────────────────────
