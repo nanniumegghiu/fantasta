@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { MarchioFantasta } from '@/components/MarchioFantasta'
+import { Coriandoli } from '@/components/Coriandoli'
+import { useMovimentoRidotto } from '@/lib/movimento'
 import { Bottone } from '@/components/Bottone'
 import { useLega } from '@/features/leghe/api'
 import { totaleSlot } from '@/features/leghe/tipi'
@@ -104,7 +106,7 @@ export function SchermoAsta({
   const fasePrecedente = useRef<string>('nessuno')
   const secondoPrecedente = useRef<number>(-1)
   const acquistiPrecedenti = useRef<number>(-1)
-  const chiusuraChiesta = useRef<string | null>(null)
+  const [festa, setFesta] = useState<Festeggiato | null>(null)
 
   useEffect(() => {
     if (!audioPronto) return
@@ -150,14 +152,61 @@ export function SchermoAsta({
     acquistiPrecedenti.current = quanti
   }, [rose?.length, audioPronto])
 
-  // Allo scadere si chiede al server di chiudere. Decide lui: se non è
-  // davvero scaduto rifiuta, e non succede niente.
+  // Allo scadere si chiede al server di chiudere, e si continua a chiederlo
+  // finché il lotto non è chiuso davvero. Decide lui: se non è scaduto rifiuta,
+  // e non succede niente.
+  //
+  // PERCHE' NON UNA VOLTA SOLA
+  // Prima si segnava il lotto come «già chiesto» **prima** di chiedere, e non
+  // si riprovava mai: un tentativo a vuoto — l'orologio del televisore avanti
+  // di un secondo, un pacchetto perso — lasciava il countdown a zero con il
+  // calciatore ancora lì, finché la rete di sicurezza del server non passava
+  // dieci secondi dopo. Otto persone che guardano lo schermo fermo pensano che
+  // sia rotto, e chi conduce prende il telefono e aggiudica a mano.
   useEffect(() => {
     if (timer.fase !== 'scaduto' || !lotto || !onChiudiScaduto) return
-    if (chiusuraChiesta.current === lotto.id) return
-    chiusuraChiesta.current = lotto.id
-    onChiudiScaduto(lotto.id)
+    const id = lotto.id
+    onChiudiScaduto(id)
+    const insisti = setInterval(() => onChiudiScaduto(id), 1500)
+    return () => clearInterval(insisti)
   }, [timer.fase, lotto, onChiudiScaduto])
+
+  // ─── L'aggiudicazione, che è il momento della serata ──────────────────────
+  //
+  // Aveva il suono e non aveva l'immagine: la scheda del calciatore venduto
+  // spariva e ne compariva un'altra, come una diapositiva. Otto persone
+  // guardano il televisore nel momento che aspettavano, e lo schermo non se ne
+  // accorgeva.
+  //
+  // COME SI CAPISCE CHI HA VINTO
+  // Non dal lotto: quando si chiude, sparisce. Si guarda invece quale
+  // calciatore è **comparso** nelle rose rispetto al giro prima. È l'unico
+  // segnale che arriva sempre, anche al televisore che interroga ogni secondo
+  // e mezzo senza canale in tempo reale.
+  const idsInRosa = useRef<Set<number> | null>(null)
+  useEffect(() => {
+    if (!rose) return
+    const adesso = new Set(rose.map((r) => r.player_id))
+    const prima = idsInRosa.current
+    idsInRosa.current = adesso
+    if (!prima) return
+    const nuovo = rose.find((r) => !prima.has(r.player_id))
+    if (!nuovo) return
+    setFesta({
+      nome: nuovo.players.name,
+      ruolo: nuovo.players.role,
+      foto: nuovo.players.photo_path,
+      squadra: (budget ?? []).find((b) => b.team_id === nuovo.team_id)?.name ?? '',
+      idSquadra: nuovo.team_id,
+      prezzo: nuovo.price,
+    })
+  }, [rose, budget])
+
+  useEffect(() => {
+    if (!festa) return
+    const finisce = setTimeout(() => setFesta(null), 1600)
+    return () => clearTimeout(finisce)
+  }, [festa])
 
   if (!audioPronto) {
     return <SchermataAttivazione lega={lega?.name} onAttiva={() => setAudioPronto(true)} />
@@ -170,7 +219,18 @@ export function SchermoAsta({
   const spesiTotali = (rose ?? []).reduce((s, r) => s + r.price, 0)
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-verde-notte">
+    <div className="relative flex h-dvh flex-col overflow-hidden bg-verde-notte">
+      <AnimatePresence>
+        {festa && (
+          <Festa
+            key={`${festa.idSquadra}-${festa.nome}`}
+            chi={festa}
+            quante={squadre.length}
+            indice={Math.max(0, squadre.findIndex((s) => s.team_id === festa.idSquadra))}
+          />
+        )}
+      </AnimatePresence>
+
       <BarraAlta
         reparto={asta?.current_role_phase ?? null}
         nomeLega={lega?.name}
@@ -187,11 +247,15 @@ export function SchermoAsta({
         }}
       />
 
+      {/* AnimatePresence: senza, niente esce mai di scena e ogni cambiamento e'
+          uno scatto. Era la ragione tecnica per cui l'app sembrava spenta. */}
       <div className="min-h-0 shrink-0 basis-[44%] px-6 py-3">
+        <AnimatePresence mode="wait">
         {lotto ? (
-          <InAsta lotto={lotto} timer={timer} squadre={squadre} />
+          <InAsta key={lotto.id} lotto={lotto} timer={timer} squadre={squadre} />
         ) : (
           <NessunaChiamata
+            key="nessuno"
             asta={asta}
             squadre={squadre}
             chiusa={asta?.status === 'closed'}
@@ -199,6 +263,7 @@ export function SchermoAsta({
             iniziata={presiTotali > 0}
           />
         )}
+        </AnimatePresence>
       </div>
 
       <FasciaSquadre
@@ -276,6 +341,76 @@ function SchermataAttivazione({ lega, onAttiva }: { lega?: string; onAttiva: () 
       </p>
       {errore && <p className="text-base text-oro">{errore}</p>}
     </div>
+  )
+}
+
+type Festeggiato = {
+  nome: string
+  ruolo: Ruolo
+  foto: string | null
+  squadra: string
+  idSquadra: string
+  prezzo: number
+}
+
+/**
+ * La festa dell'aggiudicazione.
+ *
+ * Novecento millisecondi in cui lo schermo dice una cosa sola: **chi ha preso
+ * chi, e a quanto**. Il nome della squadra entra grande, il prezzo con lui, e
+ * i coriandoli cadono nei colori del logo.
+ *
+ * PERCHE' LA SCHEDA SI SPOSTA VERSO LA SUA COLONNA
+ * Perché il racconto non è «è stato venduto», è «è finito **lì**». Le colonne
+ * delle rose sono larghe uguali, quindi la colonna giusta si sa senza misurare
+ * niente: è la sua posizione nell'elenco. Chi guarda segue il movimento e sa
+ * dove cercare la riga nuova, che è esattamente quello che nessuno faceva
+ * quando la riga compariva di nascosto.
+ */
+function Festa({
+  chi,
+  quante,
+  indice,
+}: {
+  chi: Festeggiato
+  quante: number
+  indice: number
+}) {
+  const ridotto = useMovimentoRidotto()
+  // Il centro della sua colonna, in frazione di schermo: -0.5 è tutto a
+  // sinistra, +0.5 tutto a destra.
+  const versoDove = quante > 0 ? (indice + 0.5) / quante - 0.5 : 0
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-verde-notte/85"
+    >
+      <Coriandoli />
+      <motion.div
+        initial={ridotto ? { opacity: 0 } : { scale: 0.7, opacity: 0, y: 0, x: 0 }}
+        animate={
+          ridotto
+            ? { opacity: 1 }
+            : { scale: [0.7, 1.08, 1, 0.55], opacity: [0, 1, 1, 0], y: [0, 0, 0, 220], x: [0, 0, 0, versoDove * 900] }
+        }
+        transition={{ duration: ridotto ? 0.2 : 1.5, times: [0, 0.18, 0.6, 1] }}
+        className="flex flex-col items-center gap-3 text-center"
+      >
+        <Volto
+          nome={chi.nome}
+          indirizzo={null}
+          classeRuolo={CLASSE_RUOLO[chi.ruolo]}
+          misura={128}
+        />
+        <p className="text-5xl font-extrabold text-nebbia">{chi.nome}</p>
+        <p className="text-7xl font-extrabold text-oro">{chi.squadra}</p>
+        <p className="cifre-fisse text-6xl font-extrabold text-nebbia">{chi.prezzo}</p>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -385,12 +520,19 @@ function InAsta({
   const offerente = squadre.find((s) => s.team_id === lotto.current_bidder_team_id)
   const stat = lotto.players.player_stats
   const inCountdown = timer.fase === 'countdown' || timer.fase === 'scaduto'
+  // La pulsazione infinita e' la piu' fastidiosa di tutte per chi soffre di
+  // emicrania vestibolare, e la regola CSS non la fermava: e' pilotata da
+  // JavaScript. Qui il numero resta fermo e il colore dice lo stesso tutto.
+  const ridotto = useMovimentoRidotto()
 
   return (
-    <div className="grid h-full grid-cols-[1.2fr_auto_1fr] items-center gap-6">
+    <motion.div
+      exit={{ opacity: 0, y: -26, scale: 0.97 }}
+      transition={{ duration: 0.2 }}
+      className="grid h-full grid-cols-[1.2fr_auto_1fr] items-center gap-6"
+    >
       {/* Sinistra: chi è in asta, a quanto, e chi ha offerto */}
       <motion.div
-        key={lotto.id}
         initial={{ opacity: 0, y: 24, rotate: -1 }}
         animate={{ opacity: 1, y: 0, rotate: 0 }}
         transition={{ duration: 0.32, ease: [0.34, 1.56, 0.64, 1] }}
@@ -451,8 +593,8 @@ function InAsta({
       <div className="flex w-56 flex-col items-center justify-center">
         {inCountdown ? (
           <motion.div
-            animate={{ scale: [1, 1.06, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            animate={ridotto ? { scale: 1 } : { scale: [1, 1.06, 1] }}
+            transition={ridotto ? { duration: 0 } : { duration: 1, repeat: Infinity }}
             className="flex flex-col items-center"
           >
             <p
@@ -498,7 +640,7 @@ function InAsta({
           </p>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -649,6 +791,21 @@ function NessunaChiamata({
  * PERCHE' I CREDITI STANNO IN CIMA A OGNI COLONNA
  * Sono il dato che si guarda più spesso e da più lontano. Restano fermi
  * mentre la rosa sotto cresce, e non vanno mai cercati.
+ *
+ * PERCHE' L'ALTEZZA DELLE RIGHE SI MISURA INVECE DI SCEGLIERLA
+ *
+ * Prima le righe erano dimensionate in `vh`, cioè in frazioni dell'**altezza
+ * della finestra**. Ma le rose non hanno tutta la finestra: hanno quello che
+ * resta sotto la barra e sotto il calciatore in asta. Su un televisore
+ * larghissimo tornava, su uno schermo di portatile no, e le ultime righe
+ * finivano fuori: **gli attaccanti sparivano**, che è esattamente il reparto
+ * che a fine serata si guarda di più.
+ *
+ * Un `clamp` più stretto avrebbe spostato il problema su un altro schermo. Il
+ * numero di righe però si sa con certezza — lo dice il regolamento della lega,
+ * 3+8+8+6 più quattro intestazioni — quindi si misura lo spazio che c'è e lo si
+ * divide per le righe che devono starci. Nessuno schermo può tagliare qualcosa
+ * che è stato calcolato per entrarci.
  */
 function FasciaSquadre({
   squadre,
@@ -668,6 +825,28 @@ function FasciaSquadre({
     A: lega?.slots_a ?? 6,
   }
 
+  // Le righe che devono starci: i posti del regolamento più un'intestazione
+  // per reparto.
+  const righeTotali = 4 + previsti.P + previsti.D + previsti.C + previsti.A
+  const primaColonna = useRef<HTMLDivElement>(null)
+  const [altezzaRiga, setAltezzaRiga] = useState(0)
+
+  useEffect(() => {
+    const el = primaColonna.current
+    if (!el) return
+    const misura = () => setAltezzaRiga(el.clientHeight / righeTotali)
+    misura()
+    const osserva = new ResizeObserver(misura)
+    osserva.observe(el)
+    return () => osserva.disconnect()
+  }, [righeTotali])
+
+  // Finché non si è misurato si usa una taglia di ripiego: un fotogramma con
+  // le righe un po' storte è meglio di un fotogramma vuoto.
+  const riga = altezzaRiga > 0 ? altezzaRiga : 18
+  const corpo = { height: riga, fontSize: Math.max(9, riga * 0.74), lineHeight: `${riga}px` }
+  const titolo = { height: riga, fontSize: Math.max(8, riga * 0.62), lineHeight: `${riga}px` }
+
   // Una passata sola su tutti gli acquisti, invece di filtrare l'elenco intero
   // dentro ogni riga di ogni colonna.
   const perSquadra = new Map<string, Record<Ruolo, AcquistoInRosa[]>>()
@@ -683,7 +862,7 @@ function FasciaSquadre({
 
   return (
     <footer className="flex min-h-0 flex-1 gap-3 border-t border-verde-campo px-4 py-3">
-      {squadre.map((s) => {
+      {squadre.map((s, colonna) => {
         const gruppi = perSquadra.get(s.team_id) ?? { P: [], D: [], C: [], A: [] }
         const inTesta = s.team_id === idSquadraInTesta
         const spesi = ORDINE_RUOLI.reduce(
@@ -717,47 +896,56 @@ function FasciaSquadre({
             </div>
 
             {/* La rosa: una riga per ogni posto previsto, piena o vuota. */}
-            <div className="min-h-0 flex-1 overflow-hidden px-2 py-1.5">
+            <div
+              ref={colonna === 0 ? primaColonna : undefined}
+              className="min-h-0 flex-1 overflow-hidden px-2"
+            >
               {ORDINE_RUOLI.map((ruolo) => {
                 const presi = gruppi[ruolo]
                 const vuoti = Math.max(0, previsti[ruolo] - presi.length)
                 return (
-                  <div key={ruolo} className="mb-1 last:mb-0">
-                    <div className="flex items-center gap-1.5">
+                  <div key={ruolo}>
+                    <div className="flex items-center gap-1.5" style={titolo}>
                       <span
-                        className={`flex size-[clamp(0.9rem,1.7vh,1.3rem)] items-center justify-center rounded text-[clamp(0.55rem,1vh,0.8rem)] font-bold ${CLASSE_RUOLO[ruolo]}`}
+                        className={`flex items-center justify-center rounded px-1 font-bold ${CLASSE_RUOLO[ruolo]}`}
+                        style={{ height: riga * 0.8, lineHeight: `${riga * 0.8}px` }}
                       >
                         {ruolo}
                       </span>
-                      <span className="cifre-fisse text-[clamp(0.55rem,1vh,0.8rem)] text-fumo">
+                      <span className="cifre-fisse text-fumo">
                         {presi.length}/{previsti[ruolo]}
                       </span>
                       <span className="h-px flex-1 bg-verde-campo/60" />
                     </div>
 
-                    {presi.map((r) => (
-                      <div
-                        key={r.id}
-                        className="flex items-baseline justify-between gap-2 leading-tight"
-                      >
-                        <span className="min-w-0 flex-1 truncate text-[clamp(0.7rem,1.35vh,1.05rem)] text-nebbia">
-                          {r.players.name}
-                        </span>
-                        <span className="cifre-fisse shrink-0 text-[clamp(0.7rem,1.35vh,1.05rem)] font-bold text-oro">
-                          {r.price}
-                        </span>
-                      </div>
-                    ))}
+                    <AnimatePresence initial={false}>
+                      {presi.map((r) => (
+                        <motion.div
+                          key={r.id}
+                          layout
+                          initial={{ opacity: 0, x: -12, backgroundColor: 'rgba(247,196,67,0.35)' }}
+                          animate={{ opacity: 1, x: 0, backgroundColor: 'rgba(247,196,67,0)' }}
+                          exit={{ opacity: 0, x: 12 }}
+                          transition={{ duration: 0.5 }}
+                          className="flex items-center justify-between gap-2 rounded"
+                          style={corpo}
+                        >
+                          <span className="min-w-0 flex-1 truncate text-nebbia">
+                            {r.players.name}
+                          </span>
+                          <span className="cifre-fisse shrink-0 font-bold text-oro">{r.price}</span>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
 
                     {Array.from({ length: vuoti }, (_, i) => (
                       <div
                         key={`vuoto-${ruolo}-${i}`}
                         aria-hidden
-                        className="flex items-center leading-tight"
+                        className="flex items-center"
+                        style={corpo}
                       >
-                        <span className="w-full border-b border-dashed border-fumo/25 text-[clamp(0.7rem,1.35vh,1.05rem)]">
-                          &nbsp;
-                        </span>
+                        <span className="w-full border-b border-dashed border-fumo/25">&nbsp;</span>
                       </div>
                     ))}
                   </div>

@@ -179,7 +179,8 @@ giudicate scarne, e «funziona» non è la stessa cosa di «è viva».
 
 | Ciclo | Percorso | Esito |
 |---|---|---|
-| 1 | L'asta viva: schermo condiviso e dispositivo personale | ✅ svolto · 4 red flag, 6 proposte, 5 approvate dal team tecnico · [rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md) |
+| 1 | L'asta viva: schermo condiviso e dispositivo personale | ✅ svolto · 4 red flag, 6 proposte, 5 approvate · [rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md) |
+| 1b | Le cinque proposte approvate, più sette correzioni chieste dall'utente | ✅ costruite e provate · 28+54+8 prove verdi |
 | 2 | Preparazione: leghe, listone, obiettivi | 🔴 non iniziato |
 
 **Il ciclo 1 non ha toccato una riga di codice**, come il metodo impone: le decisioni si prendono
@@ -225,6 +226,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.21 | 2026-09-05 | Costruito quello che il ciclo 1 aveva approvato, più sette correzioni emerse usando l app. |
 | 1.20 | 2026-09-04 | Fetta 8, ciclo 1: l asta viva passata al setaccio. Nessun codice toccato, come impone il metodo. |
 | 1.19 | 2026-09-04 | Avversari automatici per provare l asta da soli, e i tre difetti che la loro prima prova ha fatto uscire. |
 | 1.18 | 2026-09-04 | Stato riallineato al codice: fette 6 e 7 chiuse, Google e pubblicazione fatte, e tre buchi scritti come tali — password, CSV mai caricato, asta mai vissuta. |

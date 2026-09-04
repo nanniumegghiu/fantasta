@@ -36,6 +36,7 @@ import { Stemma } from '@/components/Stemma'
 import { Volto } from '@/components/Volto'
 import { useLoghi } from '@/features/listone/loghi'
 import { useVolti } from '@/features/listone/volti'
+import { useMovimentoRidotto, vibraBreve } from '@/lib/movimento'
 import type { Ruolo } from '@/domain/listone'
 
 export function PaginaAsta() {
@@ -56,14 +57,26 @@ export function PaginaAsta() {
   const mioBudget = budget?.find((b) => b.user_id === utente?.id)
   const acquistati = new Set((rose ?? []).map((r) => r.player_id))
 
-  // Allo scadere si chiede la chiusura: decide comunque il server.
-  const chiusuraChiesta = useRef<string | null>(null)
+  // Allo scadere si chiede la chiusura, e si continua a chiederla finché il
+  // lotto non è chiuso davvero. Decide comunque il server.
+  //
+  // PERCHE' NON UNA VOLTA SOLA
+  // La prima versione segnava il lotto come «già chiesto» **prima** di
+  // chiedere, e non riprovava mai. Bastava un tentativo a vuoto — l'orologio
+  // del telefono avanti di un secondo, la rete che perde il colpo, il lotto
+  // aperto un istante prima — perché il countdown restasse a zero con il
+  // calciatore ancora lì, in attesa che la rete di sicurezza del server
+  // passasse dieci secondi dopo. Chi conduce vedeva l'asta ferma e premeva
+  // «aggiudica»: proprio il consenso in più che non deve servire.
+  const chiediChiusura = useRef(chiudi.mutate)
+  chiediChiusura.current = chiudi.mutate
   useEffect(() => {
     if (timer.fase !== 'scaduto' || !lotto) return
-    if (chiusuraChiesta.current === lotto.id) return
-    chiusuraChiesta.current = lotto.id
-    chiudi.mutate(lotto.id)
-  }, [timer.fase, lotto, chiudi])
+    const id = lotto.id
+    chiediChiusura.current(id)
+    const insisti = setInterval(() => chiediChiusura.current(id), 1500)
+    return () => clearInterval(insisti)
+  }, [timer.fase, lotto])
 
   return (
     <div className="min-h-dvh pb-6">
@@ -262,6 +275,29 @@ function InAstaOra({
 
   const postoDelTetto = postiSuoi.find((s) => s.max_price === tetto)
 
+  // Oltre il limite che ti eri dato: per prenderlo devi già sforare.
+  const oltreIlTetto = tetto != null && lotto.current_bid >= tetto
+
+  // ─── Quando ti superano ───────────────────────────────────────────────────
+  // È l'unico evento dell'asta che **obbliga** a fare qualcosa, ed era quello
+  // comunicato più piano: una parola che cambiava colore, su un telefono muto
+  // per scelta. Chi in quel momento guardava la propria rosa non se ne
+  // accorgeva affatto. Adesso la scheda trema una volta e il telefono vibra:
+  // se ne accorge anche chi sta guardando altrove, e chi ha chiesto meno
+  // movimento non riceve né l'uno né l'altra.
+  const ridotto = useMovimentoRidotto()
+  const [superato, setSuperato] = useState(false)
+  const eroInTesta = useRef(false)
+  useEffect(() => {
+    const prima = eroInTesta.current
+    eroInTesta.current = sonoInTesta
+    if (!prima || sonoInTesta || !lotto.current_bidder_team_id) return
+    setSuperato(true)
+    vibraBreve(ridotto)
+    const smetti = setTimeout(() => setSuperato(false), 700)
+    return () => clearTimeout(smetti)
+  }, [sonoInTesta, lotto.current_bidder_team_id, ridotto])
+
   function offri(importo: number) {
     setErrore(null)
     rilancia.mutate(
@@ -282,7 +318,15 @@ function InAstaOra({
   const base = lotto.current_bidder_team_id ? lotto.current_bid : Math.max(offertaMinima - 1, 0)
 
   return (
-    <section className="rounded-2xl border border-verde-campo bg-verde-campo/30 p-4">
+    <motion.section
+      animate={
+        superato && !ridotto
+          ? { x: [0, -7, 6, -4, 3, 0], borderColor: 'var(--color-arancio)' }
+          : { x: 0, borderColor: 'var(--color-verde-campo)' }
+      }
+      transition={{ duration: superato ? 0.45 : 0.3 }}
+      className="rounded-2xl border bg-verde-campo/30 p-4"
+    >
       <div className="flex items-start gap-3">
         {/* La faccia, quando c'è: si riconosce prima di leggere il nome. */}
         <Volto
@@ -335,10 +379,29 @@ function InAstaOra({
         </div>
       </div>
 
-      {/* L'aggancio con la lista obiettivi: quello che avevo scritto su di lui. */}
+      {/* L'aggancio con la lista obiettivi: quello che avevo scritto su di lui.
+          ─────────────────────────────────────────────────────────────────────
+          IL TETTO NON BLOCCA NIENTE, E NON CHIEDE NIENTE
+
+          Il massimale che ti eri dato è un consiglio che hai lasciato a te
+          stesso a mente fredda, non una regola del gioco: il server non lo
+          conosce nemmeno. Un avviso da confermare prima di ogni rilancio
+          sarebbe un tap in più nel momento in cui i tap costano — e la
+          seconda volta lo si preme senza leggerlo, che è il modo in cui gli
+          avvisi smettono di avvisare.
+
+          Quindi l'offerta parte sempre e subito, e l'unico segnale è questo
+          riquadro che **da verde diventa rosso**: lo vedi con la coda
+          dell'occhio mentre rilanci, e decidi tu. */}
       {obiettivo && (
-        <div className="mt-3 rounded-xl border border-verde-acceso/40 bg-verde-acceso/10 p-3">
-          <p className="text-sm font-bold text-verde-acceso">
+        <div
+          className={`mt-3 rounded-xl border p-3 transition-colors duration-300 ${
+            oltreIlTetto
+              ? 'border-errore/60 bg-errore/15'
+              : 'border-verde-acceso/40 bg-verde-acceso/10'
+          }`}
+        >
+          <p className={`text-sm font-bold ${oltreIlTetto ? 'text-errore' : 'text-verde-acceso'}`}>
             È un tuo obiettivo
             {fascia ? ` · ${fascia.name}` : ''}
             {postiSuoi.length > 0 && ` · ${postiSuoi.map((s) => s.label).join(', ')}`}
@@ -347,8 +410,8 @@ function InAstaOra({
             <p className="cifre-fisse mt-1 text-sm text-nebbia">
               {postoDelTetto ? `Il massimale di «${postoDelTetto.label}»` : 'Il tetto che ti eri dato'}
               : <strong>{tetto}</strong>
-              {lotto.current_bid >= tetto && (
-                <span className="text-oro"> · sei già arrivato al tuo limite</span>
+              {oltreIlTetto && (
+                <span className="font-bold text-errore"> · sei oltre il tuo limite</span>
               )}
             </p>
           )}
@@ -445,7 +508,7 @@ function InAstaOra({
           )}
         </div>
       )}
-    </section>
+    </motion.section>
   )
 }
 

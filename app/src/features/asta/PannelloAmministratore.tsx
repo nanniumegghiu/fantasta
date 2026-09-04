@@ -5,6 +5,7 @@ import { CampoNumero } from '@/components/CampoNumero'
 import { SelettoreCalciatore } from '@/features/obiettivi/SelettoreCalciatore'
 import { CodiceTv } from './CodiceTv'
 import { CorreggiRose } from './CorreggiRose'
+import { NOME_RUOLO } from '@/features/obiettivi/tipi'
 import {
   useAggiudicaOra,
   useAnnullaUltima,
@@ -12,6 +13,7 @@ import {
   useApriProssimoLotto,
   useAssegnaRapido,
   useChiudiAsta,
+  useNuovoGiro,
   usePassaLotto,
   usePausaAsta,
   type AcquistoInRosa,
@@ -74,8 +76,16 @@ export function PannelloAmministratore({
   const [prezzo, setPrezzo] = useState(1)
   const [confermaAnnullo, setConfermaAnnullo] = useState(false)
   const [confermaChiusura, setConfermaChiusura] = useState(false)
+  const [giroFinito, setGiroFinito] = useState(false)
+  const nuovoGiro = useNuovoGiro(idLega)
 
-  const dice = (e: { messaggio: string }) => setMessaggio(e.messaggio)
+  // «Il listone è finito» è il momento in cui il tasto del giro nuovo passa da
+  // discreto a d'oro: prima non serviva, adesso è l'unica cosa da fare.
+  const dice = (e: { esito?: string; messaggio: string }) => {
+    setMessaggio(e.messaggio)
+    if (e.esito === 'listone_finito') setGiroFinito(true)
+    if (e.esito === 'ok') setGiroFinito(false)
+  }
   const sbaglia = (e: Error) => setMessaggio(e.message)
   const inPausa = asta.status === 'paused'
   const automatica = asta.method !== 'chiamata'
@@ -121,6 +131,35 @@ export function PannelloAmministratore({
             onClick={() => apriProssimo.mutate(undefined, { onSuccess: dice, onError: sbaglia })}
           >
             {asta.method === 'random' ? 'Estrai il prossimo' : 'Apri il prossimo'}
+          </Bottone>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────────
+            UN ALTRO GIRO SULLO STESSO REPARTO
+
+            Nei metodi a estrazione ogni nome esce una volta sola, ed è giusto:
+            altrimenti la stessa faccia tornerebbe ogni due minuti. Ma quando
+            il reparto finisce, quasi mai le rose sono piene — restano tre
+            posti da portiere e cinquanta portieri che mezz'ora fa nessuno
+            voleva, quando i crediti erano tanti e le idee altre.
+
+            Finora l'unica via era chiamarli per nome uno alla volta: va bene
+            per due buchi, non per venti, e chi conduce finisce a leggere ad
+            alta voce un listone.
+
+            Il tasto sta qui e non si accende da solo: un secondo giro che
+            parte in automatico è un'asta che non finisce mai, e toglie a chi
+            conduce il momento in cui dire «ragazzi, ne restano quattro e vi
+            mancano sei posti». */}
+        {automatica && fermo && (
+          <Bottone
+            aspetto={giroFinito ? 'oro' : 'fantasma'}
+            inCorso={nuovoGiro.isPending}
+            onClick={() => nuovoGiro.mutate(undefined, { onSuccess: dice, onError: sbaglia })}
+          >
+            {asta.current_role_phase
+              ? `Rifai un giro sui ${NOME_RUOLO[asta.current_role_phase].toLowerCase()}`
+              : 'Rimetti in gioco gli invenduti'}
           </Bottone>
         )}
 

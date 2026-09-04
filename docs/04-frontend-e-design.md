@@ -73,24 +73,31 @@ I bottoni animati devono aiutare, non distrarre.
 | Rilancio accettato | Il numero sale con un rimbalzo corto | 240 ms |
 | Nuova chiamata | La scheda del calciatore entra dal basso con una leggera rotazione | 320 ms |
 | Countdown | Pulsazione a ogni secondo, il colore vira dall'oro al rosso sotto i 3 secondi | 1 s per ciclo |
-| Aggiudicazione | 🔴 **Non costruita.** Coriandoli brevi e il nome della squadra che ingrandisce | 900 ms |
+| Aggiudicazione | ✅ Coriandoli, nome della squadra che cresce, e la scheda che scivola verso la colonna di chi l'ha preso | 1,5 s |
 | Cambio di schermata | 🔴 **Non costruita.** Dissolvenza con scorrimento di 8 px | 180 ms |
+| Sorpasso in asta | ✅ La scheda trema una volta, il bordo va in arancio, il telefono vibra | 450 ms |
+| Acquisto in una rosa | ✅ La riga entra da sinistra con un lampo d'oro che si spegne | 500 ms |
 
 > **Questa tabella descriveva due animazioni che non esistevano**, ed è l'errore che la regola 6
-> del manuale chiama il più grave del progetto. Trovate dal ciclo 1 della Fetta 8, marcate qui, e
-> in attesa di essere costruite: [il rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md).
+> del manuale chiama il più grave del progetto. Le ha trovate il ciclo 1 della Fetta 8:
+> [il rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md).
 >
-> Nella stessa occasione è emerso che **`AnimatePresence` non è usato in nessun file**: le entrate
-> sono curate, le uscite non esistono, e ogni cambiamento è uno scatto.
+> L'aggiudicazione adesso c'è. La transizione fra schermate **no**, e resta 🔴 finché non esiste:
+> non era fra le cose approvate per questo giro.
+>
+> Nella stessa occasione era emerso che `AnimatePresence` non era usato in nessun file — le entrate
+> curate, le uscite inesistenti, ogni cambiamento uno scatto. **Era la ragione tecnica della
+> sensazione di «scarno»**, ed è stata corretta dove conta: il calciatore in asta, le righe delle
+> rose, il registro, la festa dell'aggiudicazione.
 
-**Rispetto delle preferenze di sistema.** 🟡 **Rispettato a metà.** Chi ha attivato la riduzione del
-movimento riceve le stesse informazioni senza animazioni: nessun rimbalzo, nessun coriandolo, solo
-cambi di stato immediati.
+**Rispetto delle preferenze di sistema.** ✅ Chi ha attivato la riduzione del movimento riceve le
+stesse informazioni senza animazioni: niente pulsazione del countdown, niente coriandoli, niente
+tremito, niente vibrazione.
 
-La regola in `styles/index.css` azzera le durate **CSS**, ma le animazioni di `motion/react` sono
-pilotate da JavaScript e quella regola non le tocca: con «Riduci movimento» attivo il countdown
-continua a pulsare all'infinito. `useReducedMotion` non è usato da nessuna parte. Va risolto in un
-punto solo, non animazione per animazione. Non è un dettaglio di gentilezza, è che le animazioni pulsanti
+La regola in `styles/index.css` azzera le durate **CSS** e non basta: le animazioni di
+`motion/react` sono pilotate da JavaScript e quella regola non le tocca. Si legge quindi in un
+punto solo, `lib/movimento.ts`, e chi anima chiede lì. **Non si risolve animazione per animazione**:
+così ci si dimentica alla prossima, ed è esattamente com'era andata. Non è un dettaglio di gentilezza, è che le animazioni pulsanti
 possono dare fastidio fisico a chi soffre di emicrania vestibolare.
 
 ### 2.5 Suoni
@@ -351,6 +358,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.15 | 2026-09-04 | Costruite la festa dell aggiudicazione, il sorpasso che si sente, le rose che reagiscono. Il movimento ridotto è rispettato anche dalle animazioni in JavaScript. |
 | 1.14 | 2026-09-04 | Due animazioni promesse da questo documento e mai costruite, marcate 🔴. Il movimento ridotto è rispettato a metà. |
 | 1.13 | 2026-09-04 | Lo schermo condiviso si apre anche da un codice di sei caratteri, per il televisore. |
 | 1.12 | 2026-09-04 | Stemmi delle squadre nel listone, nell asta e sullo schermo condiviso. |

@@ -420,6 +420,18 @@ export function usePassaLotto(idLega: string | undefined) {
   return useAzioneAdmin<string>(idLega, 'passa_lotto', (idLotto) => ({ p_lotto: idLotto }))
 }
 
+/**
+ * Rimette all'asta i calciatori del reparto in corso che nessuno ha voluto.
+ *
+ * Il primo giro propone ogni nome una volta sola, ed è giusto. Ma quando il
+ * reparto finisce la situazione tipica non è «le rose sono piene»: è «restano
+ * tre portieri da assegnare e cinquanta portieri che mezz'ora fa nessuno ha
+ * voluto, quando i crediti erano tanti e le idee altre».
+ */
+export function useNuovoGiro(idLega: string | undefined) {
+  return useAzioneAdmin<void>(idLega, 'nuovo_giro', () => ({ p_lega: idLega }))
+}
+
 export function useAssegnaRapido(idLega: string | undefined) {
   return useAzioneAdmin<{ idCalciatore: number; idSquadra: string; prezzo: number }>(
     idLega,

@@ -278,6 +278,8 @@ Migrazioni applicate, in `app/supabase/migrations/`:
 | `20260903234500_anche_la_ripresa_e_un_intervento.sql` | Correzione: `ripresa` mancava fra gli interventi manuali |
 | `20260904010000_i_volti_dei_calciatori.sql` | `players.fm_id` e `fm_origine`, archivio `volti`, `imposta_volto` e `imposta_volti` |
 | `20260904030000_scambi_fra_squadre.sql` | `trades`, `trade_players`, `problema_dello_scambio`, `proponi_scambio`, `accetta_scambio`, `rispondi_scambio`, vista `scambi` |
+| `20260905010000_a_reparto_finito_si_dicono_due_strade.sql` | `apri_lotto_automatico`: il messaggio a mazzo esaurito dice due strade |
+| `20260904230000_un_altro_giro_sullo_stesso_reparto.sql` | `nuovo_giro`, e `evento_manuale` che lo marca come intervento |
 | `20260904200000_codice_per_la_tv.sql` | `tv_codes`, `crea_codice_tv`, `revoca_codice_tv`, `codice_tv_corrente`, `schermo_tv` |
 | `20260904150000_riaprire_e_cambiare_partecipante.sql` | `riapri_asta`, `libera_squadra`, `affida_squadra`, vista `squadre_libere`, `teams.user_id` facoltativo |
 | `20260904170000_una_squadra_puo_cambiare_mano.sql` | Correzione: il trigger vietava il cambio di proprietario anche al server |

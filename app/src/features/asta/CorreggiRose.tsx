@@ -159,7 +159,7 @@ export function CorreggiRose({
               aria-label="Filtra per squadra"
               className="h-10 min-w-0 flex-1 rounded-lg border border-verde-acceso/30 bg-verde-campo/60 px-2 text-xs text-nebbia outline-none"
             >
-              <option value="">Tutte le squadre</option>
+              <option value="">Quale squadra?</option>
               {squadre.map((s) => (
                 <option key={s.team_id} value={s.team_id}>
                   {s.name}
@@ -172,7 +172,7 @@ export function CorreggiRose({
               aria-label="Filtra per ruolo"
               className="h-10 rounded-lg border border-verde-acceso/30 bg-verde-campo/60 px-2 text-xs text-nebbia outline-none"
             >
-              <option value="">Tutti i ruoli</option>
+              <option value="">Quale reparto?</option>
               {ORDINE_RUOLI.map((r) => (
                 <option key={r} value={r}>
                   {NOME_RUOLO[r]}
@@ -181,6 +181,28 @@ export function CorreggiRose({
             </select>
           </div>
 
+          {/* ───────────────────────────────────────────────────────────────
+              L'ELENCO NON PARTE PIENO
+
+              Duecento acquisti sono un muro: si scorre, si perde il segno, e
+              per correggere un prezzo si finisce a cercare un nome dentro una
+              lista di tutte le squadre. Chi apre questa schermata **sa già chi
+              cerca** — «il portiere di Marco», «quell'attaccante lì» — quindi
+              i filtri non servono a restringere: servono a **partire**.
+
+              Finché non si sceglie, non si mostra niente. Non è una lista
+              vuota per pigrizia: è la domanda «di chi stiamo parlando?» posta
+              con il mezzo giusto. */}
+          {!filtroSquadra && !filtroRuolo ? (
+            <p className="mt-3 rounded-xl border border-dashed border-verde-campo px-4 py-6 text-center text-sm text-fumo">
+              Scegli una squadra o un reparto qui sopra: {rose.length} acquisti tutti insieme
+              non si guardano.
+            </p>
+          ) : visibili.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-dashed border-verde-campo px-4 py-6 text-center text-sm text-fumo">
+              Nessun acquisto con questi filtri.
+            </p>
+          ) : (
           <ul className="mt-2 max-h-64 overflow-y-auto">
             {visibili.map((a) => (
               <li key={a.id}>
@@ -205,6 +227,7 @@ export function CorreggiRose({
               </li>
             ))}
           </ul>
+          )}
         </>
       )}
     </div>
