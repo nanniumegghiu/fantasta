@@ -153,17 +153,56 @@ ok(
   evento.map((x) => x.p).join(' · ') || 'nessuna riga',
 )
 
-// Chi conduce dà il via.
+// ─── Cosa si può fare **durante** la pausa ──────────────────────────────────
+//
+// La pausa non la si mette per niente: la si mette perché c'è qualcosa da
+// sistemare, e sistemarlo vuol dire quasi sempre una di due cose — assegnare
+// un calciatore senza asta, o rimettere all'asta un nome preciso. Se in pausa
+// si possono fare solo le cose che si potevano fare prima, la pausa è solo un
+// modo per non poter fare niente.
+
+const assegnataInPausa = await rpc('assegna_rapido', {
+  p_lega: lega,
+  p_player_id: 909903,
+  p_squadra: squadre[1].id,
+  p_prezzo: 4,
+})
+ok(
+  'In pausa si può assegnare un calciatore senza asta',
+  assegnataInPausa?.esito === 'ok',
+  `il server dice «${assegnataInPausa?.esito}: ${assegnataInPausa?.messaggio}»`,
+)
+
+const chiamataInPausa = await rpc('apri_lotto_scelto', { p_lega: lega, p_player_id: 909902 })
+const [messoInAsta] = await sql(`select lo.player_id, lo.last_bid_at from public.auction_lots lo
+  join public.auctions a on a.id = lo.auction_id
+  where a.league_id = '${lega}' and lo.status = 'open';`)
+ok(
+  'In pausa si può mettere all asta un nome preciso',
+  chiamataInPausa?.esito === 'ok' && messoInAsta?.player_id === 909902,
+  `il server dice «${chiamataInPausa?.esito}: ${chiamataInPausa?.messaggio}»`,
+)
+
+// La prova che rende sicura quella qui sopra: se il tempo del lotto non
+// ripartisse dalla ripresa, un calciatore chiamato durante una pausa di dieci
+// minuti risulterebbe scaduto nell'istante in cui si riprende, e finirebbe a
+// nessuno prima che qualcuno possa alzare la mano.
+await new Promise((r) => setTimeout(r, 4000))
 await rpc('pausa_asta', { p_lega: lega, p_in_pausa: false })
-const ripartita = await rpc('apri_prossimo_lotto', { p_lega: lega })
-const [inAsta] = await sql(`select p.name, p.role::text r from public.auction_lots lo
+const [dopoRipresa] = await sql(`select
+    extract(epoch from (now() - lo.last_bid_at))::numeric(6,2) da_quanto,
+    lo.player_id, p.role::text r, p.name
+  from public.auction_lots lo
   join public.players p on p.id = lo.player_id
   join public.auctions a on a.id = lo.auction_id
   where a.league_id = '${lega}' and lo.status = 'open';`)
 ok(
-  'Quando chi conduce riprende, il reparto nuovo parte',
-  ripartita?.esito === 'ok' && inAsta?.r === 'D',
-  inAsta ? `in asta ${inAsta.name} (${inAsta.r})` : `nessuno: «${ripartita?.messaggio}»`,
+  'Alla ripresa il tempo del calciatore in asta riparte da zero',
+  dopoRipresa != null && Number(dopoRipresa.da_quanto) < 1.5,
+  dopoRipresa
+    ? `${dopoRipresa.name} (${dopoRipresa.r}) è in asta da ${dopoRipresa.da_quanto}s, ` +
+      'dopo quattro secondi di pausa'
+    : 'nessuno in asta dopo la ripresa',
 )
 
 const passate = esiti.filter(Boolean).length

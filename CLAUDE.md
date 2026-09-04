@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.8 · **Data** · 2026-09-05
+**Versione documento** · 3.9 · **Data** · 2026-09-05
 
 ---
 
@@ -269,6 +269,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.9 | 2026-09-05 | In pausa si puo chiamare un nome e assegnare senza asta: erano proprio le due cose che la pausa serve a fare, e sparivano appena la si metteva. |
 | 3.8 | 2026-09-05 | Il listone aperto dall asta mostra gli svincolati del reparto in corso con i propri obiettivi accesi e contati, gli avversari si leggono reparto per reparto, e fra un reparto e l altro l asta si ferma da sola. |
 | 3.7 | 2026-09-05 | Lo schermo condiviso si inchiodava allo scadere del countdown: corretto, e nata la prima verifica che apre davvero un browser. Ha trovato subito altri due difetti che nessuna prova sul server poteva vedere. |
 | 3.6 | 2026-09-05 | Sette correzioni in asta e le animazioni approvate dal ciclo 1: la festa dell aggiudicazione, il sorpasso che si sente, le rose che non si tagliano più, un altro giro sugli invenduti del reparto. |

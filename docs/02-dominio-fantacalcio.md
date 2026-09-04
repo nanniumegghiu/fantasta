@@ -216,6 +216,22 @@ credito residuo, reparto già completo.
   verifiche, non con valori grandi e sbilanciati.
 - ✅ Gli scambi fra squadre sono costruiti e verificati.
 
+## Cosa si può fare durante una pausa
+
+La pausa non la si mette per niente: la si mette **perché c’è qualcosa da sistemare**. Quindi
+restano possibili le due cose con cui si sistema:
+
+| In pausa | Perché |
+|---|---|
+| **Mettere all’asta un nome preciso** | È il gesto di chi conduce, che sa cosa sta facendo |
+| **Assegnare senza asta** | Un solo pretendente, nessuna gara da fare |
+| ~~Estrarre il prossimo~~ | Vietato: la catena è ferma **proprio** perché non deve andare avanti da sola |
+
+Aprire un lotto durante una pausa è sicuro per una riga scritta in : alla ripresa **il
+tempo dei lotti aperti riparte da zero**. Senza, un calciatore chiamato durante una pausa di dieci
+minuti risulterebbe scaduto nell’istante della ripresa, e finirebbe a nessuno prima che qualcuno
+possa alzare la mano.
+
 ## Il ritmo della serata: la pausa fra i reparti
 
 Nella variante **per ruolo** l'asta si ferma da sola quando un reparto finisce, e riparte quando

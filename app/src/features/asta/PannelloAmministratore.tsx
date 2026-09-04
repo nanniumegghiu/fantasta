@@ -101,6 +101,19 @@ export function PannelloAmministratore({
   // cosa da fare sta qui sopra.
   const fermo = !lotto && asta.status === 'open'
 
+  // ─── Due «fermo» diversi, e la differenza non è un dettaglio ──────────────
+  //
+  // **Estrarre** durante una pausa non si può: la pausa esiste per fermare la
+  // catena, e un calciatore estratto mentre nessuno può rilanciare è un
+  // calciatore regalato al primo che riprende.
+  //
+  // **Chiamare un nome preciso** e **assegnare senza asta**, invece, sono le
+  // due cose che si fanno *proprio* durante una pausa: si ferma tutto perché
+  // c'è qualcosa da sistemare, e sistemarlo vuol dire una di quelle due. Fino
+  // a ieri i due tasti sparivano appena si metteva in pausa, cioè esattamente
+  // quando servivano.
+  const fermoOInPausa = !lotto && (asta.status === 'open' || inPausa)
+
   return (
     <section className="rounded-2xl border border-oro/40 bg-oro/5">
       {/* ─── Il piano di sopra: l'azione del momento ─────────────────────── */}
@@ -190,13 +203,19 @@ export function PannelloAmministratore({
           </Bottone>
         )}
 
-        {fermo && (
+        {fermoOInPausa && (
           <Bottone
             aspetto="secondario"
             inCorso={apriScelto.isPending}
             onClick={() => setSelettore('riempi')}
           >
             Metti all&apos;asta un nome
+          </Bottone>
+        )}
+
+        {fermoOInPausa && (
+          <Bottone aspetto="secondario" onClick={() => setSelettore('assegna')}>
+            Assegna senza asta
           </Bottone>
         )}
 

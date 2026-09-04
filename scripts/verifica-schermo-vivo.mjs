@@ -369,7 +369,45 @@ try {
     `il conteggio dice ${dati.conteggio}, e ci sono ${dati.accesi} righe accese`,
   )
 
-  // ─── 6. Niente eccezioni ─────────────────────────────────────────────────
+  // ─── 6. In pausa i comandi che servono ci sono ───────────────────────────
+  //
+  // La pausa la si mette **perché c'è qualcosa da sistemare**, e i due tasti
+  // per sistemarlo sparivano appena la si metteva. Questo si vede solo
+  // aprendo la pagina: il server li avrebbe pure accettati, era
+  // l'interfaccia a non offrirli.
+  await rpc('pausa_asta', { p_lega: lega, p_in_pausa: true })
+  const [daChiudere] = await sql(`select lo.id, lo.current_bidder_team_id chi
+    from public.auction_lots lo join public.auctions a on a.id = lo.auction_id
+    where a.league_id = '${lega}' and lo.status = 'open' limit 1;`)
+  if (daChiudere) {
+    await rpc(daChiudere.chi ? 'aggiudica_ora' : 'passa_lotto', { p_lotto: daChiudere.id })
+  }
+
+  await scheda.vaiA(`${sito.indirizzo}/lega/${lega}/asta`)
+  await scheda.aspetta(`${testo}.includes('pausa')`, { entro: 20000 })
+
+  const comandi = await scheda.valuta(`(() => {
+    const tasti = [...document.querySelectorAll('button')].map((b) => ({
+      testo: b.innerText.trim(),
+      spento: b.disabled,
+    }))
+    const trova = (r) => tasti.find((t) => r.test(t.testo)) ?? null
+    return {
+      nome: trova(/all.asta un nome/i),
+      assegna: trova(/assegna senza asta/i),
+      riprendi: trova(/comincia|riprendi/i),
+    }
+  })()`)
+
+  ok(
+    'Con l asta in pausa restano il nome da chiamare e l assegnazione diretta',
+    Boolean(comandi.nome) && !comandi.nome.spento &&
+      Boolean(comandi.assegna) && !comandi.assegna.spento,
+    `«${comandi.nome?.testo ?? 'assente'}» e «${comandi.assegna?.testo ?? 'assente'}»` +
+      ` · per ripartire: «${comandi.riprendi?.testo ?? 'assente'}»`,
+  )
+
+  // ─── 7. Niente eccezioni ─────────────────────────────────────────────────
   const esplosioni = scheda.console.filter((c) => c.tipo === 'eccezione' || c.tipo === 'error')
   ok(
     'Nessuna eccezione nella console del browser',
