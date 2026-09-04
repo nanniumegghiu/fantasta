@@ -40,6 +40,10 @@ const radice = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = join(radice, 'app', 'dist')
 const DOMINIO = 'prova.vivo.fantasta'
 const STAGIONE = 'PROVA-VIVO'
+// Lo stesso percorso base del sito pubblicato. E' l'unico modo perche' questa
+// prova possa accorgersi di un indirizzo costruito senza: con base '/' un link
+// sbagliato e uno giusto sono la stessa stringa.
+const BASE = '/fantasta/'
 
 const esiti = []
 const ok = (nome, buono, dettaglio) => {
@@ -154,7 +158,7 @@ await rpc('apri_prossimo_lotto', { p_lega: lega })
 
 // ─── Il browser ─────────────────────────────────────────────────────────────
 
-const sito = await serviCartella(DIST)
+const sito = await serviCartella(DIST, 4599, BASE)
 const browser = await apriBrowser({ mostra: process.argv.includes('--mostra') })
 const scheda = await apriScheda(browser.porta)
 
@@ -451,7 +455,56 @@ try {
     sparito ? 'sparito entro otto secondi' : 'e rimasto li: coprirebbe la chiamata dopo',
   )
 
-  // ─── 8. Niente eccezioni ─────────────────────────────────────────────────
+  // ─── 8. Il link d'invito porta davvero da qualche parte ──────────────────
+  //
+  // È il link che finisce su WhatsApp, ed è l'unico che **non si può provare
+  // da soli**: si scopre che è rotto sul telefono di qualcun altro, dopo
+  // averlo mandato. Costruito dalla sola origine mancava del percorso base e
+  // dava «404 not found».
+  //
+  // La prova non guarda la stringa: **apre l'indirizzo** e controlla di
+  // arrivare sulla schermata d'ingresso con il codice già dentro.
+  await scheda.vaiA(`${sito.indirizzo}/lega/${lega}`)
+  await scheda.aspetta(`${testo}.includes('invito')`, { entro: 20000 })
+
+  // Il link non è scritto nella pagina: vive dentro il tasto «Manda su
+  // WhatsApp» e negli appunti. È esattamente la stringa che parte, quindi è
+  // quella che va guardata — non una scritta che le somiglia.
+  const linkInvito = await scheda.valuta(`(() => {
+    const a = document.querySelector('a[href^="https://wa.me/"]')
+    if (!a) return null
+    const testo = decodeURIComponent(a.getAttribute('href').split('text=')[1] ?? '')
+    const m = testo.match(/https?:\\/\\/[^\\s]+invito\\/[A-Z0-9]{6}/)
+    return m ? m[0] : null
+  })()`)
+
+  const base = await scheda.valuta("document.querySelector('link[rel=manifest]')?.getAttribute('href') ?? '/'")
+  const radiceApp = base.replace(/manifest\.webmanifest$/, '')
+
+  ok(
+    'Il link d invito contiene il percorso base dell applicazione',
+    Boolean(linkInvito) && new URL(linkInvito).pathname.startsWith(`${radiceApp}invito/`),
+    linkInvito
+      ? `${linkInvito} (l app sta sotto ${radiceApp})`
+      : 'nessun link d invito nella pagina della lega',
+  )
+
+  if (linkInvito) {
+    await scheda.vaiA(linkInvito)
+    const atterrato = await scheda.aspetta(
+      `${testo}.includes('entra') || ${testo}.includes('codice')`,
+      { entro: 20000 },
+    )
+    ok(
+      'E aprendolo si arriva sulla schermata d ingresso, non su un 404',
+      atterrato,
+      atterrato
+        ? 'la pagina d ingresso si e aperta'
+        : `pagina sbagliata: «${(await scheda.valuta('document.body.innerText')).slice(0, 120)}»`,
+    )
+  }
+
+  // ─── 9. Niente eccezioni ─────────────────────────────────────────────────
   const esplosioni = scheda.console.filter((c) => c.tipo === 'eccezione' || c.tipo === 'error')
   ok(
     'Nessuna eccezione nella console del browser',

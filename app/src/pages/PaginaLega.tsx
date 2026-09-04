@@ -197,7 +197,24 @@ function RiquadroInvito({ lega }: { lega: LegaCompleta }) {
   const [copiato, setCopiato] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
 
-  const link = `${window.location.origin}/invito/${lega.invite_code}`
+  // ─── Il link d'invito, e il percorso base ─────────────────────────────────
+  //
+  // `window.location.origin` è **solo** «https://nanniumegghiu.github.io»:
+  // l'applicazione online sta sotto `/fantasta/`, e un indirizzo costruito
+  // dalla sola origine porta alla radice del dominio, dove non c'è niente.
+  //
+  // Il link finiva su WhatsApp e dava «404 not found» a chi lo apriva — cioè
+  // falliva nell'unico posto in cui non lo si può provare da soli: sul telefono
+  // di qualcun altro, dopo averlo mandato.
+  //
+  // È la terza volta che il percorso base morde in questo progetto: il ritorno
+  // da Google, il codice della TV, e adesso l'invito. La regola, ogni volta che
+  // si costruisce un indirizzo assoluto: **origine più `BASE_URL`**, mai
+  // l'origine da sola.
+  const link = new URL(
+    `${import.meta.env.BASE_URL}invito/${lega.invite_code}`,
+    window.location.origin,
+  ).toString()
   const testo =
     `Ti aspetto nella lega "${lega.name}" su Fantasta.\n` +
     `Codice: ${lega.invite_code}\n${link}`

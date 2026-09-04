@@ -215,7 +215,7 @@ export async function apriScheda(porta) {
  * regola con cui la pagina pubblicata gestisce le rotte, e senza di essa
  * `/lega/<id>/asta/schermo` darebbe 404 prima ancora di caricare l'app.
  */
-export async function serviCartella(cartella, porta = 4599) {
+export async function serviCartella(cartella, porta = 4599, base = '/') {
   const { createServer } = await import('node:http')
   const { readFile } = await import('node:fs/promises')
   const { extname, join: unisci, normalize } = await import('node:path')
@@ -232,7 +232,12 @@ export async function serviCartella(cartella, porta = 4599) {
   }
 
   const server = createServer(async (req, res) => {
-    const percorso = decodeURIComponent((req.url ?? '/').split('?')[0])
+    const chiesto = decodeURIComponent((req.url ?? '/').split('?')[0])
+    // Il percorso base si toglie prima di cercare il file, esattamente come fa
+    // il sito pubblicato: senza, una prova che gira sotto `/` non potrebbe
+    // accorgersi di un indirizzo costruito **senza** il percorso base, che è
+    // il difetto che ha mandato il link d'invito su un 404.
+    const percorso = chiesto.startsWith(base) ? chiesto.slice(base.length - 1) : chiesto
     const dentro = normalize(unisci(cartella, percorso))
     if (!dentro.startsWith(normalize(cartella))) {
       res.writeHead(403).end()
@@ -251,7 +256,9 @@ export async function serviCartella(cartella, porta = 4599) {
 
   await new Promise((ok) => server.listen(porta, '127.0.0.1', ok))
   return {
-    indirizzo: `http://127.0.0.1:${porta}`,
+    // L'indirizzo comprende il percorso base, senza la barra finale: chi lo
+    // usa ci attacca «/lega/…» e ottiene quello che otterrebbe online.
+    indirizzo: `http://127.0.0.1:${porta}${base === '/' ? '' : base.replace(/\/$/, '')}`,
     chiudi: () => new Promise((ok) => server.close(ok)),
   }
 }
