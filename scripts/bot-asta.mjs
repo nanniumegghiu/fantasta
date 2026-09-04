@@ -160,6 +160,7 @@ for (const a of amici) {
   const c = carattere(a.email)
   bot.push({
     nome: a.email.split('@')[0],
+    email: a.email,
     squadra: a.squadra,
     idSquadra: a.squadra_id,
     token: await accedi(a.email),
@@ -200,7 +201,31 @@ console.log('\nCtrl+C per fermarli.\n')
 // i bot smettono di funzionare invece di continuare a girare su dati che
 // nessun giocatore vedrebbe.
 
-const occhi = bot[0].token
+/**
+ * Gli occhi con cui si legge lo stato: il token di uno qualsiasi dei bot.
+ *
+ * Non è una costante perché **i token scadono**. Un'asta vera dura ore, un
+ * token di Supabase un'ora: alla scadenza tutte le letture avrebbero
+ * cominciato a rispondere 401, e i bot sarebbero rimasti fermi a guardare
+ * senza che nessuno capisse perché. Si rifà l'accesso e si continua.
+ */
+let occhi = bot[0].token
+
+/** Rifà l'accesso per tutti, e restituisce quanti ne ha rinnovati. */
+async function rinnovaAccessi() {
+  let quanti = 0
+  for (const b of bot) {
+    try {
+      b.token = await accedi(b.email)
+      quanti++
+    } catch {
+      // Se proprio non si riesce, si riprova al giro dopo: meglio un bot
+      // fermo per un minuto che tutti spenti per sempre.
+    }
+  }
+  if (quanti) occhi = bot[0].token
+  return quanti
+}
 
 /**
  * Lo scarto fra l'orologio di questo computer e quello del server.
@@ -391,6 +416,7 @@ const ORA = () => new Date().toLocaleTimeString('it-IT')
 
 let ultimoLotto = null
 let ultimoStato = null
+let senzaAsta = false
 let fermati = false
 process.on('SIGINT', () => {
   fermati = true
@@ -401,15 +427,32 @@ while (!fermati) {
   try {
     s = await stato()
   } catch (e) {
-    console.log(`${ORA()}  il database non risponde: ${e.message.slice(0, 80)}`)
+    // Un 401 vuol dire token scaduto, non asta finita: si rifà l'accesso.
+    if (e.stato === 401) {
+      const quanti = await rinnovaAccessi()
+      console.log(`${ORA()}  accessi rinnovati (${quanti} su ${bot.length})`)
+    } else {
+      console.log(`${ORA()}  il server non risponde: ${e.message.slice(0, 90)}`)
+    }
     await new Promise((r) => setTimeout(r, 3000))
     continue
   }
 
+  // Nessuna asta: si aspetta, **non si esce**.
+  //
+  // Prima qui si usciva, e la frase era «questa lega non ha ancora un'asta».
+  // Detta in mezzo a un'asta vera era falsa due volte: l'asta c'era, e i bot
+  // se ne sono andati lasciando la partita a metà. Un attrezzo che si spegne
+  // da solo mentre serve è peggio di uno che non parte.
   if (!s) {
-    console.log('Questa lega non ha ancora un\'asta. Aprila dall\'app.')
-    break
+    if (!senzaAsta) {
+      console.log(`${ORA()}  questa lega non ha ancora un'asta: aspetto che venga aperta`)
+      senzaAsta = true
+    }
+    await new Promise((r) => setTimeout(r, 3000))
+    continue
   }
+  senzaAsta = false
 
   if (s.asta.status !== ultimoStato) {
     ultimoStato = s.asta.status
@@ -449,7 +492,21 @@ while (!fermati) {
     )
   }
 
-  const mediaRuolo = await prezzoDiUnPosto(s.asta.season)
+  // Anche questa legge dal server, e anche questa può andare storta: fuori dal
+  // riparo un errore qui farebbe cadere l'intero processo nel mezzo di un
+  // lotto. Se non si riesce a rileggere il mercato si usa quello di prima —
+  // cambia lentamente, e un giro con i prezzi di trenta secondi fa è
+  // infinitamente meglio di cinque bot che spariscono.
+  let mediaRuolo
+  try {
+    mediaRuolo = await prezzoDiUnPosto(s.asta.season)
+  } catch {
+    mediaRuolo = mercato.media
+    if (!Object.keys(mediaRuolo).length) {
+      await new Promise((r) => setTimeout(r, 2000))
+      continue
+    }
+  }
 
   // Chi ha aspettato abbastanza rilancia. Uno per giro: appena uno rilancia,
   // il tempo riparte per tutti, ed e' esattamente quello che succede fra

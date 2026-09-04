@@ -120,11 +120,29 @@ export async function rpc(token, funzione, corpo) {
 }
 
 /** Legge una tabella o vista con il token di un amico, come farebbe l'app. */
+/**
+ * Legge una tabella o vista con il token di un amico, come farebbe l'app.
+ *
+ * PERCHE' SOLLEVA UN ERRORE INVECE DI RESTITUIRE UN ELENCO VUOTO
+ *
+ * Restituiva `[]` a ogni risposta non riuscita. Comodo da scrivere e
+ * pericoloso da usare: «non ci sono righe» e «non sono riuscito a chiedere»
+ * diventavano la stessa cosa, e chi legge non ha modo di distinguerle.
+ *
+ * E' successo davvero. I bot, in mezzo a un'asta vera, si sono spenti da soli
+ * dicendo «questa lega non ha ancora un'asta»: la lega ce l'aveva, ma una
+ * richiesta era andata storta e l'elenco vuoto sembrava una risposta valida.
+ * Un errore mascherato da dato normale e' peggio di un errore.
+ */
 export async function leggi(token, percorso) {
   const r = await fetch(`${URL_BASE}/rest/v1/${percorso}`, {
     headers: { apikey: CHIAVE, Authorization: `Bearer ${token}` },
   })
-  if (!r.ok) return []
+  if (!r.ok) {
+    const e = new Error(`lettura di ${percorso.split('?')[0]} fallita: HTTP ${r.status}`)
+    e.stato = r.status
+    throw e
+  }
   return await r.json().catch(() => [])
 }
 
