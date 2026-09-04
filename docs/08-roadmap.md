@@ -181,6 +181,7 @@ giudicate scarne, e «funziona» non è la stessa cosa di «è viva».
 |---|---|---|
 | 1 | L'asta viva: schermo condiviso e dispositivo personale | ✅ svolto · 4 red flag, 6 proposte, 5 approvate · [rapporto](qa/2026-09-04-asta-grafica-e-animazioni.md) |
 | 1b | Le cinque proposte approvate, più sette correzioni chieste dall'utente | ✅ costruite e provate · 28+54+8 prove verdi |
+| 1c | **Regressione grave**: lo schermo condiviso si inchiodava allo scadere del countdown | ✅ corretta, e coperta da una verifica che apre un browser vero |
 | 2 | Preparazione: leghe, listone, obiettivi | 🔴 non iniziato |
 
 **Il ciclo 1 non ha toccato una riga di codice**, come il metodo impone: le decisioni si prendono
@@ -213,6 +214,9 @@ non è decorativa: è il criterio di chiusura.
 
 - 🔴 **Recupero della password: non esiste.** Messo da parte per scelta, non per svista. Vedi Fetta 0.
 - 🔴 **Il CSV delle rose non è mai stato caricato nell'app Fantacalcio.** Vedi Fetta 6.
+- ✅ **Le schermate si provano in un browser.** `verifica-schermo-vivo.mjs` apre Chrome senza
+  finestra, entra nello schermo condiviso e guarda. È nata dopo una regressione che nessuna delle
+  novanta prove sul server poteva vedere, e nel primo giro ne ha trovate altre due.
 - 🟡 **Un'asta vera, in movimento.** Gli avversari automatici esistono e sono provati
   (`bot-asta.mjs`, 17 prove): rilanciano da soli, si fermano al loro limite, e non possono fare
   niente che una persona non possa fare. Manca la serata vera, con lo schermo sul televisore.
@@ -226,6 +230,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.22 | 2026-09-05 | Prima verifica dentro un browser vero, nata da una regressione sullo schermo condiviso. |
 | 1.21 | 2026-09-05 | Costruito quello che il ciclo 1 aveva approvato, più sette correzioni emerse usando l app. |
 | 1.20 | 2026-09-04 | Fetta 8, ciclo 1: l asta viva passata al setaccio. Nessun codice toccato, come impone il metodo. |
 | 1.19 | 2026-09-04 | Avversari automatici per provare l asta da soli, e i tre difetti che la loro prima prova ha fatto uscire. |

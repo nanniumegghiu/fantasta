@@ -90,6 +90,20 @@ I bottoni animati devono aiutare, non distrarre.
 > sensazione di «scarno»**, ed è stata corretta dove conta: il calciatore in asta, le righe delle
 > rose, il registro, la festa dell'aggiudicazione.
 
+### Tre difetti che solo un browser poteva mostrare
+
+Le novanta verifiche di questo progetto parlano tutte al server, e nessuna ha potuto vedere
+questi, perché vivevano fra React e lo schermo:
+
+| Difetto | Perché nessuna prova sul server poteva vederlo |
+|---|---|
+| Allo scadere del countdown lo schermo condiviso si inchiodava | Era un **anello di render**: una dipendenza instabile in un effetto che faceva partire una richiesta, la cui risposta causava un altro render. Nessuna singola richiesta era sbagliata |
+| Il tocco iniziale poteva non aprire mai lo schermo | `AudioContext.resume()` può restare appesa senza mai risolversi né fallire. Lo schermo aspettava quella promessa per aprirsi |
+| Le rose restavano tagliate anche dopo la correzione | La misura si agganciava con un effetto che gira una volta sola, e al primo disegno le squadre non erano ancora arrivate: nessuna colonna da misurare, e nessuna seconda occasione |
+
+Da qui `scripts/verifica-schermo-vivo.mjs`, che apre Chrome davvero. **Il terzo difetto l'ha
+trovato lei**, dopo che la correzione era già stata dichiarata fatta.
+
 **Rispetto delle preferenze di sistema.** ✅ Chi ha attivato la riduzione del movimento riceve le
 stesse informazioni senza animazioni: niente pulsazione del countdown, niente coriandoli, niente
 tremito, niente vibrazione.
@@ -358,6 +372,7 @@ equivalenti inglesi: le etichette dei bottoni vanno verificate a 360 px.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.16 | 2026-09-05 | Tre difetti che vivevano dentro il browser, e la verifica che adesso ne apre uno. |
 | 1.15 | 2026-09-04 | Costruite la festa dell aggiudicazione, il sorpasso che si sente, le rose che reagiscono. Il movimento ridotto è rispettato anche dalle animazioni in JavaScript. |
 | 1.14 | 2026-09-04 | Due animazioni promesse da questo documento e mai costruite, marcate 🔴. Il movimento ridotto è rispettato a metà. |
 | 1.13 | 2026-09-04 | Lo schermo condiviso si apre anche da un codice di sei caratteri, per il televisore. |

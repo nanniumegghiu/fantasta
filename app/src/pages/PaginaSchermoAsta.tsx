@@ -100,6 +100,9 @@ export function SchermoAsta({
 
   const [audioPronto, setAudioPronto] = useState(false)
   const [suoni, setSuoni] = useState(true)
+  // Vero quando l'attivazione dell'audio non e' riuscita: lo schermo funziona
+  // lo stesso, e lo dice invece di far credere che i suoni ci siano.
+  const [audioMuto, setAudioMuto] = useState(false)
 
   // ─── Suoni, guardando cosa è cambiato ─────────────────────────────────────
   const lottoPrecedente = useRef<string | null>(null)
@@ -196,7 +199,15 @@ export function SchermoAsta({
   }, [festa])
 
   if (!audioPronto) {
-    return <SchermataAttivazione lega={lega?.name} onAttiva={() => setAudioPronto(true)} />
+    return (
+      <SchermataAttivazione
+        lega={lega?.name}
+        onAttiva={(riuscito) => {
+          setAudioPronto(true)
+          void riuscito.then((ok) => setAudioMuto(!ok))
+        }}
+      />
+    )
   }
 
   const squadre = [...(budget ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'it'))
@@ -227,7 +238,8 @@ export function SchermoAsta({
         presi={presiTotali}
         totali={totaliDaAssegnare}
         spesi={spesiTotali}
-        suoni={suoni}
+        suoni={suoni && !audioMuto}
+        audioMuto={audioMuto}
         onSuoni={(v) => {
           setSuoni(v)
           impostaSuoniAccesi(v)
@@ -296,9 +308,30 @@ export function PaginaSchermoAsta() {
 
 // ─── Attivazione dell'audio ─────────────────────────────────────────────────
 
-function SchermataAttivazione({ lega, onAttiva }: { lega?: string; onAttiva: () => void }) {
-  const [errore, setErrore] = useState<string | null>(null)
-
+/**
+ * Il tocco iniziale, e perché lo schermo non aspetta l'audio.
+ *
+ * PRIMA ASPETTAVA, ED ERA UNA TRAPPOLA
+ *
+ * Il tocco chiamava `attivaAudio()` e apriva lo schermo **dentro** il `.then`.
+ * `attivaAudio` non fallisce mai — ha il suo try/catch — ma può restare
+ * appesa: `AudioContext.resume()` restituisce una promessa che su un browser
+ * senza scheda audio, o con criteri di riproduzione severi, non si risolve.
+ * E una promessa che non si risolve non è un errore che si vede: è uno
+ * schermo che resta sulla schermata di benvenuto, per sempre, la sera
+ * dell'asta, davanti a otto persone.
+ *
+ * Adesso il tocco **apre subito**. L'audio si attiva per conto suo, con un
+ * limite di due secondi, e se non ce la fa lo schermo funziona in silenzio e
+ * lo dice nella barra. L'audio è un di più: lo schermo è la cosa.
+ */
+function SchermataAttivazione({
+  lega,
+  onAttiva,
+}: {
+  lega?: string
+  onAttiva: (audioRiuscito: Promise<boolean>) => void
+}) {
   return (
     <div className="flex h-dvh flex-col items-center justify-center gap-6 bg-verde-notte px-6 text-center">
       <img src={`${import.meta.env.BASE_URL}icona-512.png`} alt="" width={160} height={160} className="size-40" />
@@ -308,15 +341,16 @@ function SchermataAttivazione({ lega, onAttiva }: { lega?: string; onAttiva: () 
       <Bottone
         misura="grande"
         onClick={() => {
-          void attivaAudio().then((ok) => {
-            impostaVolume(0.6)
-            if (!ok) {
-              setErrore(
-                'Il browser non mi lascia usare l’audio. Lo schermo funziona lo stesso, ma in silenzio.',
-              )
-            }
-            onAttiva()
-          })
+          // Deve partire dentro il gestore del tocco, o il browser lo rifiuta.
+          // Ma il suo esito non blocca niente.
+          const riuscito = Promise.race([
+            attivaAudio().then((ok) => {
+              impostaVolume(0.6)
+              return ok
+            }),
+            new Promise<boolean>((r) => setTimeout(() => r(false), 2000)),
+          ]).catch(() => false)
+          onAttiva(riuscito)
         }}
       >
         Tocca per attivare l&apos;audio
@@ -326,7 +360,6 @@ function SchermataAttivazione({ lega, onAttiva }: { lega?: string; onAttiva: () 
         Nessun browser fa partire un suono prima di un tocco. Uno solo, adesso, e per tutta la
         serata si sentiranno chiamate, rilanci e aggiudicazioni.
       </p>
-      {errore && <p className="text-base text-oro">{errore}</p>}
     </div>
   )
 }
@@ -413,6 +446,7 @@ function BarraAlta({
   totali,
   spesi,
   suoni,
+  audioMuto,
   onSuoni,
 }: {
   reparto: Ruolo | null
@@ -424,6 +458,7 @@ function BarraAlta({
   totali: number
   spesi: number
   suoni: boolean
+  audioMuto: boolean
   onSuoni: (v: boolean) => void
 }) {
   const quota = totali > 0 ? presi / totali : 0
@@ -464,6 +499,12 @@ function BarraAlta({
           <span className="text-fumo">spesi</span>
           <span className="font-bold text-oro">{spesi}</span>
         </div>
+
+        {audioMuto && (
+          <span className="rounded-full bg-verde-campo px-3 py-1 text-base text-fumo">
+            audio non disponibile
+          </span>
+        )}
 
         <button
           type="button"
@@ -815,24 +856,51 @@ function FasciaSquadre({
   // Le righe che devono starci: i posti del regolamento più un'intestazione
   // per reparto.
   const righeTotali = 4 + previsti.P + previsti.D + previsti.C + previsti.A
-  const primaColonna = useRef<HTMLDivElement>(null)
   const [altezzaRiga, setAltezzaRiga] = useState(0)
+  const osservatore = useRef<ResizeObserver | null>(null)
 
-  useEffect(() => {
-    const el = primaColonna.current
-    if (!el) return
-    // Arrotondata al mezzo pixel e scritta solo se cambia: un osservatore
-    // che si risveglia da solo e' il modo piu' silenzioso di inchiodare una
-    // pagina, e qui sotto ci sono centocinquanta righe da ridisegnare.
-    const misura = () => {
-      const nuova = Math.round((el.clientHeight / righeTotali) * 2) / 2
-      setAltezzaRiga((vecchia) => (Math.abs(vecchia - nuova) < 0.5 ? vecchia : nuova))
-    }
-    misura()
-    const osserva = new ResizeObserver(misura)
-    osserva.observe(el)
-    return () => osserva.disconnect()
-  }, [righeTotali])
+  /**
+   * La misura si attacca alla colonna **quando la colonna nasce**, non quando
+   * nasce il componente.
+   *
+   * PERCHE' NON UN EFFETTO
+   *
+   * Un effetto con `[righeTotali]` gira una volta sola, subito dopo il primo
+   * disegno. E al primo disegno le squadre spesso non sono ancora arrivate dal
+   * server: di colonne non ce n'è nessuna, il riferimento è vuoto, l'effetto
+   * esce senza fare niente — e non riparte più, perché le sue dipendenze non
+   * cambiano. Le righe restavano alla misura di ripiego, e gli attaccanti
+   * finivano fuori schermo esattamente come prima.
+   *
+   * Succedeva **solo quando i dati arrivavano tardi**, cioè quasi sempre sul
+   * televisore e quasi mai aprendo la pagina già scaldata. È il genere di
+   * difetto che nessuna prova sul server può vedere, e infatti l'ha trovato la
+   * prova che apre un browser.
+   *
+   * Un riferimento-funzione invece viene chiamato **ogni volta che il nodo si
+   * attacca o si stacca**: se la colonna compare dopo tre secondi, la misura
+   * parte in quel momento.
+   */
+  const misuraLaColonna = useCallback(
+    (el: HTMLDivElement | null) => {
+      osservatore.current?.disconnect()
+      osservatore.current = null
+      if (!el) return
+
+      // Arrotondata al mezzo pixel e scritta solo se cambia davvero: un
+      // osservatore che si risveglia da solo è il modo più silenzioso di
+      // inchiodare una pagina, e qui sotto ci sono centocinquanta righe.
+      const misura = () => {
+        const nuova = Math.round((el.clientHeight / righeTotali) * 2) / 2
+        if (nuova <= 0) return
+        setAltezzaRiga((vecchia) => (Math.abs(vecchia - nuova) < 0.5 ? vecchia : nuova))
+      }
+      misura()
+      osservatore.current = new ResizeObserver(misura)
+      osservatore.current.observe(el)
+    },
+    [righeTotali],
+  )
 
   // Finché non si è misurato si usa una taglia di ripiego: un fotogramma con
   // le righe un po' storte è meglio di un fotogramma vuoto.
@@ -890,7 +958,7 @@ function FasciaSquadre({
 
             {/* La rosa: una riga per ogni posto previsto, piena o vuota. */}
             <div
-              ref={colonna === 0 ? primaColonna : undefined}
+              ref={colonna === 0 ? misuraLaColonna : undefined}
               className="min-h-0 flex-1 overflow-hidden px-2"
             >
               {ORDINE_RUOLI.map((ruolo) => {

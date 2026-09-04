@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.6 · **Data** · 2026-09-05
+**Versione documento** · 3.7 · **Data** · 2026-09-05
 
 ---
 
@@ -191,7 +191,7 @@ movimento su più di un dispositivo.
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
 | Il CSV caricato davvero nell app Fantacalcio | 🔴 mai provato sul sito vero |
-| Un asta vera, in movimento, su più dispositivi | 🟡 gli avversari automatici ci sono e sono provati; manca la serata vera |
+| Un asta vera, in movimento, su più dispositivi | 🟡 avversari automatici provati, e lo schermo condiviso ora si prova **in un browser vero**; manca la serata con le persone |
 | Fetta 8: revisione iper-critica | 🟡 ciclo 1 sull asta svolto, in attesa di decisione: `docs/qa/2026-09-04-asta-grafica-e-animazioni.md` |
 | Animazioni dell asta | ✅ festa dell aggiudicazione, sorpasso che si sente, rose che reagiscono |
 | Transizione fra schermate | 🔴 promessa dal design, non costruita: non era fra le approvate |
@@ -238,6 +238,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
 | `node scripts/verifica-asta-completa.mjs` | Cinquantaquattro prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore, la catena che si apre da sola, il riempimento per nome e la rete di sicurezza. |
 | `node scripts/bot-asta.mjs` | **Non è una verifica, è un attrezzo.** Gli avversari giocano da soli: fanno l accesso come i compagni finti e chiamano le stesse funzioni che chiama l app. Serve a fare un asta vera senza radunare otto persone. |
+| `node scripts/verifica-schermo-vivo.mjs` | **Sette prove dentro un browser vero.** Apre Chrome senza finestra, entra nello schermo condiviso di una lega di prova e guarda cosa succede mentre l asta si muove: il rilancio compare, allo scadere le richieste di chiusura restano poche, la pagina va avanti da sola, e l ultimo reparto delle rose sta dentro lo schermo. Serve `cd app && npm run build` prima. |
 | `node scripts/prova-nuovo-giro.mjs` | Otto prove sul giro nuovo. Le tre che contano verificano che **non** faccia più del dovuto: chi è già stato comprato non torna nel mazzo, mentre c è un calciatore in asta non si tocca niente, e non lo apre chi capita. |
 | `node scripts/verifica-bot-asta.mjs` | Diciassette prove sui bot, con un asta giocata davvero. Le più importanti non controllano che rilancino: controllano che **non possano fare più di una persona** — crediti, reparti, doppioni, e niente scritture dirette nel database. |
 | `node scripts/amici-di-prova.mjs` | **Non è una verifica, è un attrezzo.** Mette in lega compagni finti con cui provare un asta da soli, e permette di rilanciare per conto loro dalla riga di comando. |
@@ -267,6 +268,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.7 | 2026-09-05 | Lo schermo condiviso si inchiodava allo scadere del countdown: corretto, e nata la prima verifica che apre davvero un browser. Ha trovato subito altri due difetti che nessuna prova sul server poteva vedere. |
 | 3.6 | 2026-09-05 | Sette correzioni in asta e le animazioni approvate dal ciclo 1: la festa dell aggiudicazione, il sorpasso che si sente, le rose che non si tagliano più, un altro giro sugli invenduti del reparto. |
 | 3.5 | 2026-09-04 | Fetta 8, ciclo 1 sull asta: quattro red flag, e due animazioni che il documento di design dava per fatte e non esistevano. |
 | 3.4 | 2026-09-04 | Avversari automatici: rilanciano da soli, con un carattere stabile e un limite di spesa, e non possono fare niente che una persona non possa fare. |
