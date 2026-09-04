@@ -29,213 +29,24 @@
 //   node scripts/amici-di-prova.mjs --stato           chi e' in asta e a quanto
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const radice = join(dirname(fileURLToPath(import.meta.url)), '..')
-
-function leggiEnv(p) {
-  const v = {}
-  for (const riga of readFileSync(p, 'utf8').split(/\r?\n/)) {
-    const t = riga.trim()
-    if (!t || t.startsWith('#')) continue
-    const i = t.indexOf('=')
-    if (i > 0) v[t.slice(0, i).trim()] = t.slice(i + 1).trim()
-  }
-  return v
-}
-
-const envApp = leggiEnv(join(radice, 'app', '.env.local'))
-const envRad = leggiEnv(join(radice, '.env.local'))
-const URL_BASE = envApp.VITE_SUPABASE_URL
-const CHIAVE = envApp.VITE_SUPABASE_ANON_KEY
-const ref = URL_BASE.replace('https://', '').split('.')[0]
-
-/**
- * La password degli amici finti.
- *
- * PERCHE' NON E' PIU' SCRITTA QUI
- * Lo era, in chiaro, con la scusa che sono account finti su un dominio che non
- * esiste. La scusa regge finche' l'app resta sul computer di casa: appena
- * viene pubblicata online, quella riga in un repository pubblico diventa la
- * password buona per entrare nella lega vera e vedere — o rovinare — un'asta.
- *
- * Adesso sta in `.env.local`, che non e' versionato. Se manca, se ne genera
- * una e la si scrive li': non c'e' niente da ricordare e niente da decidere.
- *
- * Una sola per tutti resta la scelta giusta: dieci password diverse vorrebbero
- * dire tenerne un elenco, e sarebbe un elenco di password che non serve a
- * nessuno.
- */
-function assicuraPassword() {
-  if (envRad.FANTASTA_PASSWORD_AMICI) return envRad.FANTASTA_PASSWORD_AMICI
-
-  const nuova =
-    'amici-' +
-    Math.random().toString(36).slice(2, 10) +
-    Math.random().toString(36).slice(2, 6)
-
-  const percorso = join(radice, '.env.local')
-  const testo = readFileSync(percorso, 'utf8')
-  writeFileSync(
-    percorso,
-    testo.replace(/\s*$/, '') +
-      '\n\n# Password degli amici di prova, generata da scripts/amici-di-prova.mjs.\n' +
-      '# Sta qui e non nel codice: il codice puo\' finire in un repository pubblico.\n' +
-      `FANTASTA_PASSWORD_AMICI=${nuova}\n`,
-  )
-  console.log(`Password degli amici generata e salvata in .env.local: ${nuova}\n`)
-  return nuova
-}
-
-const PASSWORD = assicuraPassword()
-
-// Il dominio si puo' spostare solo per provare questo script stesso: la
-// verifica ha bisogno di amici finti tutti suoi, perche' --elimina porta via
-// tutti quelli del dominio e non deve toccare i tuoi.
-const DOMINIO = process.env.FANTASTA_DOMINIO_AMICI ?? 'amici.fantasta'
-
-const NOMI = [
-  { utente: 'marco', squadra: 'Real Sciacallo' },
-  { utente: 'giulia', squadra: 'Atletico Divano' },
-  { utente: 'sara', squadra: 'Borussia Panchina' },
-  { utente: 'luca', squadra: 'Manchester Sitty' },
-  { utente: 'elena', squadra: 'Inter Rotta' },
-  { utente: 'davide', squadra: 'Bayern Fuorigioco' },
-  { utente: 'chiara', squadra: 'Napoletanissima' },
-  { utente: 'andrea', squadra: 'Juventurbo' },
-  { utente: 'francesca', squadra: 'Milanesi Distratti' },
-  { utente: 'paolo', squadra: 'Lazio Malissimo' },
-  { utente: 'valentina', squadra: 'Roma Sparita' },
-  { utente: 'stefano', squadra: 'Atalanta Bergamasca' },
-  { utente: 'ilaria', squadra: 'Fiorentina Viola Sbiadito' },
-  { utente: 'matteo', squadra: 'Torino Granata Pallido' },
-  { utente: 'alessia', squadra: 'Bologna Ragu' },
-  { utente: 'simone', squadra: 'Udinese Friulana' },
-  { utente: 'martina', squadra: 'Genoa Mugugno' },
-  { utente: 'riccardo', squadra: 'Sampdoria Baciccia' },
-  { utente: 'noemi', squadra: 'Cagliari Quattromori' },
-]
-
-// ─── Attrezzi ───────────────────────────────────────────────────────────────
-
-async function sql(query) {
-  const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${envRad.SUPABASE_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ query }),
-  })
-  const t = await r.text()
-  if (!r.ok) throw new Error(t)
-  return JSON.parse(t)
-}
-
-const cita = (v) => `'${String(v).replace(/'/g, "''")}'`
-
-async function registra(email) {
-  const r = await fetch(`${URL_BASE}/auth/v1/signup`, {
-    method: 'POST',
-    headers: { apikey: CHIAVE, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email,
-      password: PASSWORD,
-      data: { display_name: email.split('@')[0] },
-    }),
-  })
-  const j = await r.json()
-  if (!j.access_token) throw new Error(`registrazione di ${email} fallita: ${JSON.stringify(j)}`)
-  return j.access_token
-}
-
-async function accedi(email) {
-  const r = await fetch(`${URL_BASE}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: { apikey: CHIAVE, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: PASSWORD }),
-  })
-  const j = await r.json()
-  if (!j.access_token) throw new Error(`accesso di ${email} fallito: ${JSON.stringify(j)}`)
-  return j.access_token
-}
-
-async function rpc(token, funzione, corpo) {
-  const r = await fetch(`${URL_BASE}/rest/v1/rpc/${funzione}`, {
-    method: 'POST',
-    headers: {
-      apikey: CHIAVE,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(corpo ?? {}),
-  })
-  return { stato: r.status, corpo: await r.json().catch(() => null) }
-}
-
-// ─── Quale lega ─────────────────────────────────────────────────────────────
-
-function argomento(nome) {
-  const i = process.argv.indexOf(nome)
-  return i >= 0 ? process.argv[i + 1] : undefined
-}
-
-async function trovaLega() {
-  const codice = argomento('--lega')
-  const leghe = await sql(`select l.id, l.name, l.invite_code, l.invite_active, l.max_members,
-      l.status, u.email as admin,
-      (select count(*) from public.teams t where t.league_id = l.id)::int as squadre
-    from public.leagues l join auth.users u on u.id = l.admin_user_id
-    ${codice ? `where l.invite_code = ${cita(codice.toUpperCase())}` : ''}
-    order by l.created_at;`)
-
-  if (leghe.length === 0) {
-    console.error(
-      codice
-        ? `Nessuna lega con il codice ${codice}.`
-        : 'Non c\'e\' nessuna lega. Creane una dall\'app, poi rilancia questo comando.',
-    )
-    process.exit(1)
-  }
-  if (leghe.length > 1) {
-    console.error('Ci sono piu\' leghe: dimmi quale, con --lega <codice>.\n')
-    for (const l of leghe) console.error(`  ${l.invite_code}  ${l.name} (${l.squadre} squadre)`)
-    process.exit(1)
-  }
-  return leghe[0]
-}
-
-/** Gli amici finti gia' dentro questa lega, in ordine di ingresso. */
-async function amiciInLega(lega) {
-  return await sql(`select u.email, t.name as squadra, t.id as squadra_id,
-      b.credits_remaining, b.massimo_offribile, b.slot_rimanenti
-    from auth.users u
-    join public.teams t on t.user_id = u.id and t.league_id = ${cita(lega)}
-    left join public.team_budget b on b.team_id = t.id
-    where u.email like ${cita('%@' + DOMINIO)}
-    order by t.created_at;`)
-}
-
-/** Risolve «2» o «marco» o l'email intera nell'amico corrispondente. */
-async function scegliAmico(lega, quale) {
-  const amici = await amiciInLega(lega)
-  if (amici.length === 0) {
-    console.error('Non ci sono amici di prova in questa lega. Creali prima, senza argomenti.')
-    process.exit(1)
-  }
-  const n = Number(quale)
-  if (Number.isInteger(n) && n >= 1 && n <= amici.length) return amici[n - 1]
-  const trovato = amici.find(
-    (a) => a.email === quale || a.email.split('@')[0] === String(quale).toLowerCase(),
-  )
-  if (trovato) return trovato
-
-  console.error(`Non capisco chi sia «${quale}». Gli amici in lega sono:\n`)
-  amici.forEach((a, i) => console.error(`  ${i + 1}  ${a.email.split('@')[0]}  (${a.squadra})`))
-  process.exit(1)
-}
+// Chi sono gli amici, come si accede e come si parla al server sta in
+// `lib/amici.mjs`: lo condivide con `bot-asta.mjs`, che li fa giocare da soli.
+// Due copie di quelle regole vorrebbero dire bot in una lega e amici in
+// un'altra, e ce ne si accorgerebbe la sera dell'asta.
+import {
+  DOMINIO,
+  NOMI,
+  PASSWORD,
+  accedi,
+  amiciInLega,
+  argomento,
+  cita,
+  registra,
+  rpc,
+  scegliAmico,
+  sql,
+  trovaLega,
+} from './lib/amici.mjs'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // I comandi

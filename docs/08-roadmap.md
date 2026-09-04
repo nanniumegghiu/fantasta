@@ -202,8 +202,9 @@ non è decorativa: è il criterio di chiusura.
 
 - 🔴 **Recupero della password: non esiste.** Messo da parte per scelta, non per svista. Vedi Fetta 0.
 - 🔴 **Il CSV delle rose non è mai stato caricato nell'app Fantacalcio.** Vedi Fetta 6.
-- 🟡 **Un'asta vera, in movimento.** Finora: prove lato server, e una simulazione con compagni finti
-  da un dispositivo solo. Quattro difetti erano usciti da quella; da una vera ne escono altri.
+- 🟡 **Un'asta vera, in movimento.** Gli avversari automatici esistono e sono provati
+  (`bot-asta.mjs`, 17 prove): rilanciano da soli, si fermano al loro limite, e non possono fare
+  niente che una persona non possa fare. Manca la serata vera, con lo schermo sul televisore.
 - 🟡 **Fetta 8**, iniziata, con la grafica e le animazioni fra gli oggetti dell'esame.
 - 🟡 Una prova di `verifica-asta-completa.mjs` è fallita **una volta sola** e non si è più
   riprodotta in tre rilanci. Lasciata dichiarata come irrisolta invece che fatta sparire.
@@ -214,6 +215,7 @@ non è decorativa: è il criterio di chiusura.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 1.19 | 2026-09-04 | Avversari automatici per provare l asta da soli, e i tre difetti che la loro prima prova ha fatto uscire. |
 | 1.18 | 2026-09-04 | Stato riallineato al codice: fette 6 e 7 chiuse, Google e pubblicazione fatte, e tre buchi scritti come tali — password, CSV mai caricato, asta mai vissuta. |
 | 1.17 | 2026-09-04 | Le squadre fuori Serie A si cercano per nome: 92% dei volti e tutti gli stemmi. |
 | 1.16 | 2026-09-04 | Stemmi delle squadre, e la chiave dei nomi resa simmetrica. |

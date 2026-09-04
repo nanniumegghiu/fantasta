@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.3 · **Data** · 2026-09-04
+**Versione documento** · 3.4 · **Data** · 2026-09-04
 
 ---
 
@@ -191,7 +191,7 @@ movimento su più di un dispositivo.
 | Fetta 6: esportazione CSV delle rose | ✅ 14 prove, formato di ADR-0008 |
 | Fetta 7: scambi fra squadre | ✅ 20 prove, ogni reparto deve pareggiare |
 | Il CSV caricato davvero nell app Fantacalcio | 🔴 mai provato sul sito vero |
-| Un asta vera, in movimento, su più dispositivi | 🔴 mai fatta |
+| Un asta vera, in movimento, su più dispositivi | 🟡 gli avversari automatici ci sono e sono provati; manca la serata vera |
 | Fetta 8: revisione iper-critica | 🟡 iniziata, grafica e animazioni comprese |
 
 **Prossimo passo** · **Un'asta vera dall'inizio alla fine**, condotta da chi amministra con avversari
@@ -234,6 +234,8 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/verifica-scambi.mjs` | Venti prove sugli scambi. La piu importante e quella sui reparti che non pareggiano: e la regola che tiene in piedi le rose. |
 | `node scripts/verifica-asta.mjs` | Ventotto prove sul motore d asta: massimo offribile, offerte simultanee, offerta arrivata dopo la campanella, chiusura automatica quando le rose sono complete, e chi puo vedere le rose degli altri. |
 | `node scripts/verifica-asta-completa.mjs` | Cinquantaquattro prove sulle sette varianti, la modalità live, la chiamata con passo, i poteri dell amministratore, la catena che si apre da sola, il riempimento per nome e la rete di sicurezza. |
+| `node scripts/bot-asta.mjs` | **Non è una verifica, è un attrezzo.** Gli avversari giocano da soli: fanno l accesso come i compagni finti e chiamano le stesse funzioni che chiama l app. Serve a fare un asta vera senza radunare otto persone. |
+| `node scripts/verifica-bot-asta.mjs` | Diciassette prove sui bot, con un asta giocata davvero. Le più importanti non controllano che rilancino: controllano che **non possano fare più di una persona** — crediti, reparti, doppioni, e niente scritture dirette nel database. |
 | `node scripts/amici-di-prova.mjs` | **Non è una verifica, è un attrezzo.** Mette in lega compagni finti con cui provare un asta da soli, e permette di rilanciare per conto loro dalla riga di comando. |
 | `node scripts/verifica-amici-di-prova.mjs` | Diciotto prove sull attrezzo qui sopra, lanciandolo davvero dentro una lega di prova. |
 | `node scripts/verifica-eliminazione-lega.mjs` | Undici prove sull eliminazione di una lega: chi può, la conferma del nome, e che non resti niente in giro. |
@@ -261,6 +263,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 3.4 | 2026-09-04 | Avversari automatici: rilanciano da soli, con un carattere stabile e un limite di spesa, e non possono fare niente che una persona non possa fare. |
 | 3.3 | 2026-09-04 | Documentazione riallineata al codice, e tre buchi scritti come tali invece che taciuti: password, CSV, asta mai vissuta. |
 | 3.2 | 2026-09-04 | Venti volti recuperati: il limite di caricamento tagliava sempre la coda, le abbreviazioni di due lettere non erano riconosciute e i doppioni della stessa persona bloccavano l abbinamento. |
 | 3.1 | 2026-09-04 | Un codice di sei caratteri apre lo schermo condiviso sul televisore, senza accesso e senza indirizzi lunghi da digitare col telecomando. |
