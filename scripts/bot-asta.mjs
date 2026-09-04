@@ -65,6 +65,7 @@ import {
   amiciInLega,
   argomento,
   cita,
+  esitoDi,
   leggi,
   rpc,
   sql,
@@ -526,7 +527,7 @@ while (!fermati) {
       if (s.asta.bid_type === 'con_passo' && !b.passato.has(s.lotto.id)) {
         b.passato.add(s.lotto.id)
         const r = await rpc(b.token, 'passa', { p_lotto: s.lotto.id })
-        if (r.corpo?.esito === 'ok') console.log(`${ORA()}  ${b.squadra} passa`)
+        if (esitoDi(r)?.esito === 'ok') console.log(`${ORA()}  ${b.squadra} passa`)
       }
       continue
     }
@@ -546,7 +547,7 @@ while (!fermati) {
     candidati.sort((x, y) => y.v - x.v)
     const { b, offerta, v } = candidati[0]
     const r = await rpc(b.token, 'rilancia', { p_lotto: s.lotto.id, p_importo: offerta })
-    const esito = r.corpo?.esito ?? `http ${r.stato}`
+    const esito = esitoDi(r)?.esito ?? `http ${r.stato}`
     if (esito === 'ok') {
       console.log(`${ORA()}  ${b.squadra.padEnd(22)} offre ${String(offerta).padStart(4)}   (fin dove arriva: ${v})`)
     } else if (esito !== 'offerta_troppo_bassa' && esito !== 'lotto_chiuso') {
@@ -583,7 +584,7 @@ async function chiama(b, s) {
     p_player_id: scelto.id,
     p_importo: s.asta.min_bid,
   })
-  const esito = r.corpo?.esito ?? `http ${r.stato}`
+  const esito = esitoDi(r)?.esito ?? `http ${r.stato}`
   if (esito === 'ok') {
     console.log(`\n${ORA()}  ${b.squadra} chiama ${scelto.name} (${scelto.ruolo})`)
   } else if (esito !== 'non_e_il_tuo_turno') {

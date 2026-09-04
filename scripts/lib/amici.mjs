@@ -119,6 +119,26 @@ export async function rpc(token, funzione, corpo) {
   return { stato: r.status, corpo: await r.json().catch(() => null) }
 }
 
+/**
+ * L'esito di una funzione del server, srotolato.
+ *
+ * Le funzioni d'asta restituiscono una **tabella** — `returns table (esito,
+ * messaggio)` — e PostgREST la manda come elenco di una riga. Chi legge
+ * `corpo.esito` invece di `corpo[0].esito` non trova mai niente, e siccome
+ * `undefined` non è un errore, il codice tira dritto convinto che sia andata
+ * male ogni volta che è andata bene.
+ *
+ * È successo nei bot: ogni rilancio riuscito finiva nel registro come «http
+ * 200», e il ramo che spegne un bot quando ha il reparto pieno non è mai
+ * scattato, perché `ruolo_pieno` non arrivava mai a essere confrontato.
+ * Nessun errore, nessun sintomo, solo un attrezzo che raccontava male quello
+ * che stava facendo.
+ */
+export function esitoDi(risposta) {
+  const c = risposta?.corpo
+  return (Array.isArray(c) ? c[0] : c) ?? null
+}
+
 /** Legge una tabella o vista con il token di un amico, come farebbe l'app. */
 /**
  * Legge una tabella o vista con il token di un amico, come farebbe l'app.
