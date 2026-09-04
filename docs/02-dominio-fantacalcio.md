@@ -227,7 +227,7 @@ restano possibili le due cose con cui si sistema:
 | **Assegnare senza asta** | Un solo pretendente, nessuna gara da fare |
 | ~~Estrarre il prossimo~~ | Vietato: la catena è ferma **proprio** perché non deve andare avanti da sola |
 
-Aprire un lotto durante una pausa è sicuro per una riga scritta in : alla ripresa **il
+Aprire un lotto durante una pausa è sicuro per una riga scritta in `pausa_asta`: alla ripresa **il
 tempo dei lotti aperti riparte da zero**. Senza, un calciatore chiamato durante una pausa di dieci
 minuti risulterebbe scaduto nell’istante della ripresa, e finirebbe a nessuno prima che qualcuno
 possa alzare la mano.
