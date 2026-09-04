@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { Bottone } from '@/components/Bottone'
 import { CampoNumero } from '@/components/CampoNumero'
 import { Intestazione } from '@/components/Intestazione'
@@ -74,8 +74,47 @@ export function PaginaAsta() {
   // toccarlo.
   useChiusuraInsistente(timer.fase, lotto?.id, chiudi.mutate)
 
+  // ─── «L'hai preso» ────────────────────────────────────────────────────────
+  //
+  // Il momento in cui vinci un'asta è il motivo per cui si gioca, e sul
+  // telefono non succedeva niente: il calciatore spariva dalla fascia in alto
+  // e compariva in fondo, nella propria rosa, dove nessuno stava guardando.
+  // Chi ha vinto lo capiva dal fatto che i crediti erano scesi.
+  //
+  // I telefoni sono muti per scelta — dieci telefoni che suonano insieme sono
+  // rumore — quindi il segnale è visivo e dura poco: due secondi e mezzo, poi
+  // si toglie da solo. Più lungo coprirebbe il calciatore dopo, che nei metodi
+  // a estrazione arriva subito.
+  //
+  // Si riconosce dalle rose, non dal lotto: quando il lotto si chiude sparisce,
+  // mentre l'acquisto **compare**, ed è l'unico segnale che arriva sempre.
+  const [vinto, setVinto] = useState<AcquistoInRosa | null>(null)
+  const mieiPrima = useRef<Set<number> | null>(null)
+  const ridottoQui = useMovimentoRidotto()
+
+  useEffect(() => {
+    if (!rose || !mioBudget) return
+    const miei = rose.filter((r) => r.team_id === mioBudget.team_id)
+    const adesso = new Set(miei.map((r) => r.player_id))
+    const prima = mieiPrima.current
+    mieiPrima.current = adesso
+    if (!prima) return
+    const nuovo = miei.find((r) => !prima.has(r.player_id))
+    if (!nuovo) return
+    setVinto(nuovo)
+    vibraBreve(ridottoQui)
+  }, [rose, mioBudget, ridottoQui])
+
+  useEffect(() => {
+    if (!vinto) return
+    const finisce = setTimeout(() => setVinto(null), 2600)
+    return () => clearTimeout(finisce)
+  }, [vinto])
+
   return (
     <div className="min-h-dvh pb-6">
+      <AnimatePresence>{vinto && <Preso acquisto={vinto} />}</AnimatePresence>
+
       <Intestazione
         titolo="Asta"
         sottotitolo={lega?.name}
@@ -892,6 +931,50 @@ function RepartiDi({
         )
       })}
     </span>
+  )
+}
+
+/**
+ * «L'hai preso»: il riquadro che compare quando ti aggiudichi un calciatore.
+ *
+ * PERCHE' IN CIMA E NON AL CENTRO
+ *
+ * Al centro coprirebbe il calciatore successivo, che nei metodi a estrazione
+ * arriva subito dopo: si festeggia quello preso e si perde quello dopo. In
+ * cima si vede con la coda dell'occhio senza togliere niente.
+ *
+ * PERCHE' DICE ANCHE IL PREZZO
+ *
+ * Perche' la domanda che viene subito dopo «l'ho preso?» e' «quanto ho
+ * speso?», e sono due tocchi di distanza: la propria rosa sta in fondo alla
+ * pagina. Qui c'e' gia'.
+ */
+function Preso({ acquisto }: { acquisto: AcquistoInRosa }) {
+  const volto = useVolti()
+  const ridotto = useMovimentoRidotto()
+
+  return (
+    <motion.div
+      initial={ridotto ? { opacity: 0 } : { opacity: 0, y: -40, scale: 0.9 }}
+      animate={ridotto ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+      exit={ridotto ? { opacity: 0 } : { opacity: 0, y: -24, scale: 0.95 }}
+      transition={{ duration: 0.28, ease: [0.34, 1.56, 0.64, 1] }}
+      className="pointer-events-none fixed inset-x-0 top-2 z-50 flex justify-center px-3"
+    >
+      <div className="flex max-w-md items-center gap-3 rounded-2xl border border-oro bg-verde-notte px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+        <Volto
+          nome={acquisto.players.name}
+          indirizzo={volto(acquisto.players.photo_path)}
+          classeRuolo={CLASSE_RUOLO[acquisto.players.role]}
+          misura={44}
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-oro">È tuo!</p>
+          <p className="truncate text-base font-bold text-nebbia">{acquisto.players.name}</p>
+        </div>
+        <p className="cifre-fisse shrink-0 text-3xl font-extrabold text-oro">{acquisto.price}</p>
+      </div>
+    </motion.div>
   )
 }
 

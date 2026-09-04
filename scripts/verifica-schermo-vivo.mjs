@@ -407,7 +407,51 @@ try {
       ` · per ripartire: «${comandi.riprendi?.testo ?? 'assente'}»`,
   )
 
-  // ─── 7. Niente eccezioni ─────────────────────────────────────────────────
+  // ─── 7. «È tuo!» sul dispositivo personale ───────────────────────────────
+  //
+  // Vincere un'asta è il motivo per cui si gioca, e sul telefono non succedeva
+  // niente: il calciatore spariva dalla fascia in alto e ricompariva in fondo,
+  // nella propria rosa, dove nessuno stava guardando. Si capiva di aver vinto
+  // dal fatto che i crediti erano scesi.
+  //
+  // La pagina è già aperta dal controllo qui sopra: si assegna un calciatore
+  // alla squadra di chi guarda e si controlla che il riquadro arrivi.
+  const [miaSquadra] = await sql(
+    `select id from public.teams where league_id = '${lega}' and user_id = '${capo.user.id}';`,
+  )
+  const [daRegalare] = await sql(`select p.id, p.name from public.players p
+    where p.season = '${STAGIONE}' and p.role = 'P' and p.active
+      and not exists (select 1 from public.roster_players r
+                      where r.league_id = '${lega}' and r.player_id = p.id)
+    limit 1;`)
+  await rpc('assegna_rapido', {
+    p_lega: lega,
+    p_player_id: daRegalare.id,
+    p_squadra: miaSquadra.id,
+    p_prezzo: 9,
+  })
+
+  const festeggiato = await scheda.aspetta(`${testo}.includes('è tuo')`, { entro: 12000 })
+  const cosaDice = await scheda.valuta(`(() => {
+    const n = [...document.querySelectorAll('div')].find((d) => /è tuo!/i.test(d.innerText))
+    return n ? n.innerText.replace(/\\n/g, ' · ').slice(0, 90) : null
+  })()`)
+  ok(
+    'Quando ti aggiudichi un calciatore il telefono te lo dice',
+    festeggiato,
+    festeggiato ? `«${cosaDice}»` : `${daRegalare.name} assegnato, ma il riquadro non e comparso`,
+  )
+
+  // E se ne va da solo: un avviso che resta coprirebbe il calciatore dopo, che
+  // nei metodi a estrazione arriva subito.
+  const sparito = await scheda.aspetta(`!${testo}.includes('è tuo')`, { entro: 8000 })
+  ok(
+    'E se ne va da solo, senza coprire il calciatore successivo',
+    sparito,
+    sparito ? 'sparito entro otto secondi' : 'e rimasto li: coprirebbe la chiamata dopo',
+  )
+
+  // ─── 8. Niente eccezioni ─────────────────────────────────────────────────
   const esplosioni = scheda.console.filter((c) => c.tipo === 'eccezione' || c.tipo === 'error')
   ok(
     'Nessuna eccezione nella console del browser',
