@@ -28,6 +28,7 @@ import {
   type Lotto,
 } from '@/features/asta/api'
 import { useTimerAsta } from '@/features/asta/useTimer'
+import { useChiusuraInsistente } from '@/features/asta/useChiusura'
 import { ImpostazioniPreAsta } from '@/features/asta/ImpostazioniPreAsta'
 import { PannelloAmministratore } from '@/features/asta/PannelloAmministratore'
 import { RegistroAsta } from '@/features/asta/RegistroAsta'
@@ -57,26 +58,11 @@ export function PaginaAsta() {
   const mioBudget = budget?.find((b) => b.user_id === utente?.id)
   const acquistati = new Set((rose ?? []).map((r) => r.player_id))
 
-  // Allo scadere si chiede la chiusura, e si continua a chiederla finché il
-  // lotto non è chiuso davvero. Decide comunque il server.
-  //
-  // PERCHE' NON UNA VOLTA SOLA
-  // La prima versione segnava il lotto come «già chiesto» **prima** di
-  // chiedere, e non riprovava mai. Bastava un tentativo a vuoto — l'orologio
-  // del telefono avanti di un secondo, la rete che perde il colpo, il lotto
-  // aperto un istante prima — perché il countdown restasse a zero con il
-  // calciatore ancora lì, in attesa che la rete di sicurezza del server
-  // passasse dieci secondi dopo. Chi conduce vedeva l'asta ferma e premeva
-  // «aggiudica»: proprio il consenso in più che non deve servire.
-  const chiediChiusura = useRef(chiudi.mutate)
-  chiediChiusura.current = chiudi.mutate
-  useEffect(() => {
-    if (timer.fase !== 'scaduto' || !lotto) return
-    const id = lotto.id
-    chiediChiusura.current(id)
-    const insisti = setInterval(() => chiediChiusura.current(id), 1500)
-    return () => clearInterval(insisti)
-  }, [timer.fase, lotto])
+  // Allo scadere si chiede la chiusura, e si insiste finché il lotto non è
+  // chiuso davvero. Decide comunque il server. Il perché delle precauzioni sta
+  // scritto dentro il gancio, ed è una storia che vale la pena leggere prima di
+  // toccarlo.
+  useChiusuraInsistente(timer.fase, lotto?.id, chiudi.mutate)
 
   return (
     <div className="min-h-dvh pb-6">

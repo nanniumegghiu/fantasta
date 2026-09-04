@@ -21,6 +21,7 @@ import {
   type Lotto,
 } from '@/features/asta/api'
 import { useTimerAsta } from '@/features/asta/useTimer'
+import { useChiusuraInsistente } from '@/features/asta/useChiusura'
 import {
   attivaAudio,
   impostaSuoniAccesi,
@@ -152,24 +153,10 @@ export function SchermoAsta({
     acquistiPrecedenti.current = quanti
   }, [rose?.length, audioPronto])
 
-  // Allo scadere si chiede al server di chiudere, e si continua a chiederlo
-  // finché il lotto non è chiuso davvero. Decide lui: se non è scaduto rifiuta,
-  // e non succede niente.
-  //
-  // PERCHE' NON UNA VOLTA SOLA
-  // Prima si segnava il lotto come «già chiesto» **prima** di chiedere, e non
-  // si riprovava mai: un tentativo a vuoto — l'orologio del televisore avanti
-  // di un secondo, un pacchetto perso — lasciava il countdown a zero con il
-  // calciatore ancora lì, finché la rete di sicurezza del server non passava
-  // dieci secondi dopo. Otto persone che guardano lo schermo fermo pensano che
-  // sia rotto, e chi conduce prende il telefono e aggiudica a mano.
-  useEffect(() => {
-    if (timer.fase !== 'scaduto' || !lotto || !onChiudiScaduto) return
-    const id = lotto.id
-    onChiudiScaduto(id)
-    const insisti = setInterval(() => onChiudiScaduto(id), 1500)
-    return () => clearInterval(insisti)
-  }, [timer.fase, lotto, onChiudiScaduto])
+  // Allo scadere si chiede al server di chiudere, e si insiste finché non è
+  // chiuso davvero. Decide lui: se non è scaduto rifiuta, e non succede niente.
+  // Il perché delle precauzioni sta scritto dentro il gancio.
+  useChiusuraInsistente(timer.fase, lotto?.id, onChiudiScaduto)
 
   // ─── L'aggiudicazione, che è il momento della serata ──────────────────────
   //
@@ -834,7 +821,13 @@ function FasciaSquadre({
   useEffect(() => {
     const el = primaColonna.current
     if (!el) return
-    const misura = () => setAltezzaRiga(el.clientHeight / righeTotali)
+    // Arrotondata al mezzo pixel e scritta solo se cambia: un osservatore
+    // che si risveglia da solo e' il modo piu' silenzioso di inchiodare una
+    // pagina, e qui sotto ci sono centocinquanta righe da ridisegnare.
+    const misura = () => {
+      const nuova = Math.round((el.clientHeight / righeTotali) * 2) / 2
+      setAltezzaRiga((vecchia) => (Math.abs(vecchia - nuova) < 0.5 ? vecchia : nuova))
+    }
     misura()
     const osserva = new ResizeObserver(misura)
     osserva.observe(el)
@@ -922,7 +915,6 @@ function FasciaSquadre({
                       {presi.map((r) => (
                         <motion.div
                           key={r.id}
-                          layout
                           initial={{ opacity: 0, x: -12, backgroundColor: 'rgba(247,196,67,0.35)' }}
                           animate={{ opacity: 1, x: 0, backgroundColor: 'rgba(247,196,67,0)' }}
                           exit={{ opacity: 0, x: 12 }}
