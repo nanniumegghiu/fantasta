@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 4.0 · **Data** · 2026-09-05
+**Versione documento** · 4.1 · **Data** · 2026-09-06
 
 ---
 
@@ -270,6 +270,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 4.1 | 2026-09-06 | Una sessione da ospite non e piu un accesso: entrando da un invito si creava una squadra senza account. E l app non resta piu uno schermo vuoto. |
 | 4.0 | 2026-09-05 | Quando ti aggiudichi un calciatore il telefono te lo dice. E un attrezzo per riportare una lega a prima dell asta, che pretende il nome scritto per intero. |
 | 3.9 | 2026-09-05 | In pausa si puo chiamare un nome e assegnare senza asta: erano proprio le due cose che la pausa serve a fare, e sparivano appena la si metteva. |
 | 3.8 | 2026-09-05 | Il listone aperto dall asta mostra gli svincolati del reparto in corso con i propri obiettivi accesi e contati, gli avversari si leggono reparto per reparto, e fra un reparto e l altro l asta si ferma da sola. |

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { backendConfigurato } from '@/lib/supabase'
 import { FornitoreAccesso, useAccesso } from '@/features/auth/ContestoAccesso'
+import { SeQualcosaEsplode } from '@/components/SeQualcosaEsplode'
 import { PaginaAccesso } from '@/pages/PaginaAccesso'
 import { PaginaLeghe } from '@/pages/PaginaLeghe'
 import { PaginaBackendNonConfigurato } from '@/pages/PaginaBackendNonConfigurato'
@@ -88,25 +89,55 @@ function Caricamento() {
   )
 }
 
-/** Lascia passare solo chi ha una sessione. Il resto torna all'accesso. */
+/**
+ * Lascia passare solo chi ha una sessione **con un account**.
+ *
+ * PERCHE' UNA SESSIONE NON BASTA
+ *
+ * Per il televisore è acceso l'accesso anonimo di Supabase: la pagina della TV
+ * entra come ospite per poter firmare gli indirizzi delle immagini. Quella
+ * sessione però resta nel browser, nello stesso posto di tutte le altre, e per
+ * Supabase un ospite ha il ruolo `authenticated` esattamente come chi si è
+ * registrato.
+ *
+ * Risultato, prima di questa riga: chi aveva aperto una volta il link della TV
+ * risultava «dentro» per sempre. Aprendo un invito entrava in lega **creando
+ * una squadra senza account** — senza email, senza nome, senza modo di sapere
+ * di chi fosse. È successo nella lega vera.
+ *
+ * Il server adesso rifiuta gli ospiti alle due porte d'ingresso, ed è lì che
+ * la difesa conta. Questa riga serve a un'altra cosa: che chi arriva con una
+ * sessione da ospite veda la schermata d'accesso invece di un'applicazione
+ * che sembra funzionare e poi rifiuta tutto.
+ */
 function SoloAutenticati({ children }: { children: React.ReactNode }) {
   const { inCaricamento, sessione } = useAccesso()
   const posizione = useLocation()
 
+  const ospite = sessione?.user?.is_anonymous === true
+
   if (inCaricamento) return <Caricamento />
-  if (!sessione) {
+  if (!sessione || ospite) {
     ricordaDestinazione(posizione.pathname + posizione.search)
     return <Navigate to="/accesso" replace />
   }
   return <>{children}</>
 }
 
-/** Chi e' gia' dentro non deve rivedere la schermata di accesso. */
+/**
+ * Chi e' gia' dentro non deve rivedere la schermata di accesso.
+ *
+ * Ma una sessione da ospite — quella del televisore — qui non conta, e se
+ * contasse sarebbe una trappola: rimbalzerebbe alle leghe chi sta cercando di
+ * fare l'accesso vero, e da lì `SoloAutenticati` lo rimanderebbe qui. Due
+ * porte che si rimandano a vicenda sono un'applicazione da cui non si entra.
+ */
 function SoloOspiti({ children }: { children: React.ReactNode }) {
   const { inCaricamento, sessione } = useAccesso()
+  const conAccount = sessione && sessione.user?.is_anonymous !== true
 
   if (inCaricamento) return <Caricamento />
-  if (sessione) return <Navigate to={raccogliDestinazione() ?? '/leghe'} replace />
+  if (conAccount) return <Navigate to={raccogliDestinazione() ?? '/leghe'} replace />
   return <>{children}</>
 }
 
@@ -240,11 +271,17 @@ export default function App() {
           /fantasta/leghe il router cercherebbe la rotta «/fantasta/leghe»
           e non la troverebbe. */}
       <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <FornitoreAccesso>
-          <Suspense fallback={<Caricamento />}>
-            <Rotte />
-          </Suspense>
-        </FornitoreAccesso>
+        {/* La rete sta **dentro** il router e fuori dalle rotte: dentro,
+            perché il tasto «torna alle leghe» deve poter navigare; fuori dalle
+            rotte, perché un errore in una qualsiasi schermata non deve poter
+            svuotare la pagina. */}
+        <SeQualcosaEsplode>
+          <FornitoreAccesso>
+            <Suspense fallback={<Caricamento />}>
+              <Rotte />
+            </Suspense>
+          </FornitoreAccesso>
+        </SeQualcosaEsplode>
       </BrowserRouter>
     </QueryClientProvider>
   )

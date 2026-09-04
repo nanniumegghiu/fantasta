@@ -32,7 +32,7 @@
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { CHIAVE, URL_BASE, ref, sql } from './lib/fm.mjs'
 import { apriBrowser, apriScheda, serviCartella } from './lib/browser.mjs'
 
@@ -40,10 +40,24 @@ const radice = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = join(radice, 'app', 'dist')
 const DOMINIO = 'prova.vivo.fantasta'
 const STAGIONE = 'PROVA-VIVO'
-// Lo stesso percorso base del sito pubblicato. E' l'unico modo perche' questa
-// prova possa accorgersi di un indirizzo costruito senza: con base '/' un link
-// sbagliato e uno giusto sono la stessa stringa.
-const BASE = '/fantasta/'
+/**
+ * Il percorso base **si legge dalla compilazione**, non si decide qui.
+ *
+ * La prova serve l'app sotto il suo percorso base, come fa il sito pubblicato.
+ * Deciderlo qui vorrebbe dire che una compilazione fatta senza `VITE_BASE`
+ * verrebbe servita sotto `/fantasta/` mentre dentro cerca `/assets/…`: la
+ * pagina resta bianca e **tutte** le prove falliscono insieme, per un motivo
+ * che non c'entra niente con quello che stanno controllando. È successo, e per
+ * un minuto è sembrato che si fosse rotto tutto.
+ *
+ * Si guarda dove punta il foglio di stile dentro `index.html`: quello è il
+ * percorso base vero, qualunque sia.
+ */
+function baseCompilata() {
+  const indice = readFileSync(join(DIST, 'index.html'), 'utf8')
+  const m = indice.match(/(?:src|href)="([^"]*\/)assets\//)
+  return m ? m[1] : '/'
+}
 
 const esiti = []
 const ok = (nome, buono, dettaglio) => {
@@ -158,6 +172,12 @@ await rpc('apri_prossimo_lotto', { p_lega: lega })
 
 // ─── Il browser ─────────────────────────────────────────────────────────────
 
+const BASE = baseCompilata()
+if (BASE === '/') {
+  console.log("⚠ compilata senza percorso base: la prova sul link d'invito non distinguerebbe")
+  console.log('  un indirizzo giusto da uno sbagliato. Ricompila con:')
+  console.log('  cd app && VITE_BASE=/fantasta/ npm run build\n')
+}
 const sito = await serviCartella(DIST, 4599, BASE)
 const browser = await apriBrowser({ mostra: process.argv.includes('--mostra') })
 const scheda = await apriScheda(browser.porta)
@@ -504,7 +524,69 @@ try {
     )
   }
 
-  // ─── 9. Niente eccezioni ─────────────────────────────────────────────────
+  // ─── 9. Una sessione da ospite non è un accesso ──────────────────────────
+  //
+  // Per il televisore è acceso l'accesso anonimo, e quella sessione resta nel
+  // browser insieme a tutte le altre. Chi aveva aperto una volta il link della
+  // TV risultava «dentro» per sempre, e aprendo un invito entrava in lega
+  // creando una squadra senza account. È successo nella lega vera.
+  const ospite = await (
+    await fetch(`${URL_BASE}/auth/v1/signup`, {
+      method: 'POST',
+      headers: { apikey: CHIAVE, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+  ).json()
+
+  await scheda.vaiA(sito.indirizzo)
+  await scheda.valuta(`localStorage.setItem(${JSON.stringify(`sb-${ref}-auth-token`)}, ${JSON.stringify(
+    JSON.stringify({
+      access_token: '@@GETTONE@@',
+      refresh_token: '@@RINFRESCO@@',
+      expires_at: Math.floor(Date.now() / 1000) + 3000,
+      expires_in: 3000,
+      token_type: 'bearer',
+      user: { id: '@@ID@@', is_anonymous: true },
+    }),
+  )
+    .replace('@@GETTONE@@', ospite.access_token)
+    .replace('@@RINFRESCO@@', ospite.refresh_token)
+    .replace('@@ID@@', ospite.user.id)})`)
+
+  await scheda.vaiA(`${sito.indirizzo}/invito/${codiceLega}`)
+  const respinto = await scheda.aspetta(
+    `${testo}.includes('accedi') || ${testo}.includes('registrati') || ${testo}.includes('password')`,
+    { entro: 20000 },
+  )
+  ok(
+    'Con una sessione da ospite l invito porta all accesso, non dentro la lega',
+    respinto,
+    respinto
+      ? 'la schermata di accesso'
+      : `e entrato lo stesso: «${(await scheda.valuta('document.body.innerText')).slice(0, 140)}»`,
+  )
+
+  // E il server dice di no comunque, che è la difesa che conta.
+  const provaOspite = await (
+    await fetch(`${URL_BASE}/rest/v1/rpc/entra_in_lega`, {
+      method: 'POST',
+      headers: {
+        apikey: CHIAVE,
+        Authorization: `Bearer ${ospite.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_codice: codiceLega, p_nome_squadra: 'Intruso' }),
+    })
+  ).json()
+  const rispostaOspite = Array.isArray(provaOspite) ? provaOspite[0] : provaOspite
+  ok(
+    'E il server lo rifiuta comunque, anche saltando l interfaccia',
+    rispostaOspite?.esito === 'non_autenticato',
+    `«${rispostaOspite?.esito}: ${rispostaOspite?.messaggio}»`,
+  )
+  await sql(`delete from auth.users where id = '${ospite.user.id}';`)
+
+  // ─── 10. Niente eccezioni ────────────────────────────────────────────────
   const esplosioni = scheda.console.filter((c) => c.tipo === 'eccezione' || c.tipo === 'error')
   ok(
     'Nessuna eccezione nella console del browser',
