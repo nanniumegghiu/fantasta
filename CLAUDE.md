@@ -3,7 +3,7 @@
 > **Questo è il file che si legge per primo in ogni sessione, sempre, prima di qualunque altra cosa.**
 > Se hai fretta, leggi almeno: *Cos'è il prodotto*, *Regole non negoziabili*, *Stato attuale*.
 
-**Versione documento** · 3.9 · **Data** · 2026-09-05
+**Versione documento** · 4.0 · **Data** · 2026-09-05
 
 ---
 
@@ -242,6 +242,7 @@ Tutte si lanciano dalla cartella del progetto, non da `app/`.
 | `node scripts/prova-cambio-reparto.mjs` | Sei prove sulla pausa fra un reparto e l altro. Le due che contano stanno agli estremi: che **non** si vada in pausa all apertura, e che insistere con l estrazione non la tolga. |
 | `node scripts/prova-nuovo-giro.mjs` | Otto prove sul giro nuovo. Le tre che contano verificano che **non** faccia più del dovuto: chi è già stato comprato non torna nel mazzo, mentre c è un calciatore in asta non si tocca niente, e non lo apre chi capita. |
 | `node scripts/verifica-bot-asta.mjs` | Diciassette prove sui bot, con un asta giocata davvero. Le più importanti non controllano che rilancino: controllano che **non possano fare più di una persona** — crediti, reparti, doppioni, e niente scritture dirette nel database. |
+| `node scripts/azzera-asta.mjs` | **Cancella dati veri.** Riporta una lega a prima dell asta: via rose, crediti spesi, lotti e registro. Restano lega, squadre, partecipanti, inviti e liste obiettivi. Senza `--confermo "Nome della lega"` dice soltanto cosa cancellerebbe. |
 | `node scripts/amici-di-prova.mjs` | **Non è una verifica, è un attrezzo.** Mette in lega compagni finti con cui provare un asta da soli, e permette di rilanciare per conto loro dalla riga di comando. |
 | `node scripts/verifica-amici-di-prova.mjs` | Diciotto prove sull attrezzo qui sopra, lanciandolo davvero dentro una lega di prova. |
 | `node scripts/verifica-eliminazione-lega.mjs` | Undici prove sull eliminazione di una lega: chi può, la conferma del nome, e che non resti niente in giro. |
@@ -269,6 +270,7 @@ mostragli l'errore vero.
 
 | Versione | Data | Cosa cambia |
 |---|---|---|
+| 4.0 | 2026-09-05 | Quando ti aggiudichi un calciatore il telefono te lo dice. E un attrezzo per riportare una lega a prima dell asta, che pretende il nome scritto per intero. |
 | 3.9 | 2026-09-05 | In pausa si puo chiamare un nome e assegnare senza asta: erano proprio le due cose che la pausa serve a fare, e sparivano appena la si metteva. |
 | 3.8 | 2026-09-05 | Il listone aperto dall asta mostra gli svincolati del reparto in corso con i propri obiettivi accesi e contati, gli avversari si leggono reparto per reparto, e fra un reparto e l altro l asta si ferma da sola. |
 | 3.7 | 2026-09-05 | Lo schermo condiviso si inchiodava allo scadere del countdown: corretto, e nata la prima verifica che apre davvero un browser. Ha trovato subito altri due difetti che nessuna prova sul server poteva vedere. |
